@@ -70,5 +70,11 @@ func (h *Handlers) handleShortLinkAdd(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusCreated)
 
-	_, _ = w.Write([]byte(url))
+	_, err = w.Write([]byte(url))
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
 }
