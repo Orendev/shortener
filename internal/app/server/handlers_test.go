@@ -67,6 +67,8 @@ func TestHandlers_handleShortLink(t *testing.T) {
 			h.handleShortLink(w, req)
 
 			res := w.Result()
+			err := res.Body.Close()
+			require.NoError(t, err)
 
 			assert.Equal(t, res.StatusCode, tt.want.code)
 			assert.Equal(t, tt.fields.link, res.Header.Get("Location"))
