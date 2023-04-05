@@ -6,7 +6,7 @@ import (
 	"github.com/Orendev/shortener/internal/pkg/random"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -122,7 +122,7 @@ func TestHandlers_handleShortLinkAdd(t *testing.T) {
 			assert.Equal(t, res.StatusCode, tt.want.code)
 			assert.Equal(t, tt.want.contentType, res.Header.Get("Content-Type"))
 
-			resBody, err := ioutil.ReadAll(res.Body)
+			resBody, err := io.ReadAll(res.Body)
 			require.NoError(t, err)
 			err = res.Body.Close()
 			require.NoError(t, err)
