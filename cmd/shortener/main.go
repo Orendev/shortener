@@ -1,60 +1,44 @@
 package main
 
 import (
-	"github.com/Orendev/shortener/internal/app/random"
-	"io"
-	"net/http"
-	"strings"
+	"github.com/Orendev/shortener/internal/api"
+	"github.com/Orendev/shortener/internal/app/repository/shortlinks"
+	"github.com/Orendev/shortener/internal/app/server"
+	"github.com/Orendev/shortener/internal/configs"
+	"log"
 )
-
-var mux = http.NewServeMux()
-var db = make(map[string]string)
 
 func main() {
 
-	mux.HandleFunc("/", mainPage)
-
-	if err := run(); err != nil {
-		panic(err)
+	data := map[string]shortlinks.ShortLink{}
+	shortLinkStore, err := shortlinks.NewStorage(data)
+	if err != nil {
+		return
 	}
-}
 
-func run() error {
-	return http.ListenAndServe(`:8080`, mux)
-}
-
-func mainPage(w http.ResponseWriter, r *http.Request) {
-
-	if r.Method == http.MethodPost {
-
-		w.Header().Set("Content-Type", "text/plain")
-
-		body, err := io.ReadAll(r.Body)
-
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-
-		code := random.Strn(8)
-		db[code] = string(body)
-		url := "http://localhost:8080/" + code
-
-		w.WriteHeader(http.StatusCreated)
-
-		_, _ = w.Write([]byte(url))
-
-	} else {
-
-		code := strings.TrimPrefix(r.URL.Path, "/")
-
-		if url, ok := db[code]; ok {
-			w.Header().Add("Location", url)
-			w.WriteHeader(http.StatusTemporaryRedirect)
-			return
-		}
-
-		w.WriteHeader(http.StatusBadRequest)
-
+	sl, err := shortlinks.New(*shortLinkStore)
+	if err != nil {
+		return
 	}
+	cfg, err := configs.New()
+	if err != nil {
+		return
+	}
+
+	srvCfg, err := cfg.Server()
+	if err != nil {
+		return
+	}
+
+	a, err := api.New(sl)
+	if err != nil {
+		return
+	}
+	srv, err := server.New(srvCfg, a)
+	if err != nil {
+		return
+	}
+
+	log.Fatal(srv.Start())
+
 }
