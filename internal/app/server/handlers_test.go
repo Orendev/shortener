@@ -49,7 +49,7 @@ func TestHandlers_handleShortLink(t *testing.T) {
 			configs: configs.Configs{
 				Host:    "",
 				Port:    "8080",
-				BaseUrl: "http://localhost:8080/",
+				BaseURL: "http://localhost:8080",
 			},
 		},
 	}
@@ -113,7 +113,7 @@ func TestHandlers_handleShortLinkAdd(t *testing.T) {
 			configs: configs.Configs{
 				Host:    "",
 				Port:    "8080",
-				BaseUrl: "http://localhost:8080/",
+				BaseURL: "http://localhost:8080",
 			},
 		},
 	}
