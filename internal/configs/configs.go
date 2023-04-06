@@ -1,18 +1,25 @@
 package configs
 
-import "github.com/Orendev/shortener/internal/app/server"
+import (
+	"flag"
+)
+
+var options Configs = Configs{}
 
 type Configs struct {
-	Host string
-	Port string
+	Addr    string
+	Host    string
+	Port    string
+	BaseUrl string
 }
 
-func (cfg Configs) Server() (*server.Config, error) {
-	return &server.Config{
-		Port: "8080",
-	}, nil
+func init() {
+	flag.StringVar(&options.Addr, "a", "", "Адрес запуска сервера localhost:8080")
+	flag.StringVar(&options.BaseUrl, "b", "http://localhost:8080/", "Базовый URL http://localhost:8080/")
+	flag.StringVar(&options.Port, "p", "8080", "Порт 8080")
 }
 
 func New() (*Configs, error) {
-	return &Configs{}, nil
+	flag.Parse()
+	return &options, nil
 }

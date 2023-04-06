@@ -61,12 +61,12 @@ func (h *Handlers) handleShortLinkAdd(w http.ResponseWriter, r *http.Request) {
 		Link: string(body),
 	}
 
-	if err := h.api.AddLink(sl); err != nil {
+	url, err := h.api.AddLink(sl)
+
+	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-
-	url := "http://localhost:8080/" + sl.Code
 
 	w.WriteHeader(http.StatusCreated)
 

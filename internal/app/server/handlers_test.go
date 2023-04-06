@@ -3,6 +3,7 @@ package server
 import (
 	"github.com/Orendev/shortener/internal/api"
 	"github.com/Orendev/shortener/internal/app/repository/shortlinks"
+	"github.com/Orendev/shortener/internal/configs"
 	"github.com/Orendev/shortener/internal/pkg/random"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -29,10 +30,11 @@ func TestHandlers_handleShortLink(t *testing.T) {
 	}
 
 	tests := []struct {
-		name   string
-		fields fields
-		args   args
-		want   want
+		name    string
+		fields  fields
+		configs configs.Configs
+		args    args
+		want    want
 	}{
 		{
 			name: "positive test #1 handleShortLink",
@@ -43,6 +45,11 @@ func TestHandlers_handleShortLink(t *testing.T) {
 			want: want{
 				code:        http.StatusTemporaryRedirect,
 				contentType: "text/plain",
+			},
+			configs: configs.Configs{
+				Host:    "",
+				Port:    "8080",
+				BaseUrl: "http://localhost:8080/",
 			},
 		},
 	}
@@ -56,7 +63,8 @@ func TestHandlers_handleShortLink(t *testing.T) {
 				},
 			})
 			sl, _ := shortlinks.New(*shortLinkStore)
-			a, _ := api.New(sl)
+
+			a, _ := api.New(&tt.configs, sl)
 			h := &Handlers{
 				api: a,
 			}
@@ -87,9 +95,10 @@ func TestHandlers_handleShortLinkAdd(t *testing.T) {
 	}
 
 	tests := []struct {
-		name   string
-		fields fields
-		want   want
+		name    string
+		fields  fields
+		configs configs.Configs
+		want    want
 	}{
 		{
 			name: "positive test #1 handleShortLinkAdd",
@@ -101,6 +110,11 @@ func TestHandlers_handleShortLinkAdd(t *testing.T) {
 				contentType: "text/plain",
 				response:    "http://localhost:8080/",
 			},
+			configs: configs.Configs{
+				Host:    "",
+				Port:    "8080",
+				BaseUrl: "http://localhost:8080/",
+			},
 		},
 	}
 	for _, tt := range tests {
@@ -109,7 +123,8 @@ func TestHandlers_handleShortLinkAdd(t *testing.T) {
 			shortLinkStore, _ := shortlinks.NewStorage(data)
 
 			sl, _ := shortlinks.New(*shortLinkStore)
-			a, _ := api.New(sl)
+
+			a, _ := api.New(&tt.configs, sl)
 			h := &Handlers{
 				api: a,
 			}

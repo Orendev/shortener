@@ -20,21 +20,18 @@ func main() {
 	if err != nil {
 		return
 	}
+
 	cfg, err := configs.New()
 	if err != nil {
 		return
 	}
 
-	srvCfg, err := cfg.Server()
+	a, err := api.New(cfg, sl)
 	if err != nil {
 		return
 	}
 
-	a, err := api.New(sl)
-	if err != nil {
-		return
-	}
-	srv, err := server.New(srvCfg, a)
+	srv, err := server.New(cfg, a)
 	if err != nil {
 		return
 	}
