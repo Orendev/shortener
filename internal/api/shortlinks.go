@@ -1,10 +1,13 @@
 package api
 
-import "github.com/Orendev/shortener/internal/app/repository/shortlinks"
+import (
+	"fmt"
+	"github.com/Orendev/shortener/internal/app/repository/shortlinks"
+)
 
 // AddLink add a new short link
 func (a *API) AddLink(sl shortlinks.ShortLink) (url string, err error) {
-	url = a.cfg.BaseUrl + sl.Code
+	url = fmt.Sprintf("%s/%s", a.cfg.BaseUrl, sl.Code)
 	err = a.shortLinks.Add(sl)
 	return
 }

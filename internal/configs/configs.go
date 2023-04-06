@@ -15,7 +15,7 @@ type Configs struct {
 
 func init() {
 	flag.StringVar(&options.Addr, "a", "", "Адрес запуска сервера localhost:8080")
-	flag.StringVar(&options.BaseUrl, "b", "http://localhost:8080/", "Базовый URL http://localhost:8080/")
+	flag.StringVar(&options.BaseUrl, "b", "http://localhost:8080", "Базовый URL http://localhost:8080")
 	flag.StringVar(&options.Port, "p", "8080", "Порт 8080")
 }
 
