@@ -1,9 +1,10 @@
-package server
+package http
 
 import (
 	"fmt"
-	"github.com/Orendev/shortener/internal/api"
+	shortLinksHandlers "github.com/Orendev/shortener/internal/app/repository/shortlinks/handlers"
 	"github.com/Orendev/shortener/internal/configs"
+	"github.com/go-chi/chi/v5"
 	"net/http"
 )
 
@@ -12,10 +13,9 @@ type Server struct {
 	cfg    *configs.Configs
 }
 
-func New(cfg *configs.Configs, a *api.API) (*Server, error) {
+func New(cfg *configs.Configs) (*Server, error) {
 
-	h := &Handlers{api: a}
-	r := h.routes()
+	r := shortLinksHandlers.Routes(chi.NewRouter(), cfg)
 
 	addr := fmt.Sprintf("%s:%s", cfg.Host, cfg.Port)
 	if len(cfg.Addr) > 0 {

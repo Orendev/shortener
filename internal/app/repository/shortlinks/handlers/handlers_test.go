@@ -1,8 +1,9 @@
-package server
+package handlers
 
 import (
-	"github.com/Orendev/shortener/internal/api"
 	"github.com/Orendev/shortener/internal/app/repository/shortlinks"
+	"github.com/Orendev/shortener/internal/app/repository/shortlinks/Model"
+	"github.com/Orendev/shortener/internal/app/repository/shortlinks/storage"
 	"github.com/Orendev/shortener/internal/configs"
 	"github.com/Orendev/shortener/internal/pkg/random"
 	"github.com/stretchr/testify/assert"
@@ -50,23 +51,24 @@ func TestHandlers_handleShortLink(t *testing.T) {
 				Host:    "",
 				Port:    "8080",
 				BaseURL: "http://localhost:8080",
+				Memory:  map[string]Model.ShortLink{},
 			},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			shortLinkStore, _ := shortlinks.NewStorage(map[string]shortlinks.ShortLink{
+			tt.configs.Memory = map[string]Model.ShortLink{
 				tt.fields.code: {
 					Code: tt.fields.code,
 					Link: tt.fields.link,
 				},
-			})
-			sl, _ := shortlinks.New(*shortLinkStore)
+			}
+			shortLinkStore, _ := storage.New(&tt.configs)
+			sl, _ := shortlinks.New(shortLinkStore, &tt.configs)
 
-			a, _ := api.New(&tt.configs, sl)
-			h := &Handlers{
-				api: a,
+			h := &handler{
+				ShortLinkService: sl,
 			}
 
 			req := httptest.NewRequest(http.MethodGet, "/"+tt.fields.code, nil)
@@ -114,19 +116,19 @@ func TestHandlers_handleShortLinkAdd(t *testing.T) {
 				Host:    "",
 				Port:    "8080",
 				BaseURL: "http://localhost:8080",
+				Memory:  map[string]Model.ShortLink{},
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			data := map[string]shortlinks.ShortLink{}
-			shortLinkStore, _ := shortlinks.NewStorage(data)
+			tt.configs.Memory = map[string]Model.ShortLink{}
+			shortLinkStore, _ := storage.New(&tt.configs)
 
-			sl, _ := shortlinks.New(*shortLinkStore)
+			sl, _ := shortlinks.New(shortLinkStore, &tt.configs)
 
-			a, _ := api.New(&tt.configs, sl)
-			h := &Handlers{
-				api: a,
+			h := &handler{
+				ShortLinkService: sl,
 			}
 			body := strings.NewReader(tt.fields.link)
 			req := httptest.NewRequest(http.MethodPost, "/", body)
@@ -144,7 +146,7 @@ func TestHandlers_handleShortLinkAdd(t *testing.T) {
 			err = res.Body.Close()
 			require.NoError(t, err)
 
-			for code, shortLink := range data {
+			for code, shortLink := range tt.configs.Memory {
 				assert.Equal(t, tt.want.response+code, string(resBody))
 				assert.Equal(t, tt.fields.link, shortLink.Link)
 			}

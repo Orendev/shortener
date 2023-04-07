@@ -1,8 +1,10 @@
-package server
+package handlers
 
 import (
-	"github.com/Orendev/shortener/internal/api"
 	"github.com/Orendev/shortener/internal/app/repository/shortlinks"
+	"github.com/Orendev/shortener/internal/app/repository/shortlinks/Model"
+	"github.com/Orendev/shortener/internal/app/repository/shortlinks/storage"
+	"github.com/Orendev/shortener/internal/configs"
 	"github.com/Orendev/shortener/internal/pkg/random"
 	"github.com/go-chi/chi/v5"
 	"io"
@@ -10,20 +12,35 @@ import (
 	"strings"
 )
 
-type Handlers struct {
-	api *api.API
+type handler struct {
+	ShortLinkService shortlinks.Service
 }
 
-func (h *Handlers) routes() chi.Router {
-	router := chi.NewRouter()
+func newHandler(sls shortlinks.Service) handler {
+	return handler{ShortLinkService: sls}
+}
+
+func Routes(router chi.Router, cfg *configs.Configs) chi.Router {
+	s, err := storage.New(cfg)
+	if err != nil {
+		return nil
+	}
+	service, err := shortlinks.New(s, cfg)
+	if err != nil {
+		return nil
+	}
+
+	h := newHandler(service)
+
 	router.Route("/", func(r chi.Router) {
 		r.Get("/{id}", h.handleShortLink)
 		r.Post("/", h.handleShortLinkAdd)
 	})
+
 	return router
 }
 
-func (h *Handlers) handleShortLink(w http.ResponseWriter, r *http.Request) {
+func (h *handler) handleShortLink(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
@@ -31,7 +48,7 @@ func (h *Handlers) handleShortLink(w http.ResponseWriter, r *http.Request) {
 
 	code := strings.TrimPrefix(r.URL.Path, "/")
 
-	if shortLink, err := h.api.GetLink(code); err == nil {
+	if shortLink, err := h.ShortLinkService.Get(code); err == nil {
 		w.Header().Add("Location", shortLink.Link)
 		w.WriteHeader(http.StatusTemporaryRedirect)
 		return
@@ -40,7 +57,7 @@ func (h *Handlers) handleShortLink(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *Handlers) handleShortLinkAdd(w http.ResponseWriter, r *http.Request) {
+func (h *handler) handleShortLinkAdd(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method != http.MethodPost {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -56,12 +73,12 @@ func (h *Handlers) handleShortLinkAdd(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sl := shortlinks.ShortLink{
+	sl := Model.ShortLink{
 		Code: random.Strn(8),
 		Link: string(body),
 	}
 
-	url, err := h.api.AddLink(sl)
+	url, err := h.ShortLinkService.Add(sl)
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)

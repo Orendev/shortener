@@ -2,6 +2,7 @@ package configs
 
 import (
 	"flag"
+	"github.com/Orendev/shortener/internal/app/repository/shortlinks/Model"
 	"github.com/caarlos0/env/v8"
 	"log"
 )
@@ -15,6 +16,7 @@ type Configs struct {
 	Host    string `env:"HOST"`
 	Port    string `env:"PORT"`
 	BaseURL string `env:"BASE_URL"`
+	Memory  map[string]Model.ShortLink
 }
 
 func New() (*Configs, error) {
@@ -35,6 +37,8 @@ func New() (*Configs, error) {
 	if len(cfg.BaseURL) == 0 {
 		cfg.BaseURL = baseURL
 	}
+
+	cfg.Memory = map[string]Model.ShortLink{}
 
 	return &cfg, nil
 }
