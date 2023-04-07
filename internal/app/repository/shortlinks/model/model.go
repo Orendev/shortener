@@ -1,4 +1,4 @@
-package Model
+package model
 
 type ShortLink struct {
 	Code string

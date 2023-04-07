@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"github.com/Orendev/shortener/internal/app/repository/shortlinks"
-	"github.com/Orendev/shortener/internal/app/repository/shortlinks/Model"
+	"github.com/Orendev/shortener/internal/app/repository/shortlinks/model"
 	"github.com/Orendev/shortener/internal/app/repository/shortlinks/storage"
 	"github.com/Orendev/shortener/internal/configs"
 	"github.com/Orendev/shortener/internal/pkg/random"
@@ -73,7 +73,7 @@ func (h *handler) handleShortLinkAdd(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sl := Model.ShortLink{
+	sl := model.ShortLink{
 		Code: random.Strn(8),
 		Link: string(body),
 	}

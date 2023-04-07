@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"github.com/Orendev/shortener/internal/app/repository/shortlinks"
-	"github.com/Orendev/shortener/internal/app/repository/shortlinks/Model"
+	"github.com/Orendev/shortener/internal/app/repository/shortlinks/model"
 	"github.com/Orendev/shortener/internal/app/repository/shortlinks/storage"
 	"github.com/Orendev/shortener/internal/configs"
 	"github.com/Orendev/shortener/internal/pkg/random"
@@ -51,14 +51,14 @@ func TestHandlers_handleShortLink(t *testing.T) {
 				Host:    "",
 				Port:    "8080",
 				BaseURL: "http://localhost:8080",
-				Memory:  map[string]Model.ShortLink{},
+				Memory:  map[string]model.ShortLink{},
 			},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tt.configs.Memory = map[string]Model.ShortLink{
+			tt.configs.Memory = map[string]model.ShortLink{
 				tt.fields.code: {
 					Code: tt.fields.code,
 					Link: tt.fields.link,
@@ -116,13 +116,13 @@ func TestHandlers_handleShortLinkAdd(t *testing.T) {
 				Host:    "",
 				Port:    "8080",
 				BaseURL: "http://localhost:8080",
-				Memory:  map[string]Model.ShortLink{},
+				Memory:  map[string]model.ShortLink{},
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tt.configs.Memory = map[string]Model.ShortLink{}
+			tt.configs.Memory = map[string]model.ShortLink{}
 			shortLinkStore, _ := storage.New(&tt.configs)
 
 			sl, _ := shortlinks.New(shortLinkStore, &tt.configs)
