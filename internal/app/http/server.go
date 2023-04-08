@@ -2,7 +2,7 @@ package http
 
 import (
 	"fmt"
-	shortLinksHandlers "github.com/Orendev/shortener/internal/app/repository/shortlinks/handlers"
+	shortLinksHandlers "github.com/Orendev/shortener/internal/app/repository/shortlink/handlers"
 	"github.com/Orendev/shortener/internal/configs"
 	"github.com/go-chi/chi/v5"
 	"net/http"

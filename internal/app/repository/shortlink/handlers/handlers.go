@@ -1,9 +1,9 @@
 package handlers
 
 import (
-	"github.com/Orendev/shortener/internal/app/repository/shortlinks"
-	"github.com/Orendev/shortener/internal/app/repository/shortlinks/model"
-	"github.com/Orendev/shortener/internal/app/repository/shortlinks/storage"
+	"github.com/Orendev/shortener/internal/app/repository/shortlink"
+	"github.com/Orendev/shortener/internal/app/repository/shortlink/model"
+	"github.com/Orendev/shortener/internal/app/repository/shortlink/storage"
 	"github.com/Orendev/shortener/internal/configs"
 	"github.com/Orendev/shortener/internal/pkg/random"
 	"github.com/go-chi/chi/v5"
@@ -13,24 +13,20 @@ import (
 )
 
 type handler struct {
-	ShortLinkService shortlinks.Service
+	ShortLinkRepository shortlink.Repository
 }
 
-func newHandler(sls shortlinks.Service) handler {
-	return handler{ShortLinkService: sls}
+func newHandler(repository shortlink.Repository) handler {
+	return handler{ShortLinkRepository: repository}
 }
 
 func Routes(router chi.Router, cfg *configs.Configs) chi.Router {
-	s, err := storage.New(cfg)
-	if err != nil {
-		return nil
-	}
-	service, err := shortlinks.New(s, cfg)
+	memoryStorage, err := storage.NewMemoryStorage(cfg)
 	if err != nil {
 		return nil
 	}
 
-	h := newHandler(service)
+	h := newHandler(memoryStorage)
 
 	router.Route("/", func(r chi.Router) {
 		r.Get("/{id}", h.handleShortLink)
@@ -48,7 +44,7 @@ func (h *handler) handleShortLink(w http.ResponseWriter, r *http.Request) {
 
 	code := strings.TrimPrefix(r.URL.Path, "/")
 
-	if shortLink, err := h.ShortLinkService.Get(code); err == nil {
+	if shortLink, err := h.ShortLinkRepository.Get(code); err == nil {
 		w.Header().Add("Location", shortLink.Link)
 		w.WriteHeader(http.StatusTemporaryRedirect)
 		return
@@ -78,7 +74,7 @@ func (h *handler) handleShortLinkAdd(w http.ResponseWriter, r *http.Request) {
 		Link: string(body),
 	}
 
-	url, err := h.ShortLinkService.Add(sl)
+	url, err := h.ShortLinkRepository.Add(sl)
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)

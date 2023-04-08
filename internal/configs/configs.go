@@ -2,7 +2,7 @@ package configs
 
 import (
 	"flag"
-	"github.com/Orendev/shortener/internal/app/repository/shortlinks/model"
+	"github.com/Orendev/shortener/internal/app/repository/shortlink/model"
 	"github.com/caarlos0/env/v8"
 	"log"
 )
