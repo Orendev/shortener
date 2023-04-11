@@ -4,7 +4,7 @@ import (
 	"github.com/Orendev/shortener/internal/app/repository/shortlink/model"
 	"github.com/Orendev/shortener/internal/app/repository/shortlink/storage"
 	"github.com/Orendev/shortener/internal/configs"
-	"github.com/Orendev/shortener/internal/pkg/random"
+	"github.com/Orendev/shortener/internal/random"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"io"

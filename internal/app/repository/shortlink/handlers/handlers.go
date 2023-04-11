@@ -1,11 +1,10 @@
 package handlers
 
 import (
-	"github.com/Orendev/shortener/internal/app/repository/shortlink"
 	"github.com/Orendev/shortener/internal/app/repository/shortlink/model"
 	"github.com/Orendev/shortener/internal/app/repository/shortlink/storage"
 	"github.com/Orendev/shortener/internal/configs"
-	"github.com/Orendev/shortener/internal/pkg/random"
+	"github.com/Orendev/shortener/internal/random"
 	"github.com/go-chi/chi/v5"
 	"io"
 	"net/http"
@@ -13,10 +12,10 @@ import (
 )
 
 type handler struct {
-	ShortLinkRepository shortlink.Repository
+	ShortLinkRepository storage.ShortLinkRepository
 }
 
-func newHandler(repository shortlink.Repository) handler {
+func newHandler(repository storage.ShortLinkRepository) handler {
 	return handler{ShortLinkRepository: repository}
 }
 
