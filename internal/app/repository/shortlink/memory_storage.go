@@ -1,11 +1,9 @@
-package storage
+package shortlink
 
 import (
 	"errors"
-	"fmt"
-	"github.com/Orendev/shortener/internal/app/repository/shortlink/model"
+	model "github.com/Orendev/shortener/internal/app/models/shortlink"
 	"github.com/Orendev/shortener/internal/configs"
-	"strings"
 )
 
 type MemoryStorage struct {
@@ -22,10 +20,9 @@ func (s *MemoryStorage) Get(code string) (*model.ShortLink, error) {
 	return &shortLink, nil
 }
 
-func (s *MemoryStorage) Add(shortLink model.ShortLink) (string, error) {
-	s.data[shortLink.Code] = shortLink
-	url := fmt.Sprintf("%s/%s", strings.TrimPrefix(s.cfg.BaseURL, "/"), shortLink.Code)
-	return url, nil
+func (s *MemoryStorage) Add(model model.ShortLink) (string, error) {
+	s.data[model.Code] = model
+	return model.Code, nil
 }
 
 func NewMemoryStorage(cfg *configs.Configs) (*MemoryStorage, error) {

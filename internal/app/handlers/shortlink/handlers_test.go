@@ -1,8 +1,9 @@
-package handlers
+package shortlink
 
 import (
-	"github.com/Orendev/shortener/internal/app/repository/shortlink/model"
-	"github.com/Orendev/shortener/internal/app/repository/shortlink/storage"
+	model "github.com/Orendev/shortener/internal/app/models/shortlink"
+	"github.com/Orendev/shortener/internal/app/repository/shortlink"
+	service "github.com/Orendev/shortener/internal/app/service/shortlink"
 	"github.com/Orendev/shortener/internal/configs"
 	"github.com/Orendev/shortener/internal/random"
 	"github.com/stretchr/testify/assert"
@@ -63,10 +64,10 @@ func TestHandlers_handleShortLink(t *testing.T) {
 					Link: tt.fields.link,
 				},
 			}
-			memoryStorage, _ := storage.NewMemoryStorage(&tt.configs)
+			memoryStorage, _ := shortlink.NewMemoryStorage(&tt.configs)
 
 			h := &handler{
-				ShortLinkRepository: memoryStorage,
+				ShortLinkRepository: service.NewService(memoryStorage, &tt.configs),
 			}
 
 			req := httptest.NewRequest(http.MethodGet, "/"+tt.fields.code, nil)
@@ -121,10 +122,10 @@ func TestHandlers_handleShortLinkAdd(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.configs.Memory = map[string]model.ShortLink{}
-			memoryStorage, _ := storage.NewMemoryStorage(&tt.configs)
+			memoryStorage, _ := shortlink.NewMemoryStorage(&tt.configs)
 
 			h := &handler{
-				ShortLinkRepository: memoryStorage,
+				ShortLinkRepository: service.NewService(memoryStorage, &tt.configs),
 			}
 			body := strings.NewReader(tt.fields.link)
 			req := httptest.NewRequest(http.MethodPost, "/", body)

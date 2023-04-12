@@ -1,8 +1,9 @@
-package handlers
+package shortlink
 
 import (
-	"github.com/Orendev/shortener/internal/app/repository/shortlink/model"
-	"github.com/Orendev/shortener/internal/app/repository/shortlink/storage"
+	model "github.com/Orendev/shortener/internal/app/models/shortlink"
+	repository "github.com/Orendev/shortener/internal/app/repository/shortlink"
+	service "github.com/Orendev/shortener/internal/app/service/shortlink"
 	"github.com/Orendev/shortener/internal/configs"
 	"github.com/Orendev/shortener/internal/random"
 	"github.com/go-chi/chi/v5"
@@ -12,20 +13,21 @@ import (
 )
 
 type handler struct {
-	ShortLinkRepository storage.ShortLinkRepository
+	ShortLinkRepository repository.ShortLinkRepository
 }
 
-func newHandler(repository storage.ShortLinkRepository) handler {
+func newHandler(repository repository.ShortLinkRepository) handler {
 	return handler{ShortLinkRepository: repository}
 }
 
 func Routes(router chi.Router, cfg *configs.Configs) chi.Router {
-	memoryStorage, err := storage.NewMemoryStorage(cfg)
+
+	memoryStorage, err := repository.NewMemoryStorage(cfg)
 	if err != nil {
 		return nil
 	}
 
-	h := newHandler(memoryStorage)
+	h := newHandler(service.NewService(memoryStorage, cfg))
 
 	router.Route("/", func(r chi.Router) {
 		r.Get("/{id}", h.handleShortLink)

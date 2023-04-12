@@ -1,7 +1,7 @@
-package storage
+package shortlink
 
 import (
-	"github.com/Orendev/shortener/internal/app/repository/shortlink/model"
+	model "github.com/Orendev/shortener/internal/app/models/shortlink"
 	"github.com/Orendev/shortener/internal/configs"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -96,7 +96,7 @@ func TestMemoryStorage_Add(t *testing.T) {
 					Memory:  map[string]model.ShortLink{},
 				},
 			},
-			want: "http://localhost:8080/test",
+			want: "test",
 		},
 	}
 	for _, tt := range tests {
