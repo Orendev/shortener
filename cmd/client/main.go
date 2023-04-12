@@ -13,8 +13,10 @@ import (
 
 func main() {
 	endpoint := "http://localhost:8080/"
+
 	// контейнер данных для запроса
 	data := url.Values{}
+
 	// приглашение в консоли
 	fmt.Println("Введите длинный URL")
 	// открываем потоковое чтение из консоли
