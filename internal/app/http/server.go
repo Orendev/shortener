@@ -4,6 +4,7 @@ import (
 	"fmt"
 	shortLinksHandlers "github.com/Orendev/shortener/internal/app/handlers/shortlink"
 	"github.com/Orendev/shortener/internal/configs"
+	"github.com/Orendev/shortener/internal/logger"
 	"github.com/go-chi/chi/v5"
 	"net/http"
 )
@@ -15,6 +16,10 @@ type Server struct {
 
 func New(cfg *configs.Configs) (*Server, error) {
 
+	if err := logger.NewLogger(cfg.FlagLogLevel); err != nil {
+		panic(err)
+	}
+
 	r := shortLinksHandlers.Routes(chi.NewRouter(), cfg)
 
 	addr := fmt.Sprintf("%s:%s", cfg.Host, cfg.Port)
@@ -24,7 +29,7 @@ func New(cfg *configs.Configs) (*Server, error) {
 
 	httpServer := &http.Server{
 		Addr:    addr,
-		Handler: r,
+		Handler: logger.Logger(r),
 	}
 
 	return &Server{
