@@ -254,7 +254,7 @@ func Test_handler_handleApiShorten(t *testing.T) {
 			defer func() {
 				err := resp.Body.Close()
 				if err != nil {
-
+					require.NoError(t, err)
 				}
 			}()
 
