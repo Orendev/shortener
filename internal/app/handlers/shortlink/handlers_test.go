@@ -241,6 +241,7 @@ func Test_handler_handleApiShorten(t *testing.T) {
 			}
 
 			req, err := http.NewRequest(tt.method, srv.URL, bodyReader)
+			require.NoError(t, err)
 
 			if len(tt.body) > 0 {
 				req.Header.Set("Content-Type", "application/json")

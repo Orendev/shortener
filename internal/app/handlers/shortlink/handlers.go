@@ -98,7 +98,7 @@ func (h *handler) handleAPIShorten(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
-
+	w.Header().Set("Content-Type", "application/json")
 	var shortLink models.ShortLink
 	var req models.Request
 	dec := json.NewDecoder(r.Body)
@@ -133,7 +133,6 @@ func (h *handler) handleAPIShorten(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusCreated)
-	w.Header().Set("Content-Type", "application/json")
 
 	_, err = w.Write(enc)
 	if err != nil {
