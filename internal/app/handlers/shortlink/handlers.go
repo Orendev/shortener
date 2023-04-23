@@ -33,7 +33,7 @@ func Routes(router chi.Router, cfg *configs.Configs) chi.Router {
 	router.Route("/", func(r chi.Router) {
 		r.Get("/{id}", h.handleShortLink)
 		r.Post("/", h.handleShortLinkAdd)
-		r.Post("/api/shorten", h.handleApiShorten)
+		r.Post("/api/shorten", h.handleAPIShorten)
 	})
 
 	return router
@@ -93,7 +93,7 @@ func (h *handler) handleShortLinkAdd(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (h *handler) handleApiShorten(w http.ResponseWriter, r *http.Request) {
+func (h *handler) handleAPIShorten(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return

@@ -1,12 +1,12 @@
 package shortlink
 
 import (
+	"bytes"
 	models "github.com/Orendev/shortener/internal/app/models/shortlink"
 	"github.com/Orendev/shortener/internal/app/repository/shortlink"
 	service "github.com/Orendev/shortener/internal/app/service/shortlink"
 	"github.com/Orendev/shortener/internal/configs"
 	"github.com/Orendev/shortener/internal/random"
-	"github.com/go-resty/resty/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"io"
@@ -170,7 +170,7 @@ func Test_handler_handleApiShorten(t *testing.T) {
 		ShortLinkRepository: service.NewService(memoryStorage, &cfg),
 	}
 
-	handler := http.HandlerFunc(h.handleApiShorten)
+	handler := http.HandlerFunc(h.handleAPIShorten)
 	srv := httptest.NewServer(handler)
 
 	defer srv.Close()
@@ -232,18 +232,33 @@ func Test_handler_handleApiShorten(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			req := resty.New().R()
-			req.Method = tt.method
-			req.URL = srv.URL
+
+			var bodyReader io.Reader
 
 			if len(tt.body) > 0 {
-				req.SetHeader("Content-Type", "application/json")
-				req.SetBody(tt.body)
+				jsonBody := []byte(tt.body)
+				bodyReader = bytes.NewReader(jsonBody)
 			}
 
-			resp, err := req.Send()
+			req, err := http.NewRequest(tt.method, srv.URL, bodyReader)
+
+			if len(tt.body) > 0 {
+				req.Header.Set("Content-Type", "application/json")
+
+			}
+
+			resp, err := srv.Client().Do(req)
+			require.NoError(t, err)
+
+			defer func(Body io.ReadCloser) {
+				err := Body.Close()
+				if err != nil {
+
+				}
+			}(resp.Body)
+
 			assert.NoError(t, err, "error making HTTP request")
-			assert.Equal(t, tt.want.expectedCode, resp.StatusCode(), "Response code didn't match expected")
+			assert.Equal(t, tt.want.expectedCode, resp.StatusCode, "Response code didn't match expected")
 
 			// проверяем корректность полученного тела ответа, если мы его ожидаем
 			if len(memory) > 0 {
@@ -255,7 +270,11 @@ func Test_handler_handleApiShorten(t *testing.T) {
 				}
 
 				if tt.want.expectedBody != "" {
-					assert.JSONEq(t, tt.want.expectedBody, string(resp.Body()))
+					body, err := io.ReadAll(resp.Body)
+					if err != nil {
+						require.NoError(t, err)
+					}
+					assert.JSONEq(t, tt.want.expectedBody, string(body))
 				}
 			}
 		})
