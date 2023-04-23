@@ -251,12 +251,12 @@ func Test_handler_handleApiShorten(t *testing.T) {
 			resp, err := srv.Client().Do(req)
 			require.NoError(t, err)
 
-			defer func(Body io.ReadCloser) {
-				err := Body.Close()
+			defer func() {
+				err := resp.Body.Close()
 				if err != nil {
 
 				}
-			}(resp.Body)
+			}()
 
 			assert.NoError(t, err, "error making HTTP request")
 			assert.Equal(t, tt.want.expectedCode, resp.StatusCode, "Response code didn't match expected")
