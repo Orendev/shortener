@@ -2,7 +2,7 @@ package configs
 
 import (
 	"flag"
-	"github.com/Orendev/shortener/internal/app/models/shortlink"
+	models "github.com/Orendev/shortener/internal/app/models/shortlink"
 	"github.com/caarlos0/env/v8"
 	"log"
 )
@@ -17,7 +17,7 @@ type Configs struct {
 	Host         string `env:"HOST"`
 	Port         string `env:"PORT"`
 	BaseURL      string `env:"BASE_URL"`
-	Memory       map[string]shortlink.ShortLink
+	Memory       map[string]models.ShortLink
 	FlagLogLevel string `env:"FLAG_LOG_LEVEL"`
 }
 
@@ -45,7 +45,7 @@ func New() (*Configs, error) {
 		cfg.FlagLogLevel = flagLogLevel
 	}
 
-	cfg.Memory = map[string]shortlink.ShortLink{}
+	cfg.Memory = map[string]models.ShortLink{}
 
 	return &cfg, nil
 }

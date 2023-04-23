@@ -1,11 +1,12 @@
 package shortlink
 
 import (
-	model "github.com/Orendev/shortener/internal/app/models/shortlink"
+	models "github.com/Orendev/shortener/internal/app/models/shortlink"
 	"github.com/Orendev/shortener/internal/app/repository/shortlink"
 	service "github.com/Orendev/shortener/internal/app/service/shortlink"
 	"github.com/Orendev/shortener/internal/configs"
 	"github.com/Orendev/shortener/internal/random"
+	"github.com/go-resty/resty/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"io"
@@ -51,14 +52,14 @@ func TestHandlers_handleShortLink(t *testing.T) {
 				Host:    "",
 				Port:    "8080",
 				BaseURL: "http://localhost:8080",
-				Memory:  map[string]model.ShortLink{},
+				Memory:  map[string]models.ShortLink{},
 			},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tt.configs.Memory = map[string]model.ShortLink{
+			tt.configs.Memory = map[string]models.ShortLink{
 				tt.fields.code: {
 					Code: tt.fields.code,
 					Link: tt.fields.link,
@@ -115,13 +116,13 @@ func TestHandlers_handleShortLinkAdd(t *testing.T) {
 				Host:    "",
 				Port:    "8080",
 				BaseURL: "http://localhost:8080",
-				Memory:  map[string]model.ShortLink{},
+				Memory:  map[string]models.ShortLink{},
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tt.configs.Memory = map[string]model.ShortLink{}
+			tt.configs.Memory = map[string]models.ShortLink{}
 			memoryStorage, _ := shortlink.NewMemoryStorage(&tt.configs)
 
 			h := &handler{
@@ -148,6 +149,115 @@ func TestHandlers_handleShortLinkAdd(t *testing.T) {
 				assert.Equal(t, tt.fields.link, shortLink.Link)
 			}
 
+		})
+	}
+}
+
+func Test_handler_handleApiShorten(t *testing.T) {
+
+	cfg := configs.Configs{
+		Host:    "",
+		Port:    "8080",
+		BaseURL: "http://localhost:8080",
+		Memory:  map[string]models.ShortLink{},
+	}
+
+	memoryStorage, _ := shortlink.NewMemoryStorage(&cfg)
+
+	memory := cfg.Memory
+
+	h := &handler{
+		ShortLinkRepository: service.NewService(memoryStorage, &cfg),
+	}
+
+	handler := http.HandlerFunc(h.handleApiShorten)
+	srv := httptest.NewServer(handler)
+
+	defer srv.Close()
+
+	type want struct {
+		contentType  string
+		expectedCode int
+		expectedBody string
+	}
+
+	tests := []struct {
+		name   string // добавляем название тестов
+		method string
+		body   string // добавляем тело запроса в табличные тесты
+		want   want
+	}{
+		{
+			name:   "method_get",
+			method: http.MethodGet,
+			want: want{
+				expectedCode: http.StatusMethodNotAllowed,
+				expectedBody: "",
+			},
+		},
+		{
+			name:   "method_put",
+			method: http.MethodPut,
+			want: want{
+				expectedCode: http.StatusMethodNotAllowed,
+				expectedBody: "",
+			},
+		},
+		{
+			name:   "method_delete",
+			method: http.MethodDelete,
+			want: want{
+				expectedCode: http.StatusMethodNotAllowed,
+				expectedBody: "",
+			},
+		},
+		{
+			name:   "method_post_without_body",
+			method: http.MethodPost,
+			want: want{
+				expectedCode: http.StatusInternalServerError,
+				expectedBody: "",
+			},
+		},
+		{
+			name:   "method_post_success",
+			method: http.MethodPost,
+			body:   `{"url":"https://practicum.yandex.ru/"}`,
+			want: want{
+				expectedCode: http.StatusOK,
+				expectedBody: "",
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			req := resty.New().R()
+			req.Method = tt.method
+			req.URL = srv.URL
+
+			if len(tt.body) > 0 {
+				req.SetHeader("Content-Type", "application/json")
+				req.SetBody(tt.body)
+			}
+
+			resp, err := req.Send()
+			assert.NoError(t, err, "error making HTTP request")
+			assert.Equal(t, tt.want.expectedCode, resp.StatusCode(), "Response code didn't match expected")
+
+			// проверяем корректность полученного тела ответа, если мы его ожидаем
+			if len(memory) > 0 {
+				for _, link := range memory {
+					tt.want.expectedBody = `{
+						"result": "` + link.Result + `"
+					}`
+					break
+				}
+
+				if tt.want.expectedBody != "" {
+					assert.JSONEq(t, tt.want.expectedBody, string(resp.Body()))
+				}
+			}
 		})
 	}
 }

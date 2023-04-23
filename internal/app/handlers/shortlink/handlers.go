@@ -1,7 +1,8 @@
 package shortlink
 
 import (
-	model "github.com/Orendev/shortener/internal/app/models/shortlink"
+	"encoding/json"
+	models "github.com/Orendev/shortener/internal/app/models/shortlink"
 	repository "github.com/Orendev/shortener/internal/app/repository/shortlink"
 	service "github.com/Orendev/shortener/internal/app/service/shortlink"
 	"github.com/Orendev/shortener/internal/configs"
@@ -32,6 +33,7 @@ func Routes(router chi.Router, cfg *configs.Configs) chi.Router {
 	router.Route("/", func(r chi.Router) {
 		r.Get("/{id}", h.handleShortLink)
 		r.Post("/", h.handleShortLinkAdd)
+		r.Post("/api/shorten", h.handleApiShorten)
 	})
 
 	return router
@@ -70,25 +72,72 @@ func (h *handler) handleShortLinkAdd(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sl := model.ShortLink{
+	sl := models.ShortLink{
 		Code: random.Strn(8),
 		Link: string(body),
 	}
 
-	url, err := h.ShortLinkRepository.Add(sl)
-
-	if err != nil {
+	if _, err := h.ShortLinkRepository.Add(&sl); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	w.WriteHeader(http.StatusCreated)
 
-	_, err = w.Write([]byte(url))
+	_, err = w.Write([]byte(sl.Result))
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
+}
+
+func (h handler) handleApiShorten(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+
+	var shortLink models.ShortLink
+	var req models.Request
+	dec := json.NewDecoder(r.Body)
+	// читаем тело запроса и декодируем
+	if err := dec.Decode(&req); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Генерируем уникальный код
+	shortLink.Code = random.Strn(8)
+	// Сохраняем url
+	shortLink.Link = req.Url
+
+	// Сохраним модель
+	_, err := h.ShortLinkRepository.Add(&shortLink)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	// заполняем модель ответа
+	resp := models.Response{
+		Result: shortLink.Result,
+	}
+
+	enc, err := json.MarshalIndent(resp, "", "   ")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+
+	_, err = w.Write(enc)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
 }

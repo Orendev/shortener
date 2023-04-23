@@ -1,7 +1,7 @@
 package shortlink
 
 import (
-	model "github.com/Orendev/shortener/internal/app/models/shortlink"
+	models "github.com/Orendev/shortener/internal/app/models/shortlink"
 	"github.com/Orendev/shortener/internal/configs"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -11,7 +11,7 @@ import (
 
 func TestMemoryStorage_Get(t *testing.T) {
 	type fields struct {
-		data map[string]model.ShortLink
+		data map[string]models.ShortLink
 		cfg  *configs.Configs
 	}
 	type args struct {
@@ -21,7 +21,7 @@ func TestMemoryStorage_Get(t *testing.T) {
 		name    string
 		fields  fields
 		args    args
-		want    *model.ShortLink
+		want    *models.ShortLink
 		wantErr bool
 	}{
 		{
@@ -30,14 +30,14 @@ func TestMemoryStorage_Get(t *testing.T) {
 				code: "test",
 			},
 			fields: fields{
-				data: map[string]model.ShortLink{
+				data: map[string]models.ShortLink{
 					"test": {
 						Code: "test",
 						Link: "localhost",
 					},
 				},
 			},
-			want: &model.ShortLink{
+			want: &models.ShortLink{
 				Code: "test",
 				Link: "localhost",
 			},
@@ -67,11 +67,11 @@ func TestMemoryStorage_Get(t *testing.T) {
 
 func TestMemoryStorage_Add(t *testing.T) {
 	type fields struct {
-		data map[string]model.ShortLink
+		data map[string]models.ShortLink
 		cfg  *configs.Configs
 	}
 	type args struct {
-		shortLink model.ShortLink
+		shortLink models.ShortLink
 	}
 	tests := []struct {
 		name   string
@@ -82,18 +82,18 @@ func TestMemoryStorage_Add(t *testing.T) {
 		{
 			name: "positive test #2 memory storage",
 			args: args{
-				shortLink: model.ShortLink{
+				shortLink: models.ShortLink{
 					Code: "test",
 					Link: "localhost",
 				},
 			},
 			fields: fields{
-				data: map[string]model.ShortLink{},
+				data: map[string]models.ShortLink{},
 				cfg: &configs.Configs{
 					Host:    "",
 					Port:    "8080",
 					BaseURL: "http://localhost:8080",
-					Memory:  map[string]model.ShortLink{},
+					Memory:  map[string]models.ShortLink{},
 				},
 			},
 			want: "test",
@@ -105,7 +105,7 @@ func TestMemoryStorage_Add(t *testing.T) {
 				data: tt.fields.data,
 				cfg:  tt.fields.cfg,
 			}
-			got, err := s.Add(tt.args.shortLink)
+			got, err := s.Add(&tt.args.shortLink)
 			require.NoError(t, err)
 
 			assert.Equalf(t, tt.want, got, "Add(%v)", tt.args.shortLink)

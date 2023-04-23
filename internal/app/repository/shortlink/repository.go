@@ -1,10 +1,10 @@
 package shortlink
 
 import (
-	model "github.com/Orendev/shortener/internal/app/models/shortlink"
+	models "github.com/Orendev/shortener/internal/app/models/shortlink"
 )
 
 type ShortLinkRepository interface {
-	Get(code string) (*model.ShortLink, error)
-	Add(model model.ShortLink) (string, error)
+	Get(code string) (*models.ShortLink, error)
+	Add(model *models.ShortLink) (string, error)
 }

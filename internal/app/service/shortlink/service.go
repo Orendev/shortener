@@ -2,7 +2,7 @@ package shortlink
 
 import (
 	"fmt"
-	model "github.com/Orendev/shortener/internal/app/models/shortlink"
+	models "github.com/Orendev/shortener/internal/app/models/shortlink"
 	repository "github.com/Orendev/shortener/internal/app/repository/shortlink"
 	"github.com/Orendev/shortener/internal/configs"
 	"strings"
@@ -20,13 +20,11 @@ func NewService(storage repository.ShortLinkRepository, cfg *configs.Configs) *S
 	}
 }
 
-func (s *Service) Get(code string) (*model.ShortLink, error) {
+func (s *Service) Get(code string) (*models.ShortLink, error) {
 	return s.storage.Get(code)
 }
 
-func (s *Service) Add(model model.ShortLink) (string, error) {
-	code, err := s.storage.Add(model)
-	url := fmt.Sprintf("%s/%s", strings.TrimPrefix(s.cfg.BaseURL, "/"), code)
-	fmt.Println(url)
-	return url, err
+func (s *Service) Add(model *models.ShortLink) (string, error) {
+	model.Result = fmt.Sprintf("%s/%s", strings.TrimPrefix(s.cfg.BaseURL, "/"), model.Code)
+	return s.storage.Add(model)
 }
