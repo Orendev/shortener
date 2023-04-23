@@ -224,7 +224,7 @@ func Test_handler_handleApiShorten(t *testing.T) {
 			method: http.MethodPost,
 			body:   `{"url":"https://practicum.yandex.ru/"}`,
 			want: want{
-				expectedCode: http.StatusOK,
+				expectedCode: http.StatusCreated,
 				expectedBody: "",
 			},
 		},

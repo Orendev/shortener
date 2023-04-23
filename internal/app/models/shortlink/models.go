@@ -14,5 +14,5 @@ type Response struct {
 
 // Request описывает запрос клиента.
 type Request struct {
-	Url string `json:"url"`
+	URL string `json:"url"`
 }

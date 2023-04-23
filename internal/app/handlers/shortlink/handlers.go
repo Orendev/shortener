@@ -93,7 +93,7 @@ func (h *handler) handleShortLinkAdd(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (h handler) handleApiShorten(w http.ResponseWriter, r *http.Request) {
+func (h *handler) handleApiShorten(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
@@ -111,7 +111,7 @@ func (h handler) handleApiShorten(w http.ResponseWriter, r *http.Request) {
 	// Генерируем уникальный код
 	shortLink.Code = random.Strn(8)
 	// Сохраняем url
-	shortLink.Link = req.Url
+	shortLink.Link = req.URL
 
 	// Сохраним модель
 	_, err := h.ShortLinkRepository.Add(&shortLink)
@@ -132,7 +132,7 @@ func (h handler) handleApiShorten(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
+	w.WriteHeader(http.StatusCreated)
 	w.Header().Set("Content-Type", "application/json")
 
 	_, err = w.Write(enc)
