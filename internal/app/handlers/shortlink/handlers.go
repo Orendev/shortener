@@ -5,7 +5,9 @@ import (
 	models "github.com/Orendev/shortener/internal/app/models/shortlink"
 	repository "github.com/Orendev/shortener/internal/app/repository/shortlink"
 	service "github.com/Orendev/shortener/internal/app/service/shortlink"
+	"github.com/Orendev/shortener/internal/compress"
 	"github.com/Orendev/shortener/internal/configs"
+	"github.com/Orendev/shortener/internal/logger"
 	"github.com/Orendev/shortener/internal/random"
 	"github.com/go-chi/chi/v5"
 	"io"
@@ -29,6 +31,13 @@ func Routes(router chi.Router, cfg *configs.Configs) chi.Router {
 	}
 
 	h := newHandler(service.NewService(memoryStorage, cfg))
+
+	if err := logger.NewLogger(cfg.FlagLogLevel); err != nil {
+		panic(err)
+	}
+
+	router.Use(logger.Logger)
+	router.Use(compress.GzipMiddleware)
 
 	router.Route("/", func(r chi.Router) {
 		r.Get("/{id}", h.handleShortLink)
