@@ -16,3 +16,9 @@ type Response struct {
 type Request struct {
 	URL string `json:"url"`
 }
+
+type FileDB struct {
+	UUID        uint   `json:"uuid"`
+	ShortURL    string `json:"short_url"`
+	OriginalURL string `json:"original_url"`
+}

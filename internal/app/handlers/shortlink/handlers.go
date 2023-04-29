@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	models "github.com/Orendev/shortener/internal/app/models/shortlink"
 	repository "github.com/Orendev/shortener/internal/app/repository/shortlink"
+	"github.com/Orendev/shortener/internal/app/service/filedb"
 	service "github.com/Orendev/shortener/internal/app/service/shortlink"
 	"github.com/Orendev/shortener/internal/compress"
 	"github.com/Orendev/shortener/internal/configs"
@@ -25,12 +26,22 @@ func newHandler(repository repository.ShortLinkRepository) handler {
 
 func Routes(router chi.Router, cfg *configs.Configs) chi.Router {
 
+	fileDB, err := filedb.NewFileDB(cfg)
+	if err != nil {
+		panic(err)
+	}
+
+	err = fileDB.Load()
+	if err != nil {
+		return nil
+	}
+
 	memoryStorage, err := repository.NewMemoryStorage(cfg)
 	if err != nil {
 		return nil
 	}
 
-	h := newHandler(service.NewService(memoryStorage, cfg))
+	h := newHandler(service.NewService(memoryStorage, cfg, fileDB))
 
 	if err := logger.NewLogger(cfg.FlagLogLevel); err != nil {
 		panic(err)

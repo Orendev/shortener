@@ -5,6 +5,7 @@ import (
 	"compress/gzip"
 	shortLinksHandlers "github.com/Orendev/shortener/internal/app/handlers/shortlink"
 	models "github.com/Orendev/shortener/internal/app/models/shortlink"
+	"github.com/Orendev/shortener/internal/app/service/filedb"
 	"github.com/Orendev/shortener/internal/configs"
 	"github.com/go-chi/chi/v5"
 	"github.com/stretchr/testify/require"
@@ -15,9 +16,10 @@ import (
 )
 
 var cfg = configs.Configs{
-	Host:    "",
-	Port:    "8080",
-	BaseURL: "http://localhost:8080",
+	Host:            "",
+	Port:            "8080",
+	BaseURL:         "http://localhost:8080",
+	FileStoragePath: "/tmp/test-short-url-db.json",
 }
 
 func TestGzipMiddlewareSendsGzip(t *testing.T) {
@@ -29,7 +31,21 @@ func TestGzipMiddlewareSendsGzip(t *testing.T) {
 	r := shortLinksHandlers.Routes(chi.NewRouter(), &cfg)
 
 	srv := httptest.NewServer(r)
+
+	fileDB, err := filedb.NewFileDB(&cfg)
+
+	if err != nil {
+		require.NoError(t, err)
+	}
+
 	defer srv.Close()
+
+	defer func() {
+		err := fileDB.Remove()
+		if err != nil {
+			require.NoError(t, err)
+		}
+	}()
 
 	type want struct {
 		contentType     string
@@ -114,7 +130,21 @@ func TestGzipMiddlewareAcceptsGzip(t *testing.T) {
 	r := shortLinksHandlers.Routes(chi.NewRouter(), &cfg)
 
 	srv := httptest.NewServer(r)
+
+	fileDB, err := filedb.NewFileDB(&cfg)
+
+	if err != nil {
+		require.NoError(t, err)
+	}
+
 	defer srv.Close()
+
+	defer func() {
+		err := fileDB.Remove()
+		if err != nil {
+			require.NoError(t, err)
+		}
+	}()
 
 	type want struct {
 		acceptEncoding string

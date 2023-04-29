@@ -4,6 +4,7 @@ import (
 	"bytes"
 	models "github.com/Orendev/shortener/internal/app/models/shortlink"
 	"github.com/Orendev/shortener/internal/app/repository/shortlink"
+	"github.com/Orendev/shortener/internal/app/service/filedb"
 	service "github.com/Orendev/shortener/internal/app/service/shortlink"
 	"github.com/Orendev/shortener/internal/configs"
 	"github.com/Orendev/shortener/internal/random"
@@ -49,10 +50,11 @@ func TestHandlers_handleShortLink(t *testing.T) {
 				contentType: "text/plain",
 			},
 			configs: configs.Configs{
-				Host:    "",
-				Port:    "8080",
-				BaseURL: "http://localhost:8080",
-				Memory:  map[string]models.ShortLink{},
+				Host:            "",
+				Port:            "8080",
+				BaseURL:         "http://localhost:8080",
+				Memory:          map[string]models.ShortLink{},
+				FileStoragePath: "/tmp/test-short-url-db.json",
 			},
 		},
 	}
@@ -67,8 +69,11 @@ func TestHandlers_handleShortLink(t *testing.T) {
 			}
 			memoryStorage, _ := shortlink.NewMemoryStorage(&tt.configs)
 
+			fileDB, err := filedb.NewFileDB(&tt.configs)
+			require.NoError(t, err)
+
 			h := &handler{
-				ShortLinkRepository: service.NewService(memoryStorage, &tt.configs),
+				ShortLinkRepository: service.NewService(memoryStorage, &tt.configs, fileDB),
 			}
 
 			req := httptest.NewRequest(http.MethodGet, "/"+tt.fields.code, nil)
@@ -77,11 +82,12 @@ func TestHandlers_handleShortLink(t *testing.T) {
 			h.handleShortLink(w, req)
 
 			res := w.Result()
-			err := res.Body.Close()
+			err = res.Body.Close()
 			require.NoError(t, err)
 
 			assert.Equal(t, res.StatusCode, tt.want.code)
 			assert.Equal(t, tt.fields.link, res.Header.Get("Location"))
+
 		})
 	}
 }
@@ -113,10 +119,11 @@ func TestHandlers_handleShortLinkAdd(t *testing.T) {
 				response:    "http://localhost:8080/",
 			},
 			configs: configs.Configs{
-				Host:    "",
-				Port:    "8080",
-				BaseURL: "http://localhost:8080",
-				Memory:  map[string]models.ShortLink{},
+				Host:            "",
+				Port:            "8080",
+				BaseURL:         "http://localhost:8080",
+				Memory:          map[string]models.ShortLink{},
+				FileStoragePath: "/tmp/test-short-url-db.json",
 			},
 		},
 	}
@@ -124,10 +131,13 @@ func TestHandlers_handleShortLinkAdd(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.configs.Memory = map[string]models.ShortLink{}
 			memoryStorage, _ := shortlink.NewMemoryStorage(&tt.configs)
+			fileDB, err := filedb.NewFileDB(&tt.configs)
+			require.NoError(t, err)
 
 			h := &handler{
-				ShortLinkRepository: service.NewService(memoryStorage, &tt.configs),
+				ShortLinkRepository: service.NewService(memoryStorage, &tt.configs, fileDB),
 			}
+
 			body := strings.NewReader(tt.fields.link)
 			req := httptest.NewRequest(http.MethodPost, "/", body)
 			w := httptest.NewRecorder()
@@ -156,24 +166,34 @@ func TestHandlers_handleShortLinkAdd(t *testing.T) {
 func Test_handler_handleApiShorten(t *testing.T) {
 
 	cfg := configs.Configs{
-		Host:    "",
-		Port:    "8080",
-		BaseURL: "http://localhost:8080",
-		Memory:  map[string]models.ShortLink{},
+		Host:            "",
+		Port:            "8080",
+		BaseURL:         "http://localhost:8080",
+		Memory:          map[string]models.ShortLink{},
+		FileStoragePath: "/tmp/test-short-url-db.json",
 	}
 
 	memoryStorage, _ := shortlink.NewMemoryStorage(&cfg)
 
 	memory := cfg.Memory
 
+	fileDB, err := filedb.NewFileDB(&cfg)
+	require.NoError(t, err)
+
 	h := &handler{
-		ShortLinkRepository: service.NewService(memoryStorage, &cfg),
+		ShortLinkRepository: service.NewService(memoryStorage, &cfg, fileDB),
 	}
 
 	handler := http.HandlerFunc(h.handleAPIShorten)
 	srv := httptest.NewServer(handler)
 
 	defer srv.Close()
+	defer func() {
+		err := fileDB.Remove()
+		if err != nil {
+			require.NoError(t, err)
+		}
+	}()
 
 	type want struct {
 		contentType  string

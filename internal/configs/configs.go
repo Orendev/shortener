@@ -11,14 +11,16 @@ var cfg Configs = Configs{}
 var addr string
 var baseURL string
 var flagLogLevel string
+var fileStoragePath string
 
 type Configs struct {
-	Addr         string `env:"SERVER_ADDRESS"`
-	Host         string `env:"HOST"`
-	Port         string `env:"PORT"`
-	BaseURL      string `env:"BASE_URL"`
-	Memory       map[string]models.ShortLink
-	FlagLogLevel string `env:"FLAG_LOG_LEVEL"`
+	Addr            string `env:"SERVER_ADDRESS"`
+	Host            string `env:"HOST"`
+	Port            string `env:"PORT"`
+	BaseURL         string `env:"BASE_URL"`
+	Memory          map[string]models.ShortLink
+	FlagLogLevel    string `env:"FLAG_LOG_LEVEL"`
+	FileStoragePath string `env:"FILE_STORAGE_PATH"`
 }
 
 func New() (*Configs, error) {
@@ -32,6 +34,7 @@ func New() (*Configs, error) {
 	flag.StringVar(&addr, "a", "localhost:8080", "Адрес запуска сервера localhost:8080")
 	flag.StringVar(&baseURL, "b", "http://localhost:8080", "Базовый URL http://localhost:8080")
 	flag.StringVar(&flagLogLevel, "ll", "info", "log level")
+	flag.StringVar(&fileStoragePath, "f", "/tmp/short-url-db.json", "Полное имя файла")
 	flag.Parse()
 
 	if len(cfg.Addr) == 0 {
@@ -43,6 +46,10 @@ func New() (*Configs, error) {
 
 	if len(cfg.FlagLogLevel) == 0 {
 		cfg.FlagLogLevel = flagLogLevel
+	}
+
+	if len(cfg.FileStoragePath) == 0 {
+		cfg.FileStoragePath = fileStoragePath
 	}
 
 	cfg.Memory = map[string]models.ShortLink{}
