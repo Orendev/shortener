@@ -56,6 +56,10 @@ func (f FileDB) Save(fileDB models.FileDB) error {
 func (f *FileDB) Load() error {
 
 	file, err := os.OpenFile(f.cfg.FileStoragePath, os.O_RDONLY|os.O_CREATE, 0666)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	defer func() {
 		if err := file.Close(); err != nil {
 			log.Fatal(err)
