@@ -1,4 +1,4 @@
-package filedb
+package storage
 
 import (
 	"bufio"
@@ -23,12 +23,12 @@ func NewFileDB(cfg *configs.Configs) (*FileDB, error) {
 	}, nil
 }
 
-func (f FileDB) ID() uint {
+func (f *FileDB) ID() uint {
 	return uint(len(f.cfg.Memory))
 }
 
 // Save сохраняет данные в файле FileStoragePath.
-func (f FileDB) Save(fileDB models.FileDB) error {
+func (f *FileDB) Save(fileDB models.FileDB) error {
 
 	file, err := os.OpenFile(f.cfg.FileStoragePath, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
@@ -91,6 +91,6 @@ func (f *FileDB) Load() error {
 }
 
 // Remove Удалим файл FileStoragePath
-func (f FileDB) Remove() error {
+func (f *FileDB) Remove() error {
 	return os.Remove(f.cfg.FileStoragePath)
 }

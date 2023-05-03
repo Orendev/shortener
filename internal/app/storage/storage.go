@@ -1,4 +1,4 @@
-package shortlink
+package storage
 
 import (
 	models "github.com/Orendev/shortener/internal/app/models/shortlink"

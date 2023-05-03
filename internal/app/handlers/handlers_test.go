@@ -1,11 +1,10 @@
-package shortlink
+package handlers
 
 import (
 	"bytes"
 	models "github.com/Orendev/shortener/internal/app/models/shortlink"
-	"github.com/Orendev/shortener/internal/app/repository/shortlink"
-	"github.com/Orendev/shortener/internal/app/service/filedb"
 	service "github.com/Orendev/shortener/internal/app/service/shortlink"
+	"github.com/Orendev/shortener/internal/app/storage"
 	"github.com/Orendev/shortener/internal/configs"
 	"github.com/Orendev/shortener/internal/random"
 	"github.com/stretchr/testify/assert"
@@ -17,7 +16,7 @@ import (
 	"testing"
 )
 
-func TestHandlers_handleShortLink(t *testing.T) {
+func TestHandlers_ShortLink(t *testing.T) {
 	type want struct {
 		code        int
 		contentType string
@@ -67,19 +66,21 @@ func TestHandlers_handleShortLink(t *testing.T) {
 					Link: tt.fields.link,
 				},
 			}
-			memoryStorage, _ := shortlink.NewMemoryStorage(&tt.configs)
 
-			fileDB, err := filedb.NewFileDB(&tt.configs)
+			fileDB, err := storage.NewFileDB(&tt.configs)
 			require.NoError(t, err)
 
-			h := &handler{
-				ShortLinkRepository: service.NewService(memoryStorage, &tt.configs, fileDB),
+			memoryStorage, err := storage.NewMemoryStorage(&tt.configs, fileDB)
+			require.NoError(t, err)
+
+			h := &Handler{
+				ShortLinkRepository: service.NewService(memoryStorage, &tt.configs),
 			}
 
 			req := httptest.NewRequest(http.MethodGet, "/"+tt.fields.code, nil)
 			w := httptest.NewRecorder()
 
-			h.handleShortLink(w, req)
+			h.ShortLink(w, req)
 
 			res := w.Result()
 			err = res.Body.Close()
@@ -92,7 +93,7 @@ func TestHandlers_handleShortLink(t *testing.T) {
 	}
 }
 
-func TestHandlers_handleShortLinkAdd(t *testing.T) {
+func TestHandlers_ShortLinkAdd(t *testing.T) {
 	type want struct {
 		code        int
 		response    string
@@ -130,19 +131,22 @@ func TestHandlers_handleShortLinkAdd(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.configs.Memory = map[string]models.ShortLink{}
-			memoryStorage, _ := shortlink.NewMemoryStorage(&tt.configs)
-			fileDB, err := filedb.NewFileDB(&tt.configs)
+
+			fileDB, err := storage.NewFileDB(&tt.configs)
 			require.NoError(t, err)
 
-			h := &handler{
-				ShortLinkRepository: service.NewService(memoryStorage, &tt.configs, fileDB),
+			memoryStorage, err := storage.NewMemoryStorage(&tt.configs, fileDB)
+			require.NoError(t, err)
+
+			h := &Handler{
+				ShortLinkRepository: service.NewService(memoryStorage, &tt.configs),
 			}
 
 			body := strings.NewReader(tt.fields.link)
 			req := httptest.NewRequest(http.MethodPost, "/", body)
 			w := httptest.NewRecorder()
 
-			h.handleShortLinkAdd(w, req)
+			h.ShortLinkAdd(w, req)
 
 			res := w.Result()
 
@@ -163,7 +167,7 @@ func TestHandlers_handleShortLinkAdd(t *testing.T) {
 	}
 }
 
-func Test_handler_handleApiShorten(t *testing.T) {
+func Test_handler_ApiShorten(t *testing.T) {
 
 	cfg := configs.Configs{
 		Host:            "",
@@ -173,18 +177,19 @@ func Test_handler_handleApiShorten(t *testing.T) {
 		FileStoragePath: "/tmp/test-short-url-db.json",
 	}
 
-	memoryStorage, _ := shortlink.NewMemoryStorage(&cfg)
-
 	memory := cfg.Memory
 
-	fileDB, err := filedb.NewFileDB(&cfg)
+	fileDB, err := storage.NewFileDB(&cfg)
 	require.NoError(t, err)
 
-	h := &handler{
-		ShortLinkRepository: service.NewService(memoryStorage, &cfg, fileDB),
+	memoryStorage, err := storage.NewMemoryStorage(&cfg, fileDB)
+	require.NoError(t, err)
+
+	h := &Handler{
+		ShortLinkRepository: service.NewService(memoryStorage, &cfg),
 	}
 
-	handler := http.HandlerFunc(h.handleAPIShorten)
+	handler := http.HandlerFunc(h.APIShorten)
 	srv := httptest.NewServer(handler)
 
 	defer srv.Close()
@@ -279,7 +284,7 @@ func Test_handler_handleApiShorten(t *testing.T) {
 			}()
 
 			assert.NoError(t, err, "error making HTTP request")
-			assert.Equal(t, tt.want.expectedCode, resp.StatusCode, "Response code didn't match expected")
+			assert.Equal(t, tt.want.expectedCode, resp.StatusCode, "ShortLinkResponse code didn't match expected")
 
 			// проверяем корректность полученного тела ответа, если мы его ожидаем
 			if len(memory) > 0 {

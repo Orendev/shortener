@@ -7,13 +7,13 @@ type ShortLink struct {
 	Result string `json:"result"`
 }
 
-// Response описывает ответ сервера.
-type Response struct {
+// ShortLinkResponse описывает ответ сервера.
+type ShortLinkResponse struct {
 	Result string `json:"result"`
 }
 
-// Request описывает запрос клиента.
-type Request struct {
+// ShortLinkRequest описывает запрос клиента.
+type ShortLinkRequest struct {
 	URL string `json:"url"`
 }
 

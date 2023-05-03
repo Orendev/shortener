@@ -3,13 +3,14 @@ package compress_test
 import (
 	"bytes"
 	"compress/gzip"
-	shortLinksHandlers "github.com/Orendev/shortener/internal/app/handlers/shortlink"
 	models "github.com/Orendev/shortener/internal/app/models/shortlink"
-	"github.com/Orendev/shortener/internal/app/service/filedb"
+	"github.com/Orendev/shortener/internal/app/routes"
+	"github.com/Orendev/shortener/internal/app/storage"
 	"github.com/Orendev/shortener/internal/configs"
 	"github.com/go-chi/chi/v5"
 	"github.com/stretchr/testify/require"
 	"io"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -28,15 +29,20 @@ func TestGzipMiddlewareSendsGzip(t *testing.T) {
 
 	memory := cfg.Memory
 
-	r := shortLinksHandlers.Routes(chi.NewRouter(), &cfg)
-
-	srv := httptest.NewServer(r)
-
-	fileDB, err := filedb.NewFileDB(&cfg)
-
+	fileDB, err := storage.NewFileDB(&cfg)
 	if err != nil {
 		require.NoError(t, err)
 	}
+
+	memoryStorage, err := storage.NewMemoryStorage(&cfg, fileDB)
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
+
+	r := routes.Routes(chi.NewRouter(), memoryStorage, &cfg)
+
+	srv := httptest.NewServer(r)
 
 	defer srv.Close()
 
@@ -127,15 +133,20 @@ func TestGzipMiddlewareAcceptsGzip(t *testing.T) {
 
 	memory := cfg.Memory
 
-	r := shortLinksHandlers.Routes(chi.NewRouter(), &cfg)
-
-	srv := httptest.NewServer(r)
-
-	fileDB, err := filedb.NewFileDB(&cfg)
-
+	fileDB, err := storage.NewFileDB(&cfg)
 	if err != nil {
 		require.NoError(t, err)
 	}
+
+	memoryStorage, err := storage.NewMemoryStorage(&cfg, fileDB)
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
+
+	r := routes.Routes(chi.NewRouter(), memoryStorage, &cfg)
+
+	srv := httptest.NewServer(r)
 
 	defer srv.Close()
 

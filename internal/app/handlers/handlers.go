@@ -1,65 +1,24 @@
-package shortlink
+package handlers
 
 import (
 	"encoding/json"
 	models "github.com/Orendev/shortener/internal/app/models/shortlink"
-	repository "github.com/Orendev/shortener/internal/app/repository/shortlink"
-	"github.com/Orendev/shortener/internal/app/service/filedb"
-	service "github.com/Orendev/shortener/internal/app/service/shortlink"
-	"github.com/Orendev/shortener/internal/compress"
-	"github.com/Orendev/shortener/internal/configs"
-	"github.com/Orendev/shortener/internal/logger"
+	repository "github.com/Orendev/shortener/internal/app/storage"
 	"github.com/Orendev/shortener/internal/random"
-	"github.com/go-chi/chi/v5"
 	"io"
 	"net/http"
 	"strings"
 )
 
-type handler struct {
+type Handler struct {
 	ShortLinkRepository repository.ShortLinkRepository
 }
 
-func newHandler(repository repository.ShortLinkRepository) handler {
-	return handler{ShortLinkRepository: repository}
+func NewHandler(repository repository.ShortLinkRepository) Handler {
+	return Handler{ShortLinkRepository: repository}
 }
 
-func Routes(router chi.Router, cfg *configs.Configs) chi.Router {
-
-	fileDB, err := filedb.NewFileDB(cfg)
-	if err != nil {
-		panic(err)
-	}
-
-	err = fileDB.Load()
-	if err != nil {
-		return nil
-	}
-
-	memoryStorage, err := repository.NewMemoryStorage(cfg)
-	if err != nil {
-		return nil
-	}
-
-	h := newHandler(service.NewService(memoryStorage, cfg, fileDB))
-
-	if err := logger.NewLogger(cfg.FlagLogLevel); err != nil {
-		panic(err)
-	}
-
-	router.Use(logger.Logger)
-	router.Use(compress.GzipMiddleware)
-
-	router.Route("/", func(r chi.Router) {
-		r.Get("/{id}", h.handleShortLink)
-		r.Post("/", h.handleShortLinkAdd)
-		r.Post("/api/shorten", h.handleAPIShorten)
-	})
-
-	return router
-}
-
-func (h *handler) handleShortLink(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) ShortLink(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
@@ -76,7 +35,7 @@ func (h *handler) handleShortLink(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *handler) handleShortLinkAdd(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) ShortLinkAdd(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method != http.MethodPost {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -113,14 +72,14 @@ func (h *handler) handleShortLinkAdd(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (h *handler) handleAPIShorten(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) APIShorten(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
 	var shortLink models.ShortLink
-	var req models.Request
+	var req models.ShortLinkRequest
 	dec := json.NewDecoder(r.Body)
 	// читаем тело запроса и декодируем
 	if err := dec.Decode(&req); err != nil {
@@ -142,11 +101,11 @@ func (h *handler) handleAPIShorten(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// заполняем модель ответа
-	resp := models.Response{
+	resp := models.ShortLinkResponse{
 		Result: shortLink.Result,
 	}
 
-	enc, err := json.MarshalIndent(resp, "", "   ")
+	enc, err := json.Marshal(resp)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

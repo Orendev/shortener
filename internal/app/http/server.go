@@ -2,20 +2,22 @@ package http
 
 import (
 	"fmt"
-	shortLinksHandlers "github.com/Orendev/shortener/internal/app/handlers/shortlink"
+	"github.com/Orendev/shortener/internal/app/routes"
+	"github.com/Orendev/shortener/internal/app/storage"
 	"github.com/Orendev/shortener/internal/configs"
 	"github.com/go-chi/chi/v5"
 	"net/http"
 )
 
 type Server struct {
-	server *http.Server
-	cfg    *configs.Configs
+	server     *http.Server
+	cfg        *configs.Configs
+	repository storage.ShortLinkRepository
 }
 
-func New(cfg *configs.Configs) (*Server, error) {
+func New(cfg *configs.Configs, storage storage.ShortLinkRepository) (*Server, error) {
 
-	r := shortLinksHandlers.Routes(chi.NewRouter(), cfg)
+	r := routes.Routes(chi.NewRouter(), storage, cfg)
 
 	addr := fmt.Sprintf("%s:%s", cfg.Host, cfg.Port)
 	if len(cfg.Addr) > 0 {

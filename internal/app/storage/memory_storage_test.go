@@ -1,4 +1,4 @@
-package shortlink
+package storage
 
 import (
 	models "github.com/Orendev/shortener/internal/app/models/shortlink"
@@ -90,10 +90,11 @@ func TestMemoryStorage_Add(t *testing.T) {
 			fields: fields{
 				data: map[string]models.ShortLink{},
 				cfg: &configs.Configs{
-					Host:    "",
-					Port:    "8080",
-					BaseURL: "http://localhost:8080",
-					Memory:  map[string]models.ShortLink{},
+					Host:            "",
+					Port:            "8080",
+					BaseURL:         "http://localhost:8080",
+					Memory:          map[string]models.ShortLink{},
+					FileStoragePath: "/tmp/test-short-url-db.json",
 				},
 			},
 			want: "test",
@@ -101,14 +102,23 @@ func TestMemoryStorage_Add(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			fileDB, err := NewFileDB(tt.fields.cfg)
+			if err != nil {
+				require.NoError(t, err)
+			}
+
 			s := &MemoryStorage{
 				data: tt.fields.data,
 				cfg:  tt.fields.cfg,
+				db:   fileDB,
 			}
 			got, err := s.Add(&tt.args.shortLink)
 			require.NoError(t, err)
 
 			assert.Equalf(t, tt.want, got, "Add(%v)", tt.args.shortLink)
+
+			err = s.db.Remove()
+			require.NoError(t, err)
 		})
 	}
 }
