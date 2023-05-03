@@ -6,6 +6,7 @@ import (
 	"fmt"
 	models "github.com/Orendev/shortener/internal/app/models/shortlink"
 	"github.com/Orendev/shortener/internal/configs"
+	"github.com/google/uuid"
 	"log"
 	"os"
 	"strings"
@@ -23,8 +24,9 @@ func NewFileDB(cfg *configs.Configs) (*FileDB, error) {
 	}, nil
 }
 
-func (f *FileDB) ID() uint {
-	return uint(len(f.cfg.Memory))
+func (f *FileDB) ID() string {
+	id := uuid.New()
+	return id.String()
 }
 
 // Save сохраняет данные в файле FileStoragePath.

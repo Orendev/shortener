@@ -3,6 +3,7 @@ package storage
 import (
 	models "github.com/Orendev/shortener/internal/app/models/shortlink"
 	"github.com/Orendev/shortener/internal/configs"
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -12,18 +13,19 @@ func TestFileDB_ID(t *testing.T) {
 	type args struct {
 		fileDB models.FileDB
 	}
+	id := uuid.New().String()
 	tests := []struct {
 		name    string
 		cfg     *configs.Configs
 		args    args
-		want    uint
+		want    string
 		wantErr bool
 	}{
 		{
 			name: "test fileDB ID",
 			args: args{
 				fileDB: models.FileDB{
-					UUID:        1,
+					UUID:        id,
 					OriginalURL: "http://yandex.ru",
 					ShortURL:    "4rSPg8ap",
 				},
@@ -35,7 +37,7 @@ func TestFileDB_ID(t *testing.T) {
 				Memory:          map[string]models.ShortLink{},
 				FileStoragePath: "/tmp/test-short-url-db.json",
 			},
-			want:    1,
+			want:    id,
 			wantErr: false,
 		},
 	}
@@ -44,20 +46,9 @@ func TestFileDB_ID(t *testing.T) {
 			f, err := NewFileDB(tt.cfg)
 			require.NoError(t, err)
 
-			if err := f.Save(tt.args.fileDB); (err != nil) != tt.wantErr {
-				t.Errorf("Save() error = %v, wantErr %v", err, tt.wantErr)
-			}
-
-			if err := f.Load(); (err != nil) != tt.wantErr {
-				t.Errorf("Load() error = %v, wantErr %v", err, tt.wantErr)
-			}
-
-			if got := f.ID(); got != tt.want {
-				t.Errorf("ID() = %v, want %v", got, tt.want)
-			}
-
-			err = f.Remove()
+			_, err = uuid.Parse(f.ID())
 			require.NoError(t, err)
+
 		})
 	}
 }
@@ -66,6 +57,7 @@ func TestFileDB_Load(t *testing.T) {
 	type args struct {
 		fileDB models.FileDB
 	}
+	id := uuid.New().String()
 	tests := []struct {
 		name    string
 		cfg     *configs.Configs
@@ -76,7 +68,7 @@ func TestFileDB_Load(t *testing.T) {
 			name: "test FileDB Load",
 			args: args{
 				fileDB: models.FileDB{
-					UUID:        1,
+					UUID:        id,
 					OriginalURL: "http://yandex.ru",
 					ShortURL:    "4rSPg8ap",
 				},
@@ -118,7 +110,7 @@ func TestFileDB_Remove(t *testing.T) {
 	type args struct {
 		fileDB models.FileDB
 	}
-
+	id := uuid.New().String()
 	tests := []struct {
 		name    string
 		cfg     *configs.Configs
@@ -129,7 +121,7 @@ func TestFileDB_Remove(t *testing.T) {
 			name: "test FileDB Remove",
 			args: args{
 				fileDB: models.FileDB{
-					UUID:        1,
+					UUID:        id,
 					OriginalURL: "http://yandex.ru",
 					ShortURL:    "4rSPg8ap",
 				},
@@ -167,6 +159,7 @@ func TestFileDB_Save(t *testing.T) {
 	type args struct {
 		fileDB models.FileDB
 	}
+	id := uuid.New().String()
 	tests := []struct {
 		name    string
 		cfg     *configs.Configs
@@ -177,7 +170,7 @@ func TestFileDB_Save(t *testing.T) {
 			name: "test DB Save",
 			args: args{
 				fileDB: models.FileDB{
-					UUID:        1,
+					UUID:        id,
 					OriginalURL: "http://yandex.ru",
 					ShortURL:    "4rSPg8ap",
 				},
