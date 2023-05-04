@@ -1,7 +1,7 @@
-package shortlink
+package storage
 
 import (
-	model "github.com/Orendev/shortener/internal/app/models/shortlink"
+	models "github.com/Orendev/shortener/internal/app/models/shortlink"
 	"github.com/Orendev/shortener/internal/configs"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -11,7 +11,7 @@ import (
 
 func TestMemoryStorage_Get(t *testing.T) {
 	type fields struct {
-		data map[string]model.ShortLink
+		data map[string]models.ShortLink
 		cfg  *configs.Configs
 	}
 	type args struct {
@@ -21,7 +21,7 @@ func TestMemoryStorage_Get(t *testing.T) {
 		name    string
 		fields  fields
 		args    args
-		want    *model.ShortLink
+		want    *models.ShortLink
 		wantErr bool
 	}{
 		{
@@ -30,16 +30,16 @@ func TestMemoryStorage_Get(t *testing.T) {
 				code: "test",
 			},
 			fields: fields{
-				data: map[string]model.ShortLink{
+				data: map[string]models.ShortLink{
 					"test": {
 						Code: "test",
-						Link: "localhost",
+						URL:  "localhost",
 					},
 				},
 			},
-			want: &model.ShortLink{
+			want: &models.ShortLink{
 				Code: "test",
-				Link: "localhost",
+				URL:  "localhost",
 			},
 			wantErr: false,
 		},
@@ -60,18 +60,18 @@ func TestMemoryStorage_Get(t *testing.T) {
 			}
 
 			assert.Equal(t, got.Code, tt.want.Code)
-			assert.Equal(t, got.Link, tt.want.Link)
+			assert.Equal(t, got.URL, tt.want.URL)
 		})
 	}
 }
 
 func TestMemoryStorage_Add(t *testing.T) {
 	type fields struct {
-		data map[string]model.ShortLink
+		data map[string]models.ShortLink
 		cfg  *configs.Configs
 	}
 	type args struct {
-		shortLink model.ShortLink
+		shortLink models.ShortLink
 	}
 	tests := []struct {
 		name   string
@@ -82,18 +82,19 @@ func TestMemoryStorage_Add(t *testing.T) {
 		{
 			name: "positive test #2 memory storage",
 			args: args{
-				shortLink: model.ShortLink{
+				shortLink: models.ShortLink{
 					Code: "test",
-					Link: "localhost",
+					URL:  "localhost",
 				},
 			},
 			fields: fields{
-				data: map[string]model.ShortLink{},
+				data: map[string]models.ShortLink{},
 				cfg: &configs.Configs{
-					Host:    "",
-					Port:    "8080",
-					BaseURL: "http://localhost:8080",
-					Memory:  map[string]model.ShortLink{},
+					Host:            "",
+					Port:            "8080",
+					BaseURL:         "http://localhost:8080",
+					Memory:          map[string]models.ShortLink{},
+					FileStoragePath: "/tmp/test-short-url-db.json",
 				},
 			},
 			want: "test",
@@ -101,14 +102,23 @@ func TestMemoryStorage_Add(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			fileDB, err := NewFileDB(tt.fields.cfg)
+			if err != nil {
+				require.NoError(t, err)
+			}
+
 			s := &MemoryStorage{
 				data: tt.fields.data,
 				cfg:  tt.fields.cfg,
+				db:   fileDB,
 			}
-			got, err := s.Add(tt.args.shortLink)
+			got, err := s.Add(&tt.args.shortLink)
 			require.NoError(t, err)
 
 			assert.Equalf(t, tt.want, got, "Add(%v)", tt.args.shortLink)
+
+			err = s.db.Remove()
+			require.NoError(t, err)
 		})
 	}
 }
