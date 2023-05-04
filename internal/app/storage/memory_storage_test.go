@@ -33,13 +33,13 @@ func TestMemoryStorage_Get(t *testing.T) {
 				data: map[string]models.ShortLink{
 					"test": {
 						Code: "test",
-						Link: "localhost",
+						URL:  "localhost",
 					},
 				},
 			},
 			want: &models.ShortLink{
 				Code: "test",
-				Link: "localhost",
+				URL:  "localhost",
 			},
 			wantErr: false,
 		},
@@ -60,7 +60,7 @@ func TestMemoryStorage_Get(t *testing.T) {
 			}
 
 			assert.Equal(t, got.Code, tt.want.Code)
-			assert.Equal(t, got.Link, tt.want.Link)
+			assert.Equal(t, got.URL, tt.want.URL)
 		})
 	}
 }
@@ -84,7 +84,7 @@ func TestMemoryStorage_Add(t *testing.T) {
 			args: args{
 				shortLink: models.ShortLink{
 					Code: "test",
-					Link: "localhost",
+					URL:  "localhost",
 				},
 			},
 			fields: fields{

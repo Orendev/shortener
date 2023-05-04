@@ -83,7 +83,7 @@ func (f *FileDB) Load() error {
 		}
 
 		f.data[fileDB.ShortURL] = models.ShortLink{
-			Link:   fileDB.OriginalURL,
+			URL:    fileDB.OriginalURL,
 			Code:   fileDB.ShortURL,
 			Result: fmt.Sprintf("%s/%s", strings.TrimPrefix(f.cfg.BaseURL, "/"), fileDB.ShortURL),
 		}

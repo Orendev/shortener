@@ -27,7 +27,7 @@ func (h *Handler) ShortLink(w http.ResponseWriter, r *http.Request) {
 	code := strings.TrimPrefix(r.URL.Path, "/")
 
 	if shortLink, err := h.ShortLinkRepository.Get(code); err == nil {
-		w.Header().Add("Location", shortLink.Link)
+		w.Header().Add("Location", shortLink.URL)
 		w.WriteHeader(http.StatusTemporaryRedirect)
 		return
 	} else {
@@ -51,12 +51,20 @@ func (h *Handler) ShortLinkAdd(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sl := models.ShortLink{
-		Code: random.Strn(8),
-		Link: string(body),
+	req := models.ShortLinkRequest{}
+	req.URL = string(body)
+
+	if err = req.Validate(); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
 	}
 
-	if _, err := h.ShortLinkRepository.Add(&sl); err != nil {
+	sl := models.ShortLink{
+		Code: random.Strn(8),
+		URL:  req.URL,
+	}
+
+	if _, err = h.ShortLinkRepository.Add(&sl); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -77,7 +85,7 @@ func (h *Handler) APIShorten(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
+
 	var shortLink models.ShortLink
 	var req models.ShortLinkRequest
 	dec := json.NewDecoder(r.Body)
@@ -87,10 +95,17 @@ func (h *Handler) APIShorten(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if err := req.Validate(); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+
 	// Генерируем уникальный код
 	shortLink.Code = random.Strn(8)
 	// Сохраняем url
-	shortLink.Link = req.URL
+	shortLink.URL = req.URL
 
 	// Сохраним модель
 	_, err := h.ShortLinkRepository.Add(&shortLink)

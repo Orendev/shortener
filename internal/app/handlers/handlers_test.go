@@ -63,7 +63,7 @@ func TestHandlers_ShortLink(t *testing.T) {
 			tt.configs.Memory = map[string]models.ShortLink{
 				tt.fields.code: {
 					Code: tt.fields.code,
-					Link: tt.fields.link,
+					URL:  tt.fields.link,
 				},
 			}
 
@@ -100,7 +100,7 @@ func TestHandlers_ShortLinkAdd(t *testing.T) {
 		contentType string
 	}
 	type fields struct {
-		link string
+		url string
 	}
 
 	tests := []struct {
@@ -112,11 +112,29 @@ func TestHandlers_ShortLinkAdd(t *testing.T) {
 		{
 			name: "positive test #1 handleShortLinkAdd",
 			fields: fields{
-				link: "https://google.com",
+				url: "https://google.com",
 			},
 			want: want{
 				code:        http.StatusCreated,
 				contentType: "text/plain",
+				response:    "http://localhost:8080/",
+			},
+			configs: configs.Configs{
+				Host:            "",
+				Port:            "8080",
+				BaseURL:         "http://localhost:8080",
+				Memory:          map[string]models.ShortLink{},
+				FileStoragePath: "/tmp/test-short-url-db.json",
+			},
+		},
+		{
+			name: "negative test #2 handleShortLinkAdd",
+			fields: fields{
+				url: "",
+			},
+			want: want{
+				code:        http.StatusBadRequest,
+				contentType: "text/plain; charset=utf-8",
 				response:    "http://localhost:8080/",
 			},
 			configs: configs.Configs{
@@ -142,7 +160,7 @@ func TestHandlers_ShortLinkAdd(t *testing.T) {
 				ShortLinkRepository: service.NewService(memoryStorage, &tt.configs),
 			}
 
-			body := strings.NewReader(tt.fields.link)
+			body := strings.NewReader(tt.fields.url)
 			req := httptest.NewRequest(http.MethodPost, "/", body)
 			w := httptest.NewRecorder()
 
@@ -155,12 +173,13 @@ func TestHandlers_ShortLinkAdd(t *testing.T) {
 
 			resBody, err := io.ReadAll(res.Body)
 			require.NoError(t, err)
+
 			err = res.Body.Close()
 			require.NoError(t, err)
 
 			for code, shortLink := range tt.configs.Memory {
 				assert.Equal(t, tt.want.response+code, string(resBody))
-				assert.Equal(t, tt.fields.link, shortLink.Link)
+				assert.Equal(t, tt.fields.url, shortLink.URL)
 			}
 
 		})
@@ -194,7 +213,7 @@ func Test_handler_ApiShorten(t *testing.T) {
 
 	defer srv.Close()
 	defer func() {
-		err := fileDB.Remove()
+		err = fileDB.Remove()
 		if err != nil {
 			require.NoError(t, err)
 		}
@@ -253,6 +272,15 @@ func Test_handler_ApiShorten(t *testing.T) {
 				expectedBody: "",
 			},
 		},
+		{
+			name:   "method_post_bad_request",
+			method: http.MethodPost,
+			body:   `{"url":""}`,
+			want: want{
+				expectedCode: http.StatusBadRequest,
+				expectedBody: "",
+			},
+		},
 	}
 
 	for _, tt := range tests {
@@ -287,7 +315,7 @@ func Test_handler_ApiShorten(t *testing.T) {
 			assert.Equal(t, tt.want.expectedCode, resp.StatusCode, "ShortLinkResponse code didn't match expected")
 
 			// проверяем корректность полученного тела ответа, если мы его ожидаем
-			if len(memory) > 0 {
+			if len(memory) > 0 && resp.StatusCode == http.StatusCreated {
 				for _, link := range memory {
 					tt.want.expectedBody = `{
 						"result": "` + link.Result + `"

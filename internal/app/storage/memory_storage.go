@@ -25,7 +25,7 @@ func (s *MemoryStorage) Add(model *models.ShortLink) (string, error) {
 	s.data[model.Code] = *model
 
 	err := s.db.Save(models.FileDB{
-		OriginalURL: model.Link,
+		OriginalURL: model.URL,
 		ShortURL:    model.Code,
 		UUID:        s.db.ID(),
 	})

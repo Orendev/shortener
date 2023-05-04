@@ -1,9 +1,11 @@
 package shortlink
 
+import "errors"
+
 // ShortLink модель коротких ссылок
 type ShortLink struct {
 	Code   string `json:"-"`
-	Link   string `json:"url"`
+	URL    string `json:"url"`
 	Result string `json:"result"`
 }
 
@@ -21,4 +23,15 @@ type FileDB struct {
 	UUID        string `json:"uuid"`
 	ShortURL    string `json:"short_url"`
 	OriginalURL string `json:"original_url"`
+}
+
+func (sl ShortLinkRequest) Validate() error {
+
+	var err error
+
+	if sl.URL == "" {
+		err = errors.New("The URL field is required!")
+	}
+
+	return err
 }
