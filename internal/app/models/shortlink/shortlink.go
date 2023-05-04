@@ -26,11 +26,9 @@ type FileDB struct {
 }
 
 func (sl ShortLinkRequest) Validate() error {
-
 	var err error
-
 	if sl.URL == "" {
-		err = errors.New("The URL field is required!")
+		err = errors.New("the URL field is required")
 	}
 
 	return err
