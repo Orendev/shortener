@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"compress/gzip"
 	"github.com/Orendev/shortener/internal/configs"
-	models "github.com/Orendev/shortener/internal/models/shortlink"
+	"github.com/Orendev/shortener/internal/models"
 	"github.com/Orendev/shortener/internal/routes"
 	storage2 "github.com/Orendev/shortener/internal/storage"
 	"github.com/go-chi/chi/v5"

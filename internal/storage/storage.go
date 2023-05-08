@@ -1,7 +1,7 @@
 package storage
 
 import (
-	models "github.com/Orendev/shortener/internal/models/shortlink"
+	"github.com/Orendev/shortener/internal/models"
 )
 
 type ShortLinkStorage interface {

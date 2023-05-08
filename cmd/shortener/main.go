@@ -3,7 +3,7 @@ package main
 import (
 	"github.com/Orendev/shortener/internal/configs"
 	"github.com/Orendev/shortener/internal/http"
-	storage2 "github.com/Orendev/shortener/internal/storage"
+	"github.com/Orendev/shortener/internal/storage"
 	"log"
 )
 
@@ -14,7 +14,7 @@ func main() {
 		return
 	}
 
-	fileDB, err := storage2.NewFileDB(cfg)
+	fileDB, err := storage.NewFileDB(cfg)
 	if err != nil {
 		log.Fatal(err)
 		return
@@ -26,7 +26,7 @@ func main() {
 		return
 	}
 
-	memoryStorage, err := storage2.NewMemoryStorage(cfg, fileDB)
+	memoryStorage, err := storage.NewMemoryStorage(cfg, fileDB)
 	if err != nil {
 		log.Fatal(err)
 		return

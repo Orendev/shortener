@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
-	models "github.com/Orendev/shortener/internal/models/shortlink"
+	"github.com/Orendev/shortener/internal/models"
 	"github.com/Orendev/shortener/internal/random"
 	"github.com/Orendev/shortener/internal/storage"
 	"io"

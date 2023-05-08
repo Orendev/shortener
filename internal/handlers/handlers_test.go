@@ -4,7 +4,7 @@ import (
 	"bytes"
 	service "github.com/Orendev/shortener/internal/app"
 	"github.com/Orendev/shortener/internal/configs"
-	models "github.com/Orendev/shortener/internal/models/shortlink"
+	"github.com/Orendev/shortener/internal/models"
 	"github.com/Orendev/shortener/internal/random"
 	"github.com/Orendev/shortener/internal/storage"
 	"github.com/stretchr/testify/assert"
