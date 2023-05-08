@@ -3,6 +3,7 @@ package storage
 import (
 	"github.com/Orendev/shortener/internal/configs"
 	"github.com/Orendev/shortener/internal/models"
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"reflect"
@@ -32,14 +33,14 @@ func TestMemoryStorage_Get(t *testing.T) {
 			fields: fields{
 				data: map[string]models.ShortLink{
 					"test": {
-						Code: "test",
-						URL:  "localhost",
+						Code:        "test",
+						OriginalUrl: "localhost",
 					},
 				},
 			},
 			want: &models.ShortLink{
-				Code: "test",
-				URL:  "localhost",
+				Code:        "test",
+				OriginalUrl: "localhost",
 			},
 			wantErr: false,
 		},
@@ -50,7 +51,7 @@ func TestMemoryStorage_Get(t *testing.T) {
 				data: tt.fields.data,
 				cfg:  tt.fields.cfg,
 			}
-			got, err := s.Get(tt.args.code)
+			got, err := s.GetByCode(tt.args.code)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Get() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -60,12 +61,13 @@ func TestMemoryStorage_Get(t *testing.T) {
 			}
 
 			assert.Equal(t, got.Code, tt.want.Code)
-			assert.Equal(t, got.URL, tt.want.URL)
+			assert.Equal(t, got.OriginalUrl, tt.want.OriginalUrl)
 		})
 	}
 }
 
 func TestMemoryStorage_Add(t *testing.T) {
+	id := uuid.New().String()
 	type fields struct {
 		data map[string]models.ShortLink
 		cfg  *configs.Configs
@@ -83,8 +85,9 @@ func TestMemoryStorage_Add(t *testing.T) {
 			name: "positive test #2 memory storage",
 			args: args{
 				shortLink: models.ShortLink{
-					Code: "test",
-					URL:  "localhost",
+					UUID:        id,
+					Code:        "test",
+					OriginalUrl: "localhost",
 				},
 			},
 			fields: fields{
@@ -97,7 +100,7 @@ func TestMemoryStorage_Add(t *testing.T) {
 					FileStoragePath: "/tmp/test-short-url-db.json",
 				},
 			},
-			want: "test",
+			want: id,
 		},
 	}
 	for _, tt := range tests {

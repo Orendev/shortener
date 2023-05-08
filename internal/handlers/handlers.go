@@ -26,8 +26,8 @@ func (h *Handler) ShortLink(w http.ResponseWriter, r *http.Request) {
 
 	code := strings.TrimPrefix(r.URL.Path, "/")
 
-	if shortLink, err := h.shortLinkStorage.Get(code); err == nil {
-		w.Header().Add("Location", shortLink.URL)
+	if shortLink, err := h.shortLinkStorage.GetByCode(code); err == nil {
+		w.Header().Add("Location", shortLink.OriginalUrl)
 		w.WriteHeader(http.StatusTemporaryRedirect)
 		return
 	} else {
@@ -58,20 +58,22 @@ func (h *Handler) ShortLinkAdd(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-
-	sl := models.ShortLink{
-		Code: random.Strn(8),
-		URL:  req.URL,
+	code := random.Strn(8)
+	shortLink := models.ShortLink{
+		UUID:        h.shortLinkStorage.Uuid(),
+		Code:        code,
+		OriginalUrl: req.URL,
+		ShortUrl:    code,
 	}
 
-	if _, err = h.shortLinkStorage.Add(&sl); err != nil {
+	if _, err = h.shortLinkStorage.Add(&shortLink); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	w.WriteHeader(http.StatusCreated)
 
-	_, err = w.Write([]byte(sl.Result))
+	_, err = w.Write([]byte(shortLink.ShortUrl))
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -86,7 +88,6 @@ func (h *Handler) APIShorten(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var shortLink models.ShortLink
 	var req models.ShortLinkRequest
 	dec := json.NewDecoder(r.Body)
 	// читаем тело запроса и декодируем
@@ -102,10 +103,13 @@ func (h *Handler) APIShorten(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 
-	// Генерируем уникальный код
-	shortLink.Code = random.Strn(8)
-	// Сохраняем url
-	shortLink.URL = req.URL
+	code := random.Strn(8)
+	shortLink := models.ShortLink{
+		UUID:        h.shortLinkStorage.Uuid(),
+		Code:        code,
+		OriginalUrl: req.URL,
+		ShortUrl:    code,
+	}
 
 	// Сохраним модель
 	_, err := h.shortLinkStorage.Add(&shortLink)
@@ -117,7 +121,7 @@ func (h *Handler) APIShorten(w http.ResponseWriter, r *http.Request) {
 
 	// заполняем модель ответа
 	resp := models.ShortLinkResponse{
-		Result: shortLink.Result,
+		Result: shortLink.ShortUrl,
 	}
 
 	enc, err := json.Marshal(resp)

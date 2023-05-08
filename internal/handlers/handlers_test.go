@@ -62,8 +62,8 @@ func TestHandlers_ShortLink(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.configs.Memory = map[string]models.ShortLink{
 				tt.fields.code: {
-					Code: tt.fields.code,
-					URL:  tt.fields.link,
+					ShortUrl:    tt.fields.code,
+					OriginalUrl: tt.fields.link,
 				},
 			}
 
@@ -156,6 +156,13 @@ func TestHandlers_ShortLinkAdd(t *testing.T) {
 			memoryStorage, err := storage.NewMemoryStorage(&tt.configs, fileDB)
 			require.NoError(t, err)
 
+			//defer func() {
+			//	err = fileDB.Remove()
+			//	if err != nil {
+			//		require.NoError(t, err)
+			//	}
+			//}()
+
 			h := &Handler{
 				shortLinkStorage: service.NewService(memoryStorage, &tt.configs),
 			}
@@ -179,7 +186,7 @@ func TestHandlers_ShortLinkAdd(t *testing.T) {
 
 			for code, shortLink := range tt.configs.Memory {
 				assert.Equal(t, tt.want.response+code, string(resBody))
-				assert.Equal(t, tt.fields.url, shortLink.URL)
+				assert.Equal(t, tt.fields.url, shortLink.OriginalUrl)
 			}
 
 		})
@@ -318,7 +325,7 @@ func Test_handler_ApiShorten(t *testing.T) {
 			if len(memory) > 0 && resp.StatusCode == http.StatusCreated {
 				for _, link := range memory {
 					tt.want.expectedBody = `{
-						"result": "` + link.Result + `"
+						"result": "` + link.ShortUrl + `"
 					}`
 					break
 				}

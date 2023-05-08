@@ -4,6 +4,7 @@ import (
 	"errors"
 	"github.com/Orendev/shortener/internal/configs"
 	"github.com/Orendev/shortener/internal/models"
+	"github.com/google/uuid"
 )
 
 type MemoryStorage struct {
@@ -12,7 +13,7 @@ type MemoryStorage struct {
 	db   *FileDB
 }
 
-func (s *MemoryStorage) Get(code string) (*models.ShortLink, error) {
+func (s *MemoryStorage) GetByCode(code string) (*models.ShortLink, error) {
 	shortLink, ok := s.data[code]
 	if !ok {
 		err := errors.New("not found")
@@ -24,16 +25,16 @@ func (s *MemoryStorage) Get(code string) (*models.ShortLink, error) {
 func (s *MemoryStorage) Add(model *models.ShortLink) (string, error) {
 	s.data[model.Code] = *model
 
-	err := s.db.Save(models.FileDB{
-		OriginalURL: model.URL,
-		ShortURL:    model.Code,
-		UUID:        s.db.ID(),
-	})
+	err := s.db.Save(*model)
 	if err != nil {
-		return model.Code, err
+		return model.ShortUrl, err
 	}
 
-	return model.Code, nil
+	return model.UUID, nil
+}
+
+func (s MemoryStorage) Uuid() string {
+	return uuid.New().String()
 }
 
 func NewMemoryStorage(cfg *configs.Configs, db *FileDB) (*MemoryStorage, error) {

@@ -3,13 +3,11 @@ package storage
 import (
 	"bufio"
 	"encoding/json"
-	"fmt"
 	"github.com/Orendev/shortener/internal/configs"
 	"github.com/Orendev/shortener/internal/models"
 	"github.com/google/uuid"
 	"log"
 	"os"
-	"strings"
 )
 
 type FileDB struct {
@@ -30,7 +28,7 @@ func (f *FileDB) ID() string {
 }
 
 // Save сохраняет данные в файле FileStoragePath.
-func (f *FileDB) Save(fileDB models.FileDB) error {
+func (f *FileDB) Save(model models.ShortLink) error {
 
 	file, err := os.OpenFile(f.cfg.FileStoragePath, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
@@ -43,7 +41,7 @@ func (f *FileDB) Save(fileDB models.FileDB) error {
 	}()
 
 	// сериализуем структуру в JSON формат
-	writeData, err := json.Marshal(fileDB)
+	writeData, err := json.Marshal(model)
 	if err != nil {
 		return err
 	}
@@ -74,19 +72,16 @@ func (f *FileDB) Load() error {
 		if !scan.Scan() {
 			break
 		}
-		fileDB := models.FileDB{}
+		model := models.ShortLink{}
 		data := scan.Bytes()
-		err = json.Unmarshal(data, &fileDB)
+
+		err = json.Unmarshal(data, &model)
 
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		f.data[fileDB.ShortURL] = models.ShortLink{
-			URL:    fileDB.OriginalURL,
-			Code:   fileDB.ShortURL,
-			Result: fmt.Sprintf("%s/%s", strings.TrimPrefix(f.cfg.BaseURL, "/"), fileDB.ShortURL),
-		}
+		f.data[model.Code] = model
 
 	}
 	return nil

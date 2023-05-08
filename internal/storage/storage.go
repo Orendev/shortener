@@ -5,6 +5,7 @@ import (
 )
 
 type ShortLinkStorage interface {
-	Get(code string) (*models.ShortLink, error)
+	GetByCode(code string) (*models.ShortLink, error)
 	Add(model *models.ShortLink) (string, error)
+	Uuid() string
 }
