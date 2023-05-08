@@ -1,61 +1,17 @@
 package storage
 
 import (
-	models "github.com/Orendev/shortener/internal/app/models/shortlink"
 	"github.com/Orendev/shortener/internal/configs"
+	"github.com/Orendev/shortener/internal/models"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
 
-func TestFileDB_ID(t *testing.T) {
-	type args struct {
-		fileDB models.FileDB
-	}
-	id := uuid.New().String()
-	tests := []struct {
-		name    string
-		cfg     *configs.Configs
-		args    args
-		want    string
-		wantErr bool
-	}{
-		{
-			name: "test fileDB ID",
-			args: args{
-				fileDB: models.FileDB{
-					UUID:        id,
-					OriginalURL: "http://yandex.ru",
-					ShortURL:    "4rSPg8ap",
-				},
-			},
-			cfg: &configs.Configs{
-				Host:            "",
-				Port:            "8080",
-				BaseURL:         "http://localhost:8080",
-				Memory:          map[string]models.ShortLink{},
-				FileStoragePath: "/tmp/test-short-url-db.json",
-			},
-			want:    id,
-			wantErr: false,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			f, err := NewFileDB(tt.cfg)
-			require.NoError(t, err)
-
-			_, err = uuid.Parse(f.ID())
-			require.NoError(t, err)
-
-		})
-	}
-}
-
 func TestFileDB_Load(t *testing.T) {
 	type args struct {
-		fileDB models.FileDB
+		model models.ShortLink
 	}
 	id := uuid.New().String()
 	tests := []struct {
@@ -65,12 +21,12 @@ func TestFileDB_Load(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name: "test FileDB Load",
+			name: "test File Load",
 			args: args{
-				fileDB: models.FileDB{
+				model: models.ShortLink{
 					UUID:        id,
 					OriginalURL: "http://yandex.ru",
-					ShortURL:    "4rSPg8ap",
+					ShortURL:    "http://localhost:8080/4rSPg8ap",
 				},
 			},
 			cfg: &configs.Configs{
@@ -78,19 +34,19 @@ func TestFileDB_Load(t *testing.T) {
 				Port:            "8080",
 				BaseURL:         "http://localhost:8080",
 				Memory:          map[string]models.ShortLink{},
-				FileStoragePath: "/tmp/test-short-url-db.json",
+				FileStoragePath: "/tmp/test-short-url-file.json",
 			},
 			wantErr: false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			f := &FileDB{
+			f := &File{
 				data: tt.cfg.Memory,
 				cfg:  tt.cfg,
 			}
 
-			if err := f.Save(tt.args.fileDB); (err != nil) != tt.wantErr {
+			if err := f.Save(tt.args.model); (err != nil) != tt.wantErr {
 				t.Errorf("Save() error = %v, wantErr %v", err, tt.wantErr)
 			}
 
@@ -98,7 +54,7 @@ func TestFileDB_Load(t *testing.T) {
 				t.Errorf("Load() error = %v, wantErr %v", err, tt.wantErr)
 			}
 
-			assert.Equal(t, tt.cfg.Memory[tt.args.fileDB.ShortURL].Code, tt.args.fileDB.ShortURL)
+			assert.Equal(t, tt.cfg.Memory[tt.args.model.Code].ShortURL, tt.args.model.ShortURL)
 
 			err := f.Remove()
 			require.NoError(t, err)
@@ -108,7 +64,7 @@ func TestFileDB_Load(t *testing.T) {
 
 func TestFileDB_Remove(t *testing.T) {
 	type args struct {
-		fileDB models.FileDB
+		model models.ShortLink
 	}
 	id := uuid.New().String()
 	tests := []struct {
@@ -118,12 +74,12 @@ func TestFileDB_Remove(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name: "test FileDB Remove",
+			name: "test File Remove",
 			args: args{
-				fileDB: models.FileDB{
+				model: models.ShortLink{
 					UUID:        id,
 					OriginalURL: "http://yandex.ru",
-					ShortURL:    "4rSPg8ap",
+					ShortURL:    "http://localhost:8080/4rSPg8ap",
 				},
 			},
 			cfg: &configs.Configs{
@@ -131,19 +87,19 @@ func TestFileDB_Remove(t *testing.T) {
 				Port:            "8080",
 				BaseURL:         "http://localhost:8080",
 				Memory:          map[string]models.ShortLink{},
-				FileStoragePath: "/tmp/test-short-url-db.json",
+				FileStoragePath: "/tmp/test-short-url-file.json",
 			},
 			wantErr: false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			f := FileDB{
+			f := File{
 				data: tt.cfg.Memory,
 				cfg:  tt.cfg,
 			}
 
-			if err := f.Save(tt.args.fileDB); (err != nil) != tt.wantErr {
+			if err := f.Save(tt.args.model); (err != nil) != tt.wantErr {
 				t.Errorf("Save() error = %v, wantErr %v", err, tt.wantErr)
 			}
 
@@ -157,7 +113,7 @@ func TestFileDB_Remove(t *testing.T) {
 func TestFileDB_Save(t *testing.T) {
 
 	type args struct {
-		fileDB models.FileDB
+		fileDB models.ShortLink
 	}
 	id := uuid.New().String()
 	tests := []struct {
@@ -169,10 +125,10 @@ func TestFileDB_Save(t *testing.T) {
 		{
 			name: "test DB Save",
 			args: args{
-				fileDB: models.FileDB{
+				fileDB: models.ShortLink{
 					UUID:        id,
 					OriginalURL: "http://yandex.ru",
-					ShortURL:    "4rSPg8ap",
+					ShortURL:    "http://localhost:8080/4rSPg8ap",
 				},
 			},
 			cfg: &configs.Configs{
@@ -180,14 +136,14 @@ func TestFileDB_Save(t *testing.T) {
 				Port:            "8080",
 				BaseURL:         "http://localhost:8080",
 				Memory:          map[string]models.ShortLink{},
-				FileStoragePath: "/tmp/test-short-url-db.json",
+				FileStoragePath: "/tmp/test-short-url-file.json",
 			},
 			wantErr: false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			f := FileDB{
+			f := File{
 				data: tt.cfg.Memory,
 				cfg:  tt.cfg,
 			}

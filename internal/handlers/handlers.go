@@ -2,20 +2,20 @@ package handlers
 
 import (
 	"encoding/json"
-	models "github.com/Orendev/shortener/internal/app/models/shortlink"
-	repository "github.com/Orendev/shortener/internal/app/storage"
+	"github.com/Orendev/shortener/internal/models"
 	"github.com/Orendev/shortener/internal/random"
+	"github.com/Orendev/shortener/internal/storage"
 	"io"
 	"net/http"
 	"strings"
 )
 
 type Handler struct {
-	ShortLinkRepository repository.ShortLinkRepository
+	shortLinkStorage storage.ShortLinkStorage
 }
 
-func NewHandler(repository repository.ShortLinkRepository) Handler {
-	return Handler{ShortLinkRepository: repository}
+func NewHandler(storage storage.ShortLinkStorage) Handler {
+	return Handler{shortLinkStorage: storage}
 }
 
 func (h *Handler) ShortLink(w http.ResponseWriter, r *http.Request) {
@@ -26,8 +26,8 @@ func (h *Handler) ShortLink(w http.ResponseWriter, r *http.Request) {
 
 	code := strings.TrimPrefix(r.URL.Path, "/")
 
-	if shortLink, err := h.ShortLinkRepository.Get(code); err == nil {
-		w.Header().Add("Location", shortLink.URL)
+	if shortLink, err := h.shortLinkStorage.GetByCode(code); err == nil {
+		w.Header().Add("Location", shortLink.OriginalURL)
 		w.WriteHeader(http.StatusTemporaryRedirect)
 		return
 	} else {
@@ -58,20 +58,22 @@ func (h *Handler) ShortLinkAdd(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-
-	sl := models.ShortLink{
-		Code: random.Strn(8),
-		URL:  req.URL,
+	code := random.Strn(8)
+	shortLink := models.ShortLink{
+		UUID:        h.shortLinkStorage.UUID(),
+		Code:        code,
+		OriginalURL: req.URL,
+		ShortURL:    code,
 	}
 
-	if _, err = h.ShortLinkRepository.Add(&sl); err != nil {
+	if _, err = h.shortLinkStorage.Add(&shortLink); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	w.WriteHeader(http.StatusCreated)
 
-	_, err = w.Write([]byte(sl.Result))
+	_, err = w.Write([]byte(shortLink.ShortURL))
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -86,7 +88,6 @@ func (h *Handler) APIShorten(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var shortLink models.ShortLink
 	var req models.ShortLinkRequest
 	dec := json.NewDecoder(r.Body)
 	// читаем тело запроса и декодируем
@@ -102,13 +103,16 @@ func (h *Handler) APIShorten(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 
-	// Генерируем уникальный код
-	shortLink.Code = random.Strn(8)
-	// Сохраняем url
-	shortLink.URL = req.URL
+	code := random.Strn(8)
+	shortLink := models.ShortLink{
+		UUID:        h.shortLinkStorage.UUID(),
+		Code:        code,
+		OriginalURL: req.URL,
+		ShortURL:    code,
+	}
 
 	// Сохраним модель
-	_, err := h.ShortLinkRepository.Add(&shortLink)
+	_, err := h.shortLinkStorage.Add(&shortLink)
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -117,7 +121,7 @@ func (h *Handler) APIShorten(w http.ResponseWriter, r *http.Request) {
 
 	// заполняем модель ответа
 	resp := models.ShortLinkResponse{
-		Result: shortLink.Result,
+		Result: shortLink.ShortURL,
 	}
 
 	enc, err := json.Marshal(resp)

@@ -3,34 +3,26 @@ package storage
 import (
 	"bufio"
 	"encoding/json"
-	"fmt"
-	models "github.com/Orendev/shortener/internal/app/models/shortlink"
 	"github.com/Orendev/shortener/internal/configs"
-	"github.com/google/uuid"
+	"github.com/Orendev/shortener/internal/models"
 	"log"
 	"os"
-	"strings"
 )
 
-type FileDB struct {
+type File struct {
 	data map[string]models.ShortLink
 	cfg  *configs.Configs
 }
 
-func NewFileDB(cfg *configs.Configs) (*FileDB, error) {
-	return &FileDB{
+func NewFile(cfg *configs.Configs) (*File, error) {
+	return &File{
 		cfg:  cfg,
 		data: cfg.Memory,
 	}, nil
 }
 
-func (f *FileDB) ID() string {
-	id := uuid.New()
-	return id.String()
-}
-
 // Save сохраняет данные в файле FileStoragePath.
-func (f *FileDB) Save(fileDB models.FileDB) error {
+func (f *File) Save(model models.ShortLink) error {
 
 	file, err := os.OpenFile(f.cfg.FileStoragePath, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
@@ -43,7 +35,7 @@ func (f *FileDB) Save(fileDB models.FileDB) error {
 	}()
 
 	// сериализуем структуру в JSON формат
-	writeData, err := json.Marshal(fileDB)
+	writeData, err := json.Marshal(model)
 	if err != nil {
 		return err
 	}
@@ -55,7 +47,7 @@ func (f *FileDB) Save(fileDB models.FileDB) error {
 }
 
 // Load Прочитаем данные из файла FileStoragePath
-func (f *FileDB) Load() error {
+func (f *File) Load() error {
 
 	file, err := os.OpenFile(f.cfg.FileStoragePath, os.O_RDONLY|os.O_CREATE, 0666)
 	if err != nil {
@@ -74,25 +66,22 @@ func (f *FileDB) Load() error {
 		if !scan.Scan() {
 			break
 		}
-		fileDB := models.FileDB{}
+		model := models.ShortLink{}
 		data := scan.Bytes()
-		err = json.Unmarshal(data, &fileDB)
+
+		err = json.Unmarshal(data, &model)
 
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		f.data[fileDB.ShortURL] = models.ShortLink{
-			URL:    fileDB.OriginalURL,
-			Code:   fileDB.ShortURL,
-			Result: fmt.Sprintf("%s/%s", strings.TrimPrefix(f.cfg.BaseURL, "/"), fileDB.ShortURL),
-		}
+		f.data[model.Code] = model
 
 	}
 	return nil
 }
 
 // Remove Удалим файл FileStoragePath
-func (f *FileDB) Remove() error {
+func (f *File) Remove() error {
 	return os.Remove(f.cfg.FileStoragePath)
 }

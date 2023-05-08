@@ -2,11 +2,11 @@ package handlers
 
 import (
 	"bytes"
-	models "github.com/Orendev/shortener/internal/app/models/shortlink"
-	service "github.com/Orendev/shortener/internal/app/service/shortlink"
-	"github.com/Orendev/shortener/internal/app/storage"
+	service "github.com/Orendev/shortener/internal/app"
 	"github.com/Orendev/shortener/internal/configs"
+	"github.com/Orendev/shortener/internal/models"
 	"github.com/Orendev/shortener/internal/random"
+	"github.com/Orendev/shortener/internal/storage"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"io"
@@ -62,19 +62,19 @@ func TestHandlers_ShortLink(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.configs.Memory = map[string]models.ShortLink{
 				tt.fields.code: {
-					Code: tt.fields.code,
-					URL:  tt.fields.link,
+					ShortURL:    tt.fields.code,
+					OriginalURL: tt.fields.link,
 				},
 			}
 
-			fileDB, err := storage.NewFileDB(&tt.configs)
+			file, err := storage.NewFile(&tt.configs)
 			require.NoError(t, err)
 
-			memoryStorage, err := storage.NewMemoryStorage(&tt.configs, fileDB)
+			memoryStorage, err := storage.NewMemoryStorage(&tt.configs)
 			require.NoError(t, err)
 
 			h := &Handler{
-				ShortLinkRepository: service.NewService(memoryStorage, &tt.configs),
+				shortLinkStorage: service.NewService(memoryStorage, file, &tt.configs),
 			}
 
 			req := httptest.NewRequest(http.MethodGet, "/"+tt.fields.code, nil)
@@ -150,14 +150,21 @@ func TestHandlers_ShortLinkAdd(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.configs.Memory = map[string]models.ShortLink{}
 
-			fileDB, err := storage.NewFileDB(&tt.configs)
+			file, err := storage.NewFile(&tt.configs)
 			require.NoError(t, err)
 
-			memoryStorage, err := storage.NewMemoryStorage(&tt.configs, fileDB)
+			memoryStorage, err := storage.NewMemoryStorage(&tt.configs)
 			require.NoError(t, err)
+
+			//defer func() {
+			//	err = fileDB.Remove()
+			//	if err != nil {
+			//		require.NoError(t, err)
+			//	}
+			//}()
 
 			h := &Handler{
-				ShortLinkRepository: service.NewService(memoryStorage, &tt.configs),
+				shortLinkStorage: service.NewService(memoryStorage, file, &tt.configs),
 			}
 
 			body := strings.NewReader(tt.fields.url)
@@ -179,7 +186,7 @@ func TestHandlers_ShortLinkAdd(t *testing.T) {
 
 			for code, shortLink := range tt.configs.Memory {
 				assert.Equal(t, tt.want.response+code, string(resBody))
-				assert.Equal(t, tt.fields.url, shortLink.URL)
+				assert.Equal(t, tt.fields.url, shortLink.OriginalURL)
 			}
 
 		})
@@ -198,14 +205,14 @@ func Test_handler_ApiShorten(t *testing.T) {
 
 	memory := cfg.Memory
 
-	fileDB, err := storage.NewFileDB(&cfg)
+	file, err := storage.NewFile(&cfg)
 	require.NoError(t, err)
 
-	memoryStorage, err := storage.NewMemoryStorage(&cfg, fileDB)
+	memoryStorage, err := storage.NewMemoryStorage(&cfg)
 	require.NoError(t, err)
 
 	h := &Handler{
-		ShortLinkRepository: service.NewService(memoryStorage, &cfg),
+		shortLinkStorage: service.NewService(memoryStorage, file, &cfg),
 	}
 
 	handler := http.HandlerFunc(h.APIShorten)
@@ -213,7 +220,7 @@ func Test_handler_ApiShorten(t *testing.T) {
 
 	defer srv.Close()
 	defer func() {
-		err = fileDB.Remove()
+		err = file.Remove()
 		if err != nil {
 			require.NoError(t, err)
 		}
@@ -318,7 +325,7 @@ func Test_handler_ApiShorten(t *testing.T) {
 			if len(memory) > 0 && resp.StatusCode == http.StatusCreated {
 				for _, link := range memory {
 					tt.want.expectedBody = `{
-						"result": "` + link.Result + `"
+						"result": "` + link.ShortURL + `"
 					}`
 					break
 				}

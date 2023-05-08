@@ -1,12 +1,13 @@
-package shortlink
+package models
 
 import "errors"
 
 // ShortLink модель коротких ссылок
 type ShortLink struct {
-	Code   string `json:"-"`
-	URL    string `json:"url"`
-	Result string `json:"result"`
+	UUID        string `json:"uuid"`
+	Code        string `json:"code"`
+	ShortURL    string `json:"short_url"`
+	OriginalURL string `json:"original_url"`
 }
 
 // ShortLinkResponse описывает ответ сервера.
@@ -17,12 +18,6 @@ type ShortLinkResponse struct {
 // ShortLinkRequest описывает запрос клиента.
 type ShortLinkRequest struct {
 	URL string `json:"url"`
-}
-
-type FileDB struct {
-	UUID        string `json:"uuid"`
-	ShortURL    string `json:"short_url"`
-	OriginalURL string `json:"original_url"`
 }
 
 func (sl ShortLinkRequest) Validate() error {
