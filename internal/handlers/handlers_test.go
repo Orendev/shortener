@@ -6,7 +6,7 @@ import (
 	"github.com/Orendev/shortener/internal/configs"
 	models "github.com/Orendev/shortener/internal/models/shortlink"
 	"github.com/Orendev/shortener/internal/random"
-	storage2 "github.com/Orendev/shortener/internal/storage"
+	"github.com/Orendev/shortener/internal/storage"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"io"
@@ -67,14 +67,14 @@ func TestHandlers_ShortLink(t *testing.T) {
 				},
 			}
 
-			fileDB, err := storage2.NewFileDB(&tt.configs)
+			fileDB, err := storage.NewFileDB(&tt.configs)
 			require.NoError(t, err)
 
-			memoryStorage, err := storage2.NewMemoryStorage(&tt.configs, fileDB)
+			memoryStorage, err := storage.NewMemoryStorage(&tt.configs, fileDB)
 			require.NoError(t, err)
 
 			h := &Handler{
-				ShortLinkRepository: service.NewService(memoryStorage, &tt.configs),
+				shortLinkStorage: service.NewService(memoryStorage, &tt.configs),
 			}
 
 			req := httptest.NewRequest(http.MethodGet, "/"+tt.fields.code, nil)
@@ -150,14 +150,14 @@ func TestHandlers_ShortLinkAdd(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.configs.Memory = map[string]models.ShortLink{}
 
-			fileDB, err := storage2.NewFileDB(&tt.configs)
+			fileDB, err := storage.NewFileDB(&tt.configs)
 			require.NoError(t, err)
 
-			memoryStorage, err := storage2.NewMemoryStorage(&tt.configs, fileDB)
+			memoryStorage, err := storage.NewMemoryStorage(&tt.configs, fileDB)
 			require.NoError(t, err)
 
 			h := &Handler{
-				ShortLinkRepository: service.NewService(memoryStorage, &tt.configs),
+				shortLinkStorage: service.NewService(memoryStorage, &tt.configs),
 			}
 
 			body := strings.NewReader(tt.fields.url)
@@ -198,14 +198,14 @@ func Test_handler_ApiShorten(t *testing.T) {
 
 	memory := cfg.Memory
 
-	fileDB, err := storage2.NewFileDB(&cfg)
+	fileDB, err := storage.NewFileDB(&cfg)
 	require.NoError(t, err)
 
-	memoryStorage, err := storage2.NewMemoryStorage(&cfg, fileDB)
+	memoryStorage, err := storage.NewMemoryStorage(&cfg, fileDB)
 	require.NoError(t, err)
 
 	h := &Handler{
-		ShortLinkRepository: service.NewService(memoryStorage, &cfg),
+		shortLinkStorage: service.NewService(memoryStorage, &cfg),
 	}
 
 	handler := http.HandlerFunc(h.APIShorten)

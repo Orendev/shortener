@@ -4,16 +4,16 @@ import (
 	"fmt"
 	"github.com/Orendev/shortener/internal/configs"
 	models "github.com/Orendev/shortener/internal/models/shortlink"
-	repository "github.com/Orendev/shortener/internal/storage"
+	"github.com/Orendev/shortener/internal/storage"
 	"strings"
 )
 
 type Service struct {
-	storage repository.ShortLinkRepository
+	storage storage.ShortLinkStorage
 	cfg     *configs.Configs
 }
 
-func NewService(storage repository.ShortLinkRepository, cfg *configs.Configs) *Service {
+func NewService(storage storage.ShortLinkStorage, cfg *configs.Configs) *Service {
 
 	return &Service{
 		storage: storage,

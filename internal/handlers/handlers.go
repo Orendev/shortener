@@ -4,18 +4,18 @@ import (
 	"encoding/json"
 	models "github.com/Orendev/shortener/internal/models/shortlink"
 	"github.com/Orendev/shortener/internal/random"
-	repository "github.com/Orendev/shortener/internal/storage"
+	"github.com/Orendev/shortener/internal/storage"
 	"io"
 	"net/http"
 	"strings"
 )
 
 type Handler struct {
-	ShortLinkRepository repository.ShortLinkRepository
+	shortLinkStorage storage.ShortLinkStorage
 }
 
-func NewHandler(repository repository.ShortLinkRepository) Handler {
-	return Handler{ShortLinkRepository: repository}
+func NewHandler(storage storage.ShortLinkStorage) Handler {
+	return Handler{shortLinkStorage: storage}
 }
 
 func (h *Handler) ShortLink(w http.ResponseWriter, r *http.Request) {
@@ -26,7 +26,7 @@ func (h *Handler) ShortLink(w http.ResponseWriter, r *http.Request) {
 
 	code := strings.TrimPrefix(r.URL.Path, "/")
 
-	if shortLink, err := h.ShortLinkRepository.Get(code); err == nil {
+	if shortLink, err := h.shortLinkStorage.Get(code); err == nil {
 		w.Header().Add("Location", shortLink.URL)
 		w.WriteHeader(http.StatusTemporaryRedirect)
 		return
@@ -64,7 +64,7 @@ func (h *Handler) ShortLinkAdd(w http.ResponseWriter, r *http.Request) {
 		URL:  req.URL,
 	}
 
-	if _, err = h.ShortLinkRepository.Add(&sl); err != nil {
+	if _, err = h.shortLinkStorage.Add(&sl); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -108,7 +108,7 @@ func (h *Handler) APIShorten(w http.ResponseWriter, r *http.Request) {
 	shortLink.URL = req.URL
 
 	// Сохраним модель
-	_, err := h.ShortLinkRepository.Add(&shortLink)
+	_, err := h.shortLinkStorage.Add(&shortLink)
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)

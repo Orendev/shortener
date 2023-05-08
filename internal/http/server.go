@@ -10,12 +10,11 @@ import (
 )
 
 type Server struct {
-	server     *http.Server
-	cfg        *configs.Configs
-	repository storage.ShortLinkRepository
+	server *http.Server
+	cfg    *configs.Configs
 }
 
-func New(cfg *configs.Configs, storage storage.ShortLinkRepository) (*Server, error) {
+func New(cfg *configs.Configs, storage storage.ShortLinkStorage) (*Server, error) {
 
 	r := routes.Routes(chi.NewRouter(), storage, cfg)
 
