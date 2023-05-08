@@ -2,8 +2,8 @@ package storage
 
 import (
 	"errors"
-	models "github.com/Orendev/shortener/internal/app/models/shortlink"
 	"github.com/Orendev/shortener/internal/configs"
+	models "github.com/Orendev/shortener/internal/models/shortlink"
 )
 
 type MemoryStorage struct {

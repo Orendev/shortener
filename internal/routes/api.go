@@ -1,12 +1,12 @@
 package routes
 
 import (
-	"github.com/Orendev/shortener/internal/app/handlers"
-	"github.com/Orendev/shortener/internal/app/middlewares"
-	service "github.com/Orendev/shortener/internal/app/service/shortlink"
-	repository "github.com/Orendev/shortener/internal/app/storage"
+	service "github.com/Orendev/shortener/internal/app"
 	"github.com/Orendev/shortener/internal/configs"
+	"github.com/Orendev/shortener/internal/handlers"
 	"github.com/Orendev/shortener/internal/logger"
+	middlewares2 "github.com/Orendev/shortener/internal/middlewares"
+	repository "github.com/Orendev/shortener/internal/storage"
 	"github.com/go-chi/chi/v5"
 )
 
@@ -18,8 +18,8 @@ func Routes(router chi.Router, repository repository.ShortLinkRepository, cfg *c
 		panic(err)
 	}
 
-	router.Use(middlewares.Logger)
-	router.Use(middlewares.Gzip)
+	router.Use(middlewares2.Logger)
+	router.Use(middlewares2.Gzip)
 
 	router.Route("/", func(r chi.Router) {
 		r.Get("/{id}", h.ShortLink)

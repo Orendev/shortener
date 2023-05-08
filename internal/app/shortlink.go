@@ -1,10 +1,10 @@
-package shortlink
+package app
 
 import (
 	"fmt"
-	models "github.com/Orendev/shortener/internal/app/models/shortlink"
-	repository "github.com/Orendev/shortener/internal/app/storage"
 	"github.com/Orendev/shortener/internal/configs"
+	models "github.com/Orendev/shortener/internal/models/shortlink"
+	repository "github.com/Orendev/shortener/internal/storage"
 	"strings"
 )
 

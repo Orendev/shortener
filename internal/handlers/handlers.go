@@ -2,9 +2,9 @@ package handlers
 
 import (
 	"encoding/json"
-	models "github.com/Orendev/shortener/internal/app/models/shortlink"
-	repository "github.com/Orendev/shortener/internal/app/storage"
+	models "github.com/Orendev/shortener/internal/models/shortlink"
 	"github.com/Orendev/shortener/internal/random"
+	repository "github.com/Orendev/shortener/internal/storage"
 	"io"
 	"net/http"
 	"strings"

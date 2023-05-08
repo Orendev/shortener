@@ -3,10 +3,10 @@ package compress_test
 import (
 	"bytes"
 	"compress/gzip"
-	models "github.com/Orendev/shortener/internal/app/models/shortlink"
-	"github.com/Orendev/shortener/internal/app/routes"
-	"github.com/Orendev/shortener/internal/app/storage"
 	"github.com/Orendev/shortener/internal/configs"
+	models "github.com/Orendev/shortener/internal/models/shortlink"
+	"github.com/Orendev/shortener/internal/routes"
+	storage2 "github.com/Orendev/shortener/internal/storage"
 	"github.com/go-chi/chi/v5"
 	"github.com/stretchr/testify/require"
 	"io"
@@ -29,12 +29,12 @@ func TestGzipMiddlewareSendsGzip(t *testing.T) {
 
 	memory := cfg.Memory
 
-	fileDB, err := storage.NewFileDB(&cfg)
+	fileDB, err := storage2.NewFileDB(&cfg)
 	if err != nil {
 		require.NoError(t, err)
 	}
 
-	memoryStorage, err := storage.NewMemoryStorage(&cfg, fileDB)
+	memoryStorage, err := storage2.NewMemoryStorage(&cfg, fileDB)
 	if err != nil {
 		log.Fatal(err)
 		return
@@ -133,12 +133,12 @@ func TestGzipMiddlewareAcceptsGzip(t *testing.T) {
 
 	memory := cfg.Memory
 
-	fileDB, err := storage.NewFileDB(&cfg)
+	fileDB, err := storage2.NewFileDB(&cfg)
 	if err != nil {
 		require.NoError(t, err)
 	}
 
-	memoryStorage, err := storage.NewMemoryStorage(&cfg, fileDB)
+	memoryStorage, err := storage2.NewMemoryStorage(&cfg, fileDB)
 	if err != nil {
 		log.Fatal(err)
 		return
