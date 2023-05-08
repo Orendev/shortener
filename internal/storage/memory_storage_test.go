@@ -10,7 +10,7 @@ import (
 	"testing"
 )
 
-func TestMemoryStorage_Get(t *testing.T) {
+func TestMemoryStorage_GetByCode(t *testing.T) {
 	type fields struct {
 		data map[string]models.ShortLink
 		cfg  *configs.Configs
@@ -34,13 +34,13 @@ func TestMemoryStorage_Get(t *testing.T) {
 				data: map[string]models.ShortLink{
 					"test": {
 						Code:        "test",
-						OriginalUrl: "localhost",
+						OriginalURL: "localhost",
 					},
 				},
 			},
 			want: &models.ShortLink{
 				Code:        "test",
-				OriginalUrl: "localhost",
+				OriginalURL: "localhost",
 			},
 			wantErr: false,
 		},
@@ -61,7 +61,7 @@ func TestMemoryStorage_Get(t *testing.T) {
 			}
 
 			assert.Equal(t, got.Code, tt.want.Code)
-			assert.Equal(t, got.OriginalUrl, tt.want.OriginalUrl)
+			assert.Equal(t, got.OriginalURL, tt.want.OriginalURL)
 		})
 	}
 }
@@ -87,7 +87,7 @@ func TestMemoryStorage_Add(t *testing.T) {
 				shortLink: models.ShortLink{
 					UUID:        id,
 					Code:        "test",
-					OriginalUrl: "localhost",
+					OriginalURL: "localhost",
 				},
 			},
 			fields: fields{
@@ -121,6 +121,45 @@ func TestMemoryStorage_Add(t *testing.T) {
 			assert.Equalf(t, tt.want, got, "Add(%v)", tt.args.shortLink)
 
 			err = s.db.Remove()
+			require.NoError(t, err)
+		})
+	}
+}
+
+func TestMemoryStorage_UUID(t *testing.T) {
+	type fields struct {
+		data map[string]models.ShortLink
+		cfg  *configs.Configs
+		db   *FileDB
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   string
+	}{
+		{
+			name: "test UUID",
+			fields: fields{
+				data: map[string]models.ShortLink{},
+				cfg: &configs.Configs{
+					Host:            "",
+					Port:            "8080",
+					BaseURL:         "http://localhost:8080",
+					Memory:          map[string]models.ShortLink{},
+					FileStoragePath: "/tmp/test-short-url-db.json",
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := MemoryStorage{
+				data: tt.fields.data,
+				cfg:  tt.fields.cfg,
+				db:   tt.fields.db,
+			}
+
+			_, err := uuid.Parse(s.UUID())
 			require.NoError(t, err)
 		})
 	}

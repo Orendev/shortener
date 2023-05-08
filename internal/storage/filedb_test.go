@@ -9,50 +9,6 @@ import (
 	"testing"
 )
 
-func TestFileDB_ID(t *testing.T) {
-	type args struct {
-		model models.ShortLink
-	}
-	id := uuid.New().String()
-	tests := []struct {
-		name    string
-		cfg     *configs.Configs
-		args    args
-		want    string
-		wantErr bool
-	}{
-		{
-			name: "test fileDB ID",
-			args: args{
-				model: models.ShortLink{
-					UUID:        id,
-					OriginalUrl: "http://yandex.ru",
-					ShortUrl:    "http://localhost:8080/4rSPg8ap",
-				},
-			},
-			cfg: &configs.Configs{
-				Host:            "",
-				Port:            "8080",
-				BaseURL:         "http://localhost:8080",
-				Memory:          map[string]models.ShortLink{},
-				FileStoragePath: "/tmp/test-short-url-db.json",
-			},
-			want:    id,
-			wantErr: false,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			f, err := NewFileDB(tt.cfg)
-			require.NoError(t, err)
-
-			_, err = uuid.Parse(f.ID())
-			require.NoError(t, err)
-
-		})
-	}
-}
-
 func TestFileDB_Load(t *testing.T) {
 	type args struct {
 		model models.ShortLink
@@ -69,8 +25,8 @@ func TestFileDB_Load(t *testing.T) {
 			args: args{
 				model: models.ShortLink{
 					UUID:        id,
-					OriginalUrl: "http://yandex.ru",
-					ShortUrl:    "http://localhost:8080/4rSPg8ap",
+					OriginalURL: "http://yandex.ru",
+					ShortURL:    "http://localhost:8080/4rSPg8ap",
 				},
 			},
 			cfg: &configs.Configs{
@@ -98,7 +54,7 @@ func TestFileDB_Load(t *testing.T) {
 				t.Errorf("Load() error = %v, wantErr %v", err, tt.wantErr)
 			}
 
-			assert.Equal(t, tt.cfg.Memory[tt.args.model.Code].ShortUrl, tt.args.model.ShortUrl)
+			assert.Equal(t, tt.cfg.Memory[tt.args.model.Code].ShortURL, tt.args.model.ShortURL)
 
 			err := f.Remove()
 			require.NoError(t, err)
@@ -122,8 +78,8 @@ func TestFileDB_Remove(t *testing.T) {
 			args: args{
 				model: models.ShortLink{
 					UUID:        id,
-					OriginalUrl: "http://yandex.ru",
-					ShortUrl:    "http://localhost:8080/4rSPg8ap",
+					OriginalURL: "http://yandex.ru",
+					ShortURL:    "http://localhost:8080/4rSPg8ap",
 				},
 			},
 			cfg: &configs.Configs{
@@ -171,8 +127,8 @@ func TestFileDB_Save(t *testing.T) {
 			args: args{
 				fileDB: models.ShortLink{
 					UUID:        id,
-					OriginalUrl: "http://yandex.ru",
-					ShortUrl:    "http://localhost:8080/4rSPg8ap",
+					OriginalURL: "http://yandex.ru",
+					ShortURL:    "http://localhost:8080/4rSPg8ap",
 				},
 			},
 			cfg: &configs.Configs{

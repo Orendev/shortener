@@ -27,7 +27,7 @@ func (s *MemoryStorage) Add(model *models.ShortLink) (string, error) {
 
 	err := s.db.Save(*model)
 	if err != nil {
-		return model.ShortUrl, err
+		return model.ShortURL, err
 	}
 
 	return model.UUID, nil

@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"github.com/Orendev/shortener/internal/configs"
 	"github.com/Orendev/shortener/internal/models"
-	"github.com/google/uuid"
 	"log"
 	"os"
 )
@@ -20,11 +19,6 @@ func NewFileDB(cfg *configs.Configs) (*FileDB, error) {
 		cfg:  cfg,
 		data: cfg.Memory,
 	}, nil
-}
-
-func (f *FileDB) ID() string {
-	id := uuid.New()
-	return id.String()
 }
 
 // Save сохраняет данные в файле FileStoragePath.

@@ -27,7 +27,7 @@ func (h *Handler) ShortLink(w http.ResponseWriter, r *http.Request) {
 	code := strings.TrimPrefix(r.URL.Path, "/")
 
 	if shortLink, err := h.shortLinkStorage.GetByCode(code); err == nil {
-		w.Header().Add("Location", shortLink.OriginalUrl)
+		w.Header().Add("Location", shortLink.OriginalURL)
 		w.WriteHeader(http.StatusTemporaryRedirect)
 		return
 	} else {
@@ -62,8 +62,8 @@ func (h *Handler) ShortLinkAdd(w http.ResponseWriter, r *http.Request) {
 	shortLink := models.ShortLink{
 		UUID:        h.shortLinkStorage.UUID(),
 		Code:        code,
-		OriginalUrl: req.URL,
-		ShortUrl:    code,
+		OriginalURL: req.URL,
+		ShortURL:    code,
 	}
 
 	if _, err = h.shortLinkStorage.Add(&shortLink); err != nil {
@@ -73,7 +73,7 @@ func (h *Handler) ShortLinkAdd(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusCreated)
 
-	_, err = w.Write([]byte(shortLink.ShortUrl))
+	_, err = w.Write([]byte(shortLink.ShortURL))
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -107,8 +107,8 @@ func (h *Handler) APIShorten(w http.ResponseWriter, r *http.Request) {
 	shortLink := models.ShortLink{
 		UUID:        h.shortLinkStorage.UUID(),
 		Code:        code,
-		OriginalUrl: req.URL,
-		ShortUrl:    code,
+		OriginalURL: req.URL,
+		ShortURL:    code,
 	}
 
 	// Сохраним модель
@@ -121,7 +121,7 @@ func (h *Handler) APIShorten(w http.ResponseWriter, r *http.Request) {
 
 	// заполняем модель ответа
 	resp := models.ShortLinkResponse{
-		Result: shortLink.ShortUrl,
+		Result: shortLink.ShortURL,
 	}
 
 	enc, err := json.Marshal(resp)

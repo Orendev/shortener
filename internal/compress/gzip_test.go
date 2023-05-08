@@ -110,7 +110,7 @@ func TestGzipMiddlewareSendsGzip(t *testing.T) {
 			if len(memory) > 0 {
 				for _, link := range memory {
 					tt.want.expectedBody = `{
-						"result": "` + link.ShortUrl + `"
+						"result": "` + link.ShortURL + `"
 					}`
 					break
 				}
@@ -219,7 +219,7 @@ func TestGzipMiddlewareAcceptsGzip(t *testing.T) {
 			if len(memory) > 0 {
 				for _, link := range memory {
 					tt.want.expectedBody = `{
-						"result": "` + link.ShortUrl + `"
+						"result": "` + link.ShortURL + `"
 					}`
 					break
 				}

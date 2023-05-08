@@ -6,8 +6,8 @@ import "errors"
 type ShortLink struct {
 	UUID        string `json:"uuid"`
 	Code        string `json:"code"`
-	ShortUrl    string `json:"short_url"`
-	OriginalUrl string `json:"original_url"`
+	ShortURL    string `json:"short_url"`
+	OriginalURL string `json:"original_url"`
 }
 
 // ShortLinkResponse описывает ответ сервера.

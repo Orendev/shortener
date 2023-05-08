@@ -26,10 +26,10 @@ func (s *Service) GetByCode(code string) (*models.ShortLink, error) {
 }
 
 func (s *Service) Add(model *models.ShortLink) (string, error) {
-	model.ShortUrl = fmt.Sprintf("%s/%s", strings.TrimPrefix(s.cfg.BaseURL, "/"), model.ShortUrl)
+	model.ShortURL = fmt.Sprintf("%s/%s", strings.TrimPrefix(s.cfg.BaseURL, "/"), model.ShortURL)
 	uuid, err := s.storage.Add(model)
 	if err != nil {
-		return model.ShortUrl, err
+		return model.ShortURL, err
 	}
 
 	return uuid, nil
