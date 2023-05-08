@@ -97,7 +97,7 @@ func TestMemoryStorage_Add(t *testing.T) {
 					Port:            "8080",
 					BaseURL:         "http://localhost:8080",
 					Memory:          map[string]models.ShortLink{},
-					FileStoragePath: "/tmp/test-short-url-db.json",
+					FileStoragePath: "/tmp/test-short-url-file.json",
 				},
 			},
 			want: id,
@@ -105,23 +105,15 @@ func TestMemoryStorage_Add(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			fileDB, err := NewFileDB(tt.fields.cfg)
-			if err != nil {
-				require.NoError(t, err)
-			}
-
 			s := &MemoryStorage{
 				data: tt.fields.data,
 				cfg:  tt.fields.cfg,
-				db:   fileDB,
 			}
 			got, err := s.Add(&tt.args.shortLink)
 			require.NoError(t, err)
 
 			assert.Equalf(t, tt.want, got, "Add(%v)", tt.args.shortLink)
 
-			err = s.db.Remove()
-			require.NoError(t, err)
 		})
 	}
 }
@@ -130,7 +122,6 @@ func TestMemoryStorage_UUID(t *testing.T) {
 	type fields struct {
 		data map[string]models.ShortLink
 		cfg  *configs.Configs
-		db   *FileDB
 	}
 	tests := []struct {
 		name   string
@@ -146,7 +137,7 @@ func TestMemoryStorage_UUID(t *testing.T) {
 					Port:            "8080",
 					BaseURL:         "http://localhost:8080",
 					Memory:          map[string]models.ShortLink{},
-					FileStoragePath: "/tmp/test-short-url-db.json",
+					FileStoragePath: "/tmp/test-short-url-file.json",
 				},
 			},
 		},
@@ -156,7 +147,6 @@ func TestMemoryStorage_UUID(t *testing.T) {
 			s := MemoryStorage{
 				data: tt.fields.data,
 				cfg:  tt.fields.cfg,
-				db:   tt.fields.db,
 			}
 
 			_, err := uuid.Parse(s.UUID())

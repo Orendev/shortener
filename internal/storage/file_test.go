@@ -21,7 +21,7 @@ func TestFileDB_Load(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name: "test FileDB Load",
+			name: "test File Load",
 			args: args{
 				model: models.ShortLink{
 					UUID:        id,
@@ -34,14 +34,14 @@ func TestFileDB_Load(t *testing.T) {
 				Port:            "8080",
 				BaseURL:         "http://localhost:8080",
 				Memory:          map[string]models.ShortLink{},
-				FileStoragePath: "/tmp/test-short-url-db.json",
+				FileStoragePath: "/tmp/test-short-url-file.json",
 			},
 			wantErr: false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			f := &FileDB{
+			f := &File{
 				data: tt.cfg.Memory,
 				cfg:  tt.cfg,
 			}
@@ -74,7 +74,7 @@ func TestFileDB_Remove(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name: "test FileDB Remove",
+			name: "test File Remove",
 			args: args{
 				model: models.ShortLink{
 					UUID:        id,
@@ -87,14 +87,14 @@ func TestFileDB_Remove(t *testing.T) {
 				Port:            "8080",
 				BaseURL:         "http://localhost:8080",
 				Memory:          map[string]models.ShortLink{},
-				FileStoragePath: "/tmp/test-short-url-db.json",
+				FileStoragePath: "/tmp/test-short-url-file.json",
 			},
 			wantErr: false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			f := FileDB{
+			f := File{
 				data: tt.cfg.Memory,
 				cfg:  tt.cfg,
 			}
@@ -136,14 +136,14 @@ func TestFileDB_Save(t *testing.T) {
 				Port:            "8080",
 				BaseURL:         "http://localhost:8080",
 				Memory:          map[string]models.ShortLink{},
-				FileStoragePath: "/tmp/test-short-url-db.json",
+				FileStoragePath: "/tmp/test-short-url-file.json",
 			},
 			wantErr: false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			f := FileDB{
+			f := File{
 				data: tt.cfg.Memory,
 				cfg:  tt.cfg,
 			}

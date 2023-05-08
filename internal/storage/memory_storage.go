@@ -10,7 +10,6 @@ import (
 type MemoryStorage struct {
 	data map[string]models.ShortLink
 	cfg  *configs.Configs
-	db   *FileDB
 }
 
 func (s *MemoryStorage) GetByCode(code string) (*models.ShortLink, error) {
@@ -25,11 +24,6 @@ func (s *MemoryStorage) GetByCode(code string) (*models.ShortLink, error) {
 func (s *MemoryStorage) Add(model *models.ShortLink) (string, error) {
 	s.data[model.Code] = *model
 
-	err := s.db.Save(*model)
-	if err != nil {
-		return model.ShortURL, err
-	}
-
 	return model.UUID, nil
 }
 
@@ -37,10 +31,9 @@ func (s MemoryStorage) UUID() string {
 	return uuid.New().String()
 }
 
-func NewMemoryStorage(cfg *configs.Configs, db *FileDB) (*MemoryStorage, error) {
+func NewMemoryStorage(cfg *configs.Configs) (*MemoryStorage, error) {
 	return &MemoryStorage{
 		cfg:  cfg,
 		data: cfg.Memory,
-		db:   db,
 	}, nil
 }

@@ -1,6 +1,7 @@
 package main
 
 import (
+	service "github.com/Orendev/shortener/internal/app"
 	"github.com/Orendev/shortener/internal/configs"
 	"github.com/Orendev/shortener/internal/http"
 	"github.com/Orendev/shortener/internal/storage"
@@ -14,25 +15,25 @@ func main() {
 		return
 	}
 
-	fileDB, err := storage.NewFileDB(cfg)
+	file, err := storage.NewFile(cfg)
 	if err != nil {
 		log.Fatal(err)
 		return
 	}
 
-	err = fileDB.Load()
+	err = file.Load()
 	if err != nil {
 		log.Fatal(err)
 		return
 	}
 
-	memoryStorage, err := storage.NewMemoryStorage(cfg, fileDB)
+	memoryStorage, err := storage.NewMemoryStorage(cfg)
 	if err != nil {
 		log.Fatal(err)
 		return
 	}
 
-	srv, err := http.New(cfg, memoryStorage)
+	srv, err := http.New(cfg, service.NewService(memoryStorage, file, cfg))
 	if err != nil {
 		log.Fatal(err)
 		return

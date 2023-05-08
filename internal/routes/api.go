@@ -1,7 +1,6 @@
 package routes
 
 import (
-	service "github.com/Orendev/shortener/internal/app"
 	"github.com/Orendev/shortener/internal/configs"
 	"github.com/Orendev/shortener/internal/handlers"
 	"github.com/Orendev/shortener/internal/logger"
@@ -12,7 +11,7 @@ import (
 
 func Routes(router chi.Router, storage storage.ShortLinkStorage, cfg *configs.Configs) chi.Router {
 
-	h := handlers.NewHandler(service.NewService(storage, cfg))
+	h := handlers.NewHandler(storage)
 
 	if err := logger.NewLogger(cfg.FlagLogLevel); err != nil {
 		panic(err)

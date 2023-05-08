@@ -9,20 +9,20 @@ import (
 	"os"
 )
 
-type FileDB struct {
+type File struct {
 	data map[string]models.ShortLink
 	cfg  *configs.Configs
 }
 
-func NewFileDB(cfg *configs.Configs) (*FileDB, error) {
-	return &FileDB{
+func NewFile(cfg *configs.Configs) (*File, error) {
+	return &File{
 		cfg:  cfg,
 		data: cfg.Memory,
 	}, nil
 }
 
 // Save сохраняет данные в файле FileStoragePath.
-func (f *FileDB) Save(model models.ShortLink) error {
+func (f *File) Save(model models.ShortLink) error {
 
 	file, err := os.OpenFile(f.cfg.FileStoragePath, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
@@ -47,7 +47,7 @@ func (f *FileDB) Save(model models.ShortLink) error {
 }
 
 // Load Прочитаем данные из файла FileStoragePath
-func (f *FileDB) Load() error {
+func (f *File) Load() error {
 
 	file, err := os.OpenFile(f.cfg.FileStoragePath, os.O_RDONLY|os.O_CREATE, 0666)
 	if err != nil {
@@ -82,6 +82,6 @@ func (f *FileDB) Load() error {
 }
 
 // Remove Удалим файл FileStoragePath
-func (f *FileDB) Remove() error {
+func (f *File) Remove() error {
 	return os.Remove(f.cfg.FileStoragePath)
 }
