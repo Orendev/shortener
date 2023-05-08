@@ -1,6 +1,7 @@
 package app
 
 import (
+	"context"
 	"fmt"
 	"github.com/Orendev/shortener/internal/configs"
 	"github.com/Orendev/shortener/internal/models"
@@ -44,4 +45,8 @@ func (s *Service) Add(model *models.ShortLink) (string, error) {
 
 func (s Service) UUID() string {
 	return s.storage.UUID()
+}
+
+func (s Service) Ping(ctx context.Context) error {
+	return s.storage.Ping(ctx)
 }

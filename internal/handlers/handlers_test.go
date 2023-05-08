@@ -70,7 +70,7 @@ func TestHandlers_ShortLink(t *testing.T) {
 			file, err := storage.NewFile(&tt.configs)
 			require.NoError(t, err)
 
-			memoryStorage, err := storage.NewMemoryStorage(&tt.configs)
+			memoryStorage, err := storage.NewMemoryStorage(&tt.configs, nil)
 			require.NoError(t, err)
 
 			h := &Handler{
@@ -153,15 +153,8 @@ func TestHandlers_ShortLinkAdd(t *testing.T) {
 			file, err := storage.NewFile(&tt.configs)
 			require.NoError(t, err)
 
-			memoryStorage, err := storage.NewMemoryStorage(&tt.configs)
+			memoryStorage, err := storage.NewMemoryStorage(&tt.configs, nil)
 			require.NoError(t, err)
-
-			//defer func() {
-			//	err = fileDB.Remove()
-			//	if err != nil {
-			//		require.NoError(t, err)
-			//	}
-			//}()
 
 			h := &Handler{
 				shortLinkStorage: service.NewService(memoryStorage, file, &tt.configs),
@@ -208,7 +201,7 @@ func Test_handler_ApiShorten(t *testing.T) {
 	file, err := storage.NewFile(&cfg)
 	require.NoError(t, err)
 
-	memoryStorage, err := storage.NewMemoryStorage(&cfg)
+	memoryStorage, err := storage.NewMemoryStorage(&cfg, nil)
 	require.NoError(t, err)
 
 	h := &Handler{

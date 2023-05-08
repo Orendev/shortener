@@ -22,6 +22,7 @@ func Routes(router chi.Router, storage storage.ShortLinkStorage, cfg *configs.Co
 
 	router.Route("/", func(r chi.Router) {
 		r.Get("/{id}", h.ShortLink)
+		r.Get("/ping", h.Ping)
 		r.Post("/", h.ShortLinkAdd)
 		r.Post("/api/shorten", h.APIShorten)
 	})
