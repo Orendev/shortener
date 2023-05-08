@@ -60,7 +60,7 @@ func (h *Handler) ShortLinkAdd(w http.ResponseWriter, r *http.Request) {
 	}
 	code := random.Strn(8)
 	shortLink := models.ShortLink{
-		UUID:        h.shortLinkStorage.Uuid(),
+		UUID:        h.shortLinkStorage.UUID(),
 		Code:        code,
 		OriginalUrl: req.URL,
 		ShortUrl:    code,
@@ -105,7 +105,7 @@ func (h *Handler) APIShorten(w http.ResponseWriter, r *http.Request) {
 
 	code := random.Strn(8)
 	shortLink := models.ShortLink{
-		UUID:        h.shortLinkStorage.Uuid(),
+		UUID:        h.shortLinkStorage.UUID(),
 		Code:        code,
 		OriginalUrl: req.URL,
 		ShortUrl:    code,

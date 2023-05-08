@@ -7,5 +7,5 @@ import (
 type ShortLinkStorage interface {
 	GetByCode(code string) (*models.ShortLink, error)
 	Add(model *models.ShortLink) (string, error)
-	Uuid() string
+	UUID() string
 }

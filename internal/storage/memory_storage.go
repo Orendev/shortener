@@ -33,7 +33,7 @@ func (s *MemoryStorage) Add(model *models.ShortLink) (string, error) {
 	return model.UUID, nil
 }
 
-func (s MemoryStorage) Uuid() string {
+func (s MemoryStorage) UUID() string {
 	return uuid.New().String()
 }
 

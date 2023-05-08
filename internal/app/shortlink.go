@@ -35,6 +35,6 @@ func (s *Service) Add(model *models.ShortLink) (string, error) {
 	return uuid, nil
 }
 
-func (s Service) Uuid() string {
-	return s.storage.Uuid()
+func (s Service) UUID() string {
+	return s.storage.UUID()
 }
