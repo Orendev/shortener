@@ -74,7 +74,7 @@ func TestHandlers_ShortLink(t *testing.T) {
 			require.NoError(t, err)
 
 			h := &Handler{
-				shortLinkStorage: service.NewService(memoryStorage),
+				shortLinkStorage: service.NewService(memoryStorage, &tt.configs),
 			}
 
 			defer func() {
@@ -164,7 +164,7 @@ func TestHandlers_ShortLinkAdd(t *testing.T) {
 			require.NoError(t, err)
 
 			h := &Handler{
-				shortLinkStorage: service.NewService(memoryStorage),
+				shortLinkStorage: service.NewService(memoryStorage, &tt.configs),
 			}
 
 			defer func() {
@@ -219,7 +219,7 @@ func Test_handler_ApiShorten(t *testing.T) {
 	require.NoError(t, err)
 
 	h := &Handler{
-		shortLinkStorage: service.NewService(memoryStorage),
+		shortLinkStorage: service.NewService(memoryStorage, &cfg),
 	}
 
 	handler := http.HandlerFunc(h.APIShorten)

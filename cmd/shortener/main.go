@@ -40,7 +40,7 @@ func main() {
 		return
 	}
 
-	srv, err := http.New(cfg, service.NewService(memoryStorage))
+	srv, err := http.New(cfg, service.NewService(memoryStorage, cfg))
 	if err != nil {
 		log.Fatal(err)
 		return

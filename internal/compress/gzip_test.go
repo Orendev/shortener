@@ -54,7 +54,7 @@ func TestGzipMiddlewareSendsGzip(t *testing.T) {
 		return
 	}
 
-	service := app.NewService(memoryStorage)
+	service := app.NewService(memoryStorage, &cfg)
 
 	r := routes.Routes(chi.NewRouter(), service, &cfg)
 
@@ -160,7 +160,7 @@ func TestGzipMiddlewareAcceptsGzip(t *testing.T) {
 		return
 	}
 
-	service := app.NewService(memoryStorage)
+	service := app.NewService(memoryStorage, &cfg)
 
 	r := routes.Routes(chi.NewRouter(), service, &cfg)
 

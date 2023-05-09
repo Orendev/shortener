@@ -4,11 +4,9 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"fmt"
 	"github.com/Orendev/shortener/internal/configs"
 	"github.com/Orendev/shortener/internal/models"
 	"github.com/google/uuid"
-	"strings"
 )
 
 type MemoryStorage struct {
@@ -28,7 +26,7 @@ func (s *MemoryStorage) GetByCode(code string) (*models.ShortLink, error) {
 }
 
 func (s *MemoryStorage) Add(model *models.ShortLink) (string, error) {
-	model.ShortURL = fmt.Sprintf("%s/%s", strings.TrimPrefix(s.cfg.BaseURL, "/"), model.Code)
+
 	s.data[model.Code] = *model
 
 	err := s.file.Save(*model)
