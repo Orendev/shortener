@@ -1,4 +1,4 @@
-package http
+package app
 
 import (
 	"fmt"
@@ -14,7 +14,7 @@ type Server struct {
 	cfg    *configs.Configs
 }
 
-func New(cfg *configs.Configs, storage storage.ShortLinkStorage) (*Server, error) {
+func NewServer(cfg *configs.Configs, storage storage.ShortLinkStorage) (*Server, error) {
 
 	r := routes.Routes(chi.NewRouter(), storage, cfg)
 

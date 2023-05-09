@@ -3,10 +3,10 @@ package compress_test
 import (
 	"bytes"
 	"compress/gzip"
-	"github.com/Orendev/shortener/internal/app"
 	"github.com/Orendev/shortener/internal/configs"
 	"github.com/Orendev/shortener/internal/models"
 	"github.com/Orendev/shortener/internal/routes"
+	"github.com/Orendev/shortener/internal/services"
 	"github.com/Orendev/shortener/internal/storage"
 	"github.com/go-chi/chi/v5"
 	"github.com/stretchr/testify/require"
@@ -54,7 +54,7 @@ func TestGzipMiddlewareSendsGzip(t *testing.T) {
 		return
 	}
 
-	service := app.NewService(memoryStorage, &cfg)
+	service := services.NewService(memoryStorage, &cfg)
 
 	r := routes.Routes(chi.NewRouter(), service, &cfg)
 
@@ -160,7 +160,7 @@ func TestGzipMiddlewareAcceptsGzip(t *testing.T) {
 		return
 	}
 
-	service := app.NewService(memoryStorage, &cfg)
+	service := services.NewService(memoryStorage, &cfg)
 
 	r := routes.Routes(chi.NewRouter(), service, &cfg)
 

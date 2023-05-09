@@ -1,9 +1,9 @@
 package main
 
 import (
-	service "github.com/Orendev/shortener/internal/app"
+	"github.com/Orendev/shortener/internal/app"
 	"github.com/Orendev/shortener/internal/configs"
-	"github.com/Orendev/shortener/internal/http"
+	"github.com/Orendev/shortener/internal/services"
 	"github.com/Orendev/shortener/internal/storage"
 	"log"
 )
@@ -40,7 +40,7 @@ func main() {
 		return
 	}
 
-	srv, err := http.New(cfg, service.NewService(memoryStorage, cfg))
+	srv, err := app.NewServer(cfg, services.NewService(memoryStorage, cfg))
 	if err != nil {
 		log.Fatal(err)
 		return

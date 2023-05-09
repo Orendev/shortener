@@ -2,10 +2,10 @@ package handlers
 
 import (
 	"bytes"
-	service "github.com/Orendev/shortener/internal/app"
 	"github.com/Orendev/shortener/internal/configs"
 	"github.com/Orendev/shortener/internal/models"
 	"github.com/Orendev/shortener/internal/random"
+	service "github.com/Orendev/shortener/internal/services"
 	"github.com/Orendev/shortener/internal/storage"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
