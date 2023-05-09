@@ -21,12 +21,6 @@ func main() {
 		return
 	}
 
-	err = file.Load()
-	if err != nil {
-		log.Fatal(err)
-		return
-	}
-
 	db, err := storage.NewPostgres(cfg.DatabaseDSN)
 	if err != nil {
 		log.Fatal(err)

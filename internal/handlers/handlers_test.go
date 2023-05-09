@@ -77,6 +77,13 @@ func TestHandlers_ShortLink(t *testing.T) {
 				shortLinkStorage: service.NewService(memoryStorage, file, &tt.configs),
 			}
 
+			defer func() {
+				err = file.Remove()
+				if err != nil {
+					require.NoError(t, err)
+				}
+			}()
+
 			req := httptest.NewRequest(http.MethodGet, "/"+tt.fields.code, nil)
 			w := httptest.NewRecorder()
 
@@ -159,6 +166,13 @@ func TestHandlers_ShortLinkAdd(t *testing.T) {
 			h := &Handler{
 				shortLinkStorage: service.NewService(memoryStorage, file, &tt.configs),
 			}
+
+			defer func() {
+				err = file.Remove()
+				if err != nil {
+					require.NoError(t, err)
+				}
+			}()
 
 			body := strings.NewReader(tt.fields.url)
 			req := httptest.NewRequest(http.MethodPost, "/", body)

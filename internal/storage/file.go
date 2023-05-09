@@ -15,6 +15,37 @@ type File struct {
 }
 
 func NewFile(cfg *configs.Configs) (*File, error) {
+
+	file, err := os.OpenFile(cfg.FileStoragePath, os.O_RDONLY|os.O_CREATE, 0666)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	defer func() {
+		if err := file.Close(); err != nil {
+			log.Fatal(err)
+		}
+	}()
+
+	scan := bufio.NewScanner(file)
+
+	for {
+		if !scan.Scan() {
+			break
+		}
+		model := models.ShortLink{}
+		data := scan.Bytes()
+
+		err = json.Unmarshal(data, &model)
+
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		cfg.Memory[model.Code] = model
+
+	}
+
 	return &File{
 		cfg:  cfg,
 		data: cfg.Memory,
