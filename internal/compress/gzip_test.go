@@ -30,7 +30,7 @@ func TestGzipMiddlewareSendsGzip(t *testing.T) {
 
 	memory := cfg.Memory
 
-	fileDB, err := storage.NewFile(&cfg)
+	file, err := storage.NewFile(&cfg)
 	if err != nil {
 		require.NoError(t, err)
 	}
@@ -48,13 +48,13 @@ func TestGzipMiddlewareSendsGzip(t *testing.T) {
 		}
 	}()
 
-	memoryStorage, err := storage.NewMemoryStorage(&cfg, db)
+	memoryStorage, err := storage.NewMemoryStorage(&cfg, db, file)
 	if err != nil {
 		log.Fatal(err)
 		return
 	}
 
-	service := app.NewService(memoryStorage, fileDB, &cfg)
+	service := app.NewService(memoryStorage)
 
 	r := routes.Routes(chi.NewRouter(), service, &cfg)
 
@@ -63,7 +63,7 @@ func TestGzipMiddlewareSendsGzip(t *testing.T) {
 	defer srv.Close()
 
 	defer func() {
-		err := fileDB.Remove()
+		err := file.Remove()
 		if err != nil {
 			require.NoError(t, err)
 		}
@@ -149,18 +149,18 @@ func TestGzipMiddlewareAcceptsGzip(t *testing.T) {
 
 	memory := cfg.Memory
 
-	fileDB, err := storage.NewFile(&cfg)
+	file, err := storage.NewFile(&cfg)
 	if err != nil {
 		require.NoError(t, err)
 	}
 
-	memoryStorage, err := storage.NewMemoryStorage(&cfg, nil)
+	memoryStorage, err := storage.NewMemoryStorage(&cfg, nil, file)
 	if err != nil {
 		log.Fatal(err)
 		return
 	}
 
-	service := app.NewService(memoryStorage, fileDB, &cfg)
+	service := app.NewService(memoryStorage)
 
 	r := routes.Routes(chi.NewRouter(), service, &cfg)
 
@@ -169,7 +169,7 @@ func TestGzipMiddlewareAcceptsGzip(t *testing.T) {
 	defer srv.Close()
 
 	defer func() {
-		err := fileDB.Remove()
+		err := file.Remove()
 		if err != nil {
 			require.NoError(t, err)
 		}

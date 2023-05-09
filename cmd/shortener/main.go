@@ -34,13 +34,13 @@ func main() {
 		}
 	}()
 
-	memoryStorage, err := storage.NewMemoryStorage(cfg, db)
+	memoryStorage, err := storage.NewMemoryStorage(cfg, db, file)
 	if err != nil {
 		log.Fatal(err)
 		return
 	}
 
-	srv, err := http.New(cfg, service.NewService(memoryStorage, file, cfg))
+	srv, err := http.New(cfg, service.NewService(memoryStorage))
 	if err != nil {
 		log.Fatal(err)
 		return

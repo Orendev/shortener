@@ -4,14 +4,17 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"github.com/Orendev/shortener/internal/configs"
 	"github.com/Orendev/shortener/internal/models"
 	"github.com/google/uuid"
+	"strings"
 )
 
 type MemoryStorage struct {
 	data map[string]models.ShortLink
 	cfg  *configs.Configs
+	file *File
 	db   *sql.DB
 }
 
@@ -25,7 +28,13 @@ func (s *MemoryStorage) GetByCode(code string) (*models.ShortLink, error) {
 }
 
 func (s *MemoryStorage) Add(model *models.ShortLink) (string, error) {
+	model.ShortURL = fmt.Sprintf("%s/%s", strings.TrimPrefix(s.cfg.BaseURL, "/"), model.Code)
 	s.data[model.Code] = *model
+
+	err := s.file.Save(*model)
+	if err != nil {
+		return model.ShortURL, err
+	}
 
 	return model.UUID, nil
 }
@@ -34,10 +43,11 @@ func (s MemoryStorage) UUID() string {
 	return uuid.New().String()
 }
 
-func NewMemoryStorage(cfg *configs.Configs, db *sql.DB) (*MemoryStorage, error) {
+func NewMemoryStorage(cfg *configs.Configs, db *sql.DB, file *File) (*MemoryStorage, error) {
 	return &MemoryStorage{
 		cfg:  cfg,
 		data: cfg.Memory,
+		file: file,
 		db:   db,
 	}, nil
 }

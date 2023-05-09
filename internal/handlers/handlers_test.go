@@ -70,11 +70,11 @@ func TestHandlers_ShortLink(t *testing.T) {
 			file, err := storage.NewFile(&tt.configs)
 			require.NoError(t, err)
 
-			memoryStorage, err := storage.NewMemoryStorage(&tt.configs, nil)
+			memoryStorage, err := storage.NewMemoryStorage(&tt.configs, nil, file)
 			require.NoError(t, err)
 
 			h := &Handler{
-				shortLinkStorage: service.NewService(memoryStorage, file, &tt.configs),
+				shortLinkStorage: service.NewService(memoryStorage),
 			}
 
 			defer func() {
@@ -160,11 +160,11 @@ func TestHandlers_ShortLinkAdd(t *testing.T) {
 			file, err := storage.NewFile(&tt.configs)
 			require.NoError(t, err)
 
-			memoryStorage, err := storage.NewMemoryStorage(&tt.configs, nil)
+			memoryStorage, err := storage.NewMemoryStorage(&tt.configs, nil, file)
 			require.NoError(t, err)
 
 			h := &Handler{
-				shortLinkStorage: service.NewService(memoryStorage, file, &tt.configs),
+				shortLinkStorage: service.NewService(memoryStorage),
 			}
 
 			defer func() {
@@ -215,11 +215,11 @@ func Test_handler_ApiShorten(t *testing.T) {
 	file, err := storage.NewFile(&cfg)
 	require.NoError(t, err)
 
-	memoryStorage, err := storage.NewMemoryStorage(&cfg, nil)
+	memoryStorage, err := storage.NewMemoryStorage(&cfg, nil, file)
 	require.NoError(t, err)
 
 	h := &Handler{
-		shortLinkStorage: service.NewService(memoryStorage, file, &cfg),
+		shortLinkStorage: service.NewService(memoryStorage),
 	}
 
 	handler := http.HandlerFunc(h.APIShorten)

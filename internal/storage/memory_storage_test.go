@@ -105,12 +105,23 @@ func TestMemoryStorage_Add(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			file, err := NewFile(tt.fields.cfg)
+			require.NoError(t, err)
+
 			s := &MemoryStorage{
 				data: tt.fields.data,
 				cfg:  tt.fields.cfg,
+				file: file,
 			}
 			got, err := s.Add(&tt.args.shortLink)
 			require.NoError(t, err)
+
+			defer func() {
+				err = file.Remove()
+				if err != nil {
+					require.NoError(t, err)
+				}
+			}()
 
 			assert.Equalf(t, tt.want, got, "Add(%v)", tt.args.shortLink)
 
@@ -144,12 +155,24 @@ func TestMemoryStorage_UUID(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+
+			file, err := NewFile(tt.fields.cfg)
+			require.NoError(t, err)
+
 			s := MemoryStorage{
 				data: tt.fields.data,
 				cfg:  tt.fields.cfg,
+				file: file,
 			}
 
-			_, err := uuid.Parse(s.UUID())
+			defer func() {
+				err = file.Remove()
+				if err != nil {
+					require.NoError(t, err)
+				}
+			}()
+
+			_, err = uuid.Parse(s.UUID())
 			require.NoError(t, err)
 		})
 	}

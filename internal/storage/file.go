@@ -15,7 +15,7 @@ type File struct {
 }
 
 func NewFile(cfg *configs.Configs) (*File, error) {
-
+	//Прочитаем данные из файла FileStoragePath
 	file, err := os.OpenFile(cfg.FileStoragePath, os.O_RDONLY|os.O_CREATE, 0666)
 	if err != nil {
 		log.Fatal(err)
@@ -73,41 +73,6 @@ func (f *File) Save(model models.ShortLink) error {
 	_, err = file.Write(append(writeData, '\n'))
 	if err != nil {
 		return err
-	}
-	return nil
-}
-
-// Load Прочитаем данные из файла FileStoragePath
-func (f *File) Load() error {
-
-	file, err := os.OpenFile(f.cfg.FileStoragePath, os.O_RDONLY|os.O_CREATE, 0666)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	defer func() {
-		if err := file.Close(); err != nil {
-			log.Fatal(err)
-		}
-	}()
-
-	scan := bufio.NewScanner(file)
-
-	for {
-		if !scan.Scan() {
-			break
-		}
-		model := models.ShortLink{}
-		data := scan.Bytes()
-
-		err = json.Unmarshal(data, &model)
-
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		f.data[model.Code] = model
-
 	}
 	return nil
 }
