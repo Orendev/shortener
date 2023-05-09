@@ -3,14 +3,14 @@ package storage
 import (
 	"context"
 	"errors"
-	"github.com/Orendev/shortener/internal/configs"
+	"github.com/Orendev/shortener/internal/config"
 	"github.com/Orendev/shortener/internal/models"
 	"github.com/google/uuid"
 )
 
 type MemoryStorage struct {
 	data map[string]models.ShortLink
-	cfg  *configs.Configs
+	cfg  *config.Configs
 	file *File
 	db   *PostgresStorage
 }
@@ -40,7 +40,7 @@ func (s MemoryStorage) UUID() string {
 	return uuid.New().String()
 }
 
-func NewMemoryStorage(cfg *configs.Configs, db *PostgresStorage, file *File) (*MemoryStorage, error) {
+func NewMemoryStorage(cfg *config.Configs, db *PostgresStorage, file *File) (*MemoryStorage, error) {
 	return &MemoryStorage{
 		cfg:  cfg,
 		data: cfg.Memory,

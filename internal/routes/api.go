@@ -1,17 +1,17 @@
 package routes
 
 import (
-	"github.com/Orendev/shortener/internal/configs"
-	"github.com/Orendev/shortener/internal/handlers"
+	"github.com/Orendev/shortener/internal/config"
 	"github.com/Orendev/shortener/internal/logger"
 	"github.com/Orendev/shortener/internal/middlewares"
 	"github.com/Orendev/shortener/internal/storage"
+	"github.com/Orendev/shortener/internal/transport/http"
 	"github.com/go-chi/chi/v5"
 )
 
-func Routes(router chi.Router, storage storage.ShortLinkStorage, cfg *configs.Configs) chi.Router {
+func Routes(router chi.Router, storage storage.ShortLinkStorage, cfg *config.Configs) chi.Router {
 
-	h := handlers.NewHandler(storage)
+	h := http.NewHandler(storage)
 
 	if err := logger.NewLogger(cfg.FlagLogLevel); err != nil {
 		panic(err)

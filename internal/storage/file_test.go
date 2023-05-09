@@ -1,7 +1,7 @@
 package storage
 
 import (
-	"github.com/Orendev/shortener/internal/configs"
+	"github.com/Orendev/shortener/internal/config"
 	"github.com/Orendev/shortener/internal/models"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
@@ -15,7 +15,7 @@ func TestFileDB_Remove(t *testing.T) {
 	id := uuid.New().String()
 	tests := []struct {
 		name    string
-		cfg     *configs.Configs
+		cfg     *config.Configs
 		args    args
 		wantErr bool
 	}{
@@ -28,7 +28,7 @@ func TestFileDB_Remove(t *testing.T) {
 					ShortURL:    "http://localhost:8080/4rSPg8ap",
 				},
 			},
-			cfg: &configs.Configs{
+			cfg: &config.Configs{
 				Host:            "",
 				Port:            "8080",
 				BaseURL:         "http://localhost:8080",
@@ -64,7 +64,7 @@ func TestFileDB_Save(t *testing.T) {
 	id := uuid.New().String()
 	tests := []struct {
 		name    string
-		cfg     *configs.Configs
+		cfg     *config.Configs
 		args    args
 		wantErr bool
 	}{
@@ -77,7 +77,7 @@ func TestFileDB_Save(t *testing.T) {
 					ShortURL:    "http://localhost:8080/4rSPg8ap",
 				},
 			},
-			cfg: &configs.Configs{
+			cfg: &config.Configs{
 				Host:            "",
 				Port:            "8080",
 				BaseURL:         "http://localhost:8080",

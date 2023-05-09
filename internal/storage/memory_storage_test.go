@@ -1,7 +1,7 @@
 package storage
 
 import (
-	"github.com/Orendev/shortener/internal/configs"
+	"github.com/Orendev/shortener/internal/config"
 	"github.com/Orendev/shortener/internal/models"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
@@ -13,7 +13,7 @@ import (
 func TestMemoryStorage_GetByCode(t *testing.T) {
 	type fields struct {
 		data map[string]models.ShortLink
-		cfg  *configs.Configs
+		cfg  *config.Configs
 	}
 	type args struct {
 		code string
@@ -70,7 +70,7 @@ func TestMemoryStorage_Add(t *testing.T) {
 	id := uuid.New().String()
 	type fields struct {
 		data map[string]models.ShortLink
-		cfg  *configs.Configs
+		cfg  *config.Configs
 	}
 	type args struct {
 		shortLink models.ShortLink
@@ -92,7 +92,7 @@ func TestMemoryStorage_Add(t *testing.T) {
 			},
 			fields: fields{
 				data: map[string]models.ShortLink{},
-				cfg: &configs.Configs{
+				cfg: &config.Configs{
 					Host:            "",
 					Port:            "8080",
 					BaseURL:         "http://localhost:8080",
@@ -132,7 +132,7 @@ func TestMemoryStorage_Add(t *testing.T) {
 func TestMemoryStorage_UUID(t *testing.T) {
 	type fields struct {
 		data map[string]models.ShortLink
-		cfg  *configs.Configs
+		cfg  *config.Configs
 	}
 	tests := []struct {
 		name   string
@@ -143,7 +143,7 @@ func TestMemoryStorage_UUID(t *testing.T) {
 			name: "test UUID",
 			fields: fields{
 				data: map[string]models.ShortLink{},
-				cfg: &configs.Configs{
+				cfg: &config.Configs{
 					Host:            "",
 					Port:            "8080",
 					BaseURL:         "http://localhost:8080",

@@ -2,7 +2,7 @@ package app
 
 import (
 	"fmt"
-	"github.com/Orendev/shortener/internal/configs"
+	"github.com/Orendev/shortener/internal/config"
 	"github.com/Orendev/shortener/internal/routes"
 	"github.com/Orendev/shortener/internal/storage"
 	"github.com/go-chi/chi/v5"
@@ -11,10 +11,10 @@ import (
 
 type Server struct {
 	server *http.Server
-	cfg    *configs.Configs
+	cfg    *config.Configs
 }
 
-func NewServer(cfg *configs.Configs, storage storage.ShortLinkStorage) (*Server, error) {
+func NewServer(cfg *config.Configs, storage storage.ShortLinkStorage) (*Server, error) {
 
 	r := routes.Routes(chi.NewRouter(), storage, cfg)
 

@@ -3,7 +3,7 @@ package storage
 import (
 	"bufio"
 	"encoding/json"
-	"github.com/Orendev/shortener/internal/configs"
+	"github.com/Orendev/shortener/internal/config"
 	"github.com/Orendev/shortener/internal/models"
 	"log"
 	"os"
@@ -11,10 +11,10 @@ import (
 
 type File struct {
 	data map[string]models.ShortLink
-	cfg  *configs.Configs
+	cfg  *config.Configs
 }
 
-func NewFile(cfg *configs.Configs) (*File, error) {
+func NewFile(cfg *config.Configs) (*File, error) {
 	//Прочитаем данные из файла FileStoragePath
 	file, err := os.OpenFile(cfg.FileStoragePath, os.O_RDONLY|os.O_CREATE, 0666)
 	if err != nil {

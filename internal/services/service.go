@@ -3,7 +3,7 @@ package services
 import (
 	"context"
 	"fmt"
-	"github.com/Orendev/shortener/internal/configs"
+	"github.com/Orendev/shortener/internal/config"
 	"github.com/Orendev/shortener/internal/models"
 	"github.com/Orendev/shortener/internal/storage"
 	"strings"
@@ -11,10 +11,10 @@ import (
 
 type Service struct {
 	storage storage.ShortLinkStorage
-	cfg     *configs.Configs
+	cfg     *config.Configs
 }
 
-func NewService(storage storage.ShortLinkStorage, cfg *configs.Configs) *Service {
+func NewService(storage storage.ShortLinkStorage, cfg *config.Configs) *Service {
 
 	return &Service{
 		storage: storage,

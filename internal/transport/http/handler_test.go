@@ -1,8 +1,8 @@
-package handlers
+package http
 
 import (
 	"bytes"
-	"github.com/Orendev/shortener/internal/configs"
+	"github.com/Orendev/shortener/internal/config"
 	"github.com/Orendev/shortener/internal/models"
 	"github.com/Orendev/shortener/internal/random"
 	service "github.com/Orendev/shortener/internal/services"
@@ -34,7 +34,7 @@ func TestHandlers_ShortLink(t *testing.T) {
 	tests := []struct {
 		name    string
 		fields  fields
-		configs configs.Configs
+		configs config.Configs
 		args    args
 		want    want
 	}{
@@ -48,7 +48,7 @@ func TestHandlers_ShortLink(t *testing.T) {
 				code:        http.StatusTemporaryRedirect,
 				contentType: "text/plain",
 			},
-			configs: configs.Configs{
+			configs: config.Configs{
 				Host:            "",
 				Port:            "8080",
 				BaseURL:         "http://localhost:8080",
@@ -113,7 +113,7 @@ func TestHandlers_ShortLinkAdd(t *testing.T) {
 	tests := []struct {
 		name    string
 		fields  fields
-		configs configs.Configs
+		configs config.Configs
 		want    want
 	}{
 		{
@@ -126,7 +126,7 @@ func TestHandlers_ShortLinkAdd(t *testing.T) {
 				contentType: "text/plain",
 				response:    "http://localhost:8080/",
 			},
-			configs: configs.Configs{
+			configs: config.Configs{
 				Host:            "",
 				Port:            "8080",
 				BaseURL:         "http://localhost:8080",
@@ -144,7 +144,7 @@ func TestHandlers_ShortLinkAdd(t *testing.T) {
 				contentType: "text/plain; charset=utf-8",
 				response:    "http://localhost:8080/",
 			},
-			configs: configs.Configs{
+			configs: config.Configs{
 				Host:            "",
 				Port:            "8080",
 				BaseURL:         "http://localhost:8080",
@@ -202,7 +202,7 @@ func TestHandlers_ShortLinkAdd(t *testing.T) {
 
 func Test_handler_ApiShorten(t *testing.T) {
 
-	cfg := configs.Configs{
+	cfg := config.Configs{
 		Host:            "",
 		Port:            "8080",
 		BaseURL:         "http://localhost:8080",

@@ -2,14 +2,14 @@ package main
 
 import (
 	"github.com/Orendev/shortener/internal/app"
-	"github.com/Orendev/shortener/internal/configs"
+	"github.com/Orendev/shortener/internal/config"
 	"github.com/Orendev/shortener/internal/services"
 	"github.com/Orendev/shortener/internal/storage"
 	"log"
 )
 
 func main() {
-	cfg, err := configs.New()
+	cfg, err := config.New()
 	if err != nil {
 		log.Fatal(err)
 		return

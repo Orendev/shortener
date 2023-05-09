@@ -3,7 +3,7 @@ package compress_test
 import (
 	"bytes"
 	"compress/gzip"
-	"github.com/Orendev/shortener/internal/configs"
+	"github.com/Orendev/shortener/internal/config"
 	"github.com/Orendev/shortener/internal/models"
 	"github.com/Orendev/shortener/internal/routes"
 	"github.com/Orendev/shortener/internal/services"
@@ -17,7 +17,7 @@ import (
 	"testing"
 )
 
-var cfg = configs.Configs{
+var cfg = config.Configs{
 	Host:            "",
 	Port:            "8080",
 	BaseURL:         "http://localhost:8080",
