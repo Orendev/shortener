@@ -35,7 +35,7 @@ func TestGzipMiddlewareSendsGzip(t *testing.T) {
 		require.NoError(t, err)
 	}
 
-	db, err := storage.NewPostgres(cfg.DatabaseDSN)
+	db, err := storage.NewPostgresStorage(cfg.DatabaseDSN)
 	if err != nil {
 		log.Fatal(err)
 		return

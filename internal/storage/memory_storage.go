@@ -2,7 +2,6 @@ package storage
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 	"github.com/Orendev/shortener/internal/configs"
 	"github.com/Orendev/shortener/internal/models"
@@ -13,7 +12,7 @@ type MemoryStorage struct {
 	data map[string]models.ShortLink
 	cfg  *configs.Configs
 	file *File
-	db   *sql.DB
+	db   *PostgresStorage
 }
 
 func (s *MemoryStorage) GetByCode(code string) (*models.ShortLink, error) {
@@ -41,7 +40,7 @@ func (s MemoryStorage) UUID() string {
 	return uuid.New().String()
 }
 
-func NewMemoryStorage(cfg *configs.Configs, db *sql.DB, file *File) (*MemoryStorage, error) {
+func NewMemoryStorage(cfg *configs.Configs, db *PostgresStorage, file *File) (*MemoryStorage, error) {
 	return &MemoryStorage{
 		cfg:  cfg,
 		data: cfg.Memory,
@@ -51,5 +50,5 @@ func NewMemoryStorage(cfg *configs.Configs, db *sql.DB, file *File) (*MemoryStor
 }
 
 func (s MemoryStorage) Ping(ctx context.Context) error {
-	return s.db.PingContext(ctx)
+	return s.db.Ping(ctx)
 }

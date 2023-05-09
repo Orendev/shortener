@@ -21,20 +21,20 @@ func main() {
 		return
 	}
 
-	db, err := storage.NewPostgres(cfg.DatabaseDSN)
+	postgresStorage, err := storage.NewPostgresStorage(cfg.DatabaseDSN)
 	if err != nil {
 		log.Fatal(err)
 		return
 	}
 
 	defer func() {
-		err := db.Close()
+		err := postgresStorage.Close()
 		if err != nil {
 			log.Fatal(err)
 		}
 	}()
 
-	memoryStorage, err := storage.NewMemoryStorage(cfg, db, file)
+	memoryStorage, err := storage.NewMemoryStorage(cfg, postgresStorage, file)
 	if err != nil {
 		log.Fatal(err)
 		return
