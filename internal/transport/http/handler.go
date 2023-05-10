@@ -19,8 +19,8 @@ type Handler struct {
 	baseURL          string
 }
 
-func NewHandler(storage storage.ShortLinkStorage, baseUrl string) Handler {
-	return Handler{shortLinkStorage: storage, baseURL: baseUrl}
+func NewHandler(storage storage.ShortLinkStorage, baseURL string) Handler {
+	return Handler{shortLinkStorage: storage, baseURL: baseURL}
 }
 
 func (h *Handler) ShortLink(w http.ResponseWriter, r *http.Request) {
