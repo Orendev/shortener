@@ -15,7 +15,7 @@ type MemoryStorage struct {
 	db   *PostgresStorage
 }
 
-func (s *MemoryStorage) GetByCode(code string) (*models.ShortLink, error) {
+func (s *MemoryStorage) GetByCode(_ context.Context, code string) (*models.ShortLink, error) {
 	shortLink, ok := s.data[code]
 	if !ok {
 		err := errors.New("not found")
@@ -24,7 +24,7 @@ func (s *MemoryStorage) GetByCode(code string) (*models.ShortLink, error) {
 	return &shortLink, nil
 }
 
-func (s *MemoryStorage) Add(model *models.ShortLink) (string, error) {
+func (s *MemoryStorage) Add(_ context.Context, model *models.ShortLink) (string, error) {
 
 	s.data[model.Code] = *model
 
@@ -38,6 +38,10 @@ func (s *MemoryStorage) Add(model *models.ShortLink) (string, error) {
 
 func (s MemoryStorage) UUID() string {
 	return uuid.New().String()
+}
+
+func (s MemoryStorage) Close() error {
+	return nil
 }
 
 func NewMemoryStorage(cfg *config.Configs, db *PostgresStorage, file *File) (*MemoryStorage, error) {

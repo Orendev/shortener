@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"context"
 	"github.com/Orendev/shortener/internal/config"
 	"github.com/Orendev/shortener/internal/models"
 	"github.com/google/uuid"
@@ -51,7 +52,7 @@ func TestMemoryStorage_GetByCode(t *testing.T) {
 				data: tt.fields.data,
 				cfg:  tt.fields.cfg,
 			}
-			got, err := s.GetByCode(tt.args.code)
+			got, err := s.GetByCode(context.Background(), tt.args.code)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Get() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -98,6 +99,7 @@ func TestMemoryStorage_Add(t *testing.T) {
 					BaseURL:         "http://localhost:8080",
 					Memory:          map[string]models.ShortLink{},
 					FileStoragePath: "/tmp/test-short-url-file.json",
+					DatabaseDSN:     "host=localhost user=shortener password=secret dbname=shortener sslmode=disable",
 				},
 			},
 			want: id,
@@ -113,7 +115,7 @@ func TestMemoryStorage_Add(t *testing.T) {
 				cfg:  tt.fields.cfg,
 				file: file,
 			}
-			got, err := s.Add(&tt.args.shortLink)
+			got, err := s.Add(context.Background(), &tt.args.shortLink)
 			require.NoError(t, err)
 
 			defer func() {
@@ -149,6 +151,7 @@ func TestMemoryStorage_UUID(t *testing.T) {
 					BaseURL:         "http://localhost:8080",
 					Memory:          map[string]models.ShortLink{},
 					FileStoragePath: "/tmp/test-short-url-file.json",
+					DatabaseDSN:     "host=localhost user=shortener password=secret dbname=shortener sslmode=disable",
 				},
 			},
 		},

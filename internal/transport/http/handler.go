@@ -3,9 +3,11 @@ package http
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/Orendev/shortener/internal/models"
 	"github.com/Orendev/shortener/internal/random"
 	"github.com/Orendev/shortener/internal/storage"
+	"github.com/google/uuid"
 	"io"
 	"net/http"
 	"strings"
@@ -14,10 +16,11 @@ import (
 
 type Handler struct {
 	shortLinkStorage storage.ShortLinkStorage
+	baseURL          string
 }
 
-func NewHandler(storage storage.ShortLinkStorage) Handler {
-	return Handler{shortLinkStorage: storage}
+func NewHandler(storage storage.ShortLinkStorage, baseUrl string) Handler {
+	return Handler{shortLinkStorage: storage, baseURL: baseUrl}
 }
 
 func (h *Handler) ShortLink(w http.ResponseWriter, r *http.Request) {
@@ -28,9 +31,10 @@ func (h *Handler) ShortLink(w http.ResponseWriter, r *http.Request) {
 
 	code := strings.TrimPrefix(r.URL.Path, "/")
 
-	if shortLink, err := h.shortLinkStorage.GetByCode(code); err == nil {
+	if shortLink, err := h.shortLinkStorage.GetByCode(r.Context(), code); err == nil {
 		w.Header().Add("Location", shortLink.OriginalURL)
 		w.WriteHeader(http.StatusTemporaryRedirect)
+
 		return
 	} else {
 		w.WriteHeader(http.StatusBadRequest)
@@ -62,13 +66,13 @@ func (h *Handler) ShortLinkAdd(w http.ResponseWriter, r *http.Request) {
 	}
 	code := random.Strn(8)
 	shortLink := models.ShortLink{
-		UUID:        h.shortLinkStorage.UUID(),
+		UUID:        uuid.New().String(),
 		Code:        code,
 		OriginalURL: req.URL,
-		ShortURL:    code,
+		ShortURL:    fmt.Sprintf("%s/%s", strings.TrimPrefix(h.baseURL, "/"), code),
 	}
 
-	if _, err = h.shortLinkStorage.Add(&shortLink); err != nil {
+	if _, err = h.shortLinkStorage.Add(r.Context(), &shortLink); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -107,14 +111,14 @@ func (h *Handler) APIShorten(w http.ResponseWriter, r *http.Request) {
 
 	code := random.Strn(8)
 	shortLink := models.ShortLink{
-		UUID:        h.shortLinkStorage.UUID(),
+		UUID:        uuid.New().String(),
 		Code:        code,
 		OriginalURL: req.URL,
-		ShortURL:    code,
+		ShortURL:    fmt.Sprintf("%s/%s", strings.TrimPrefix(h.baseURL, "/"), code),
 	}
 
 	// Сохраним модель
-	_, err := h.shortLinkStorage.Add(&shortLink)
+	_, err := h.shortLinkStorage.Add(r.Context(), &shortLink)
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)

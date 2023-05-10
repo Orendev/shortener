@@ -3,6 +3,7 @@ package compress_test
 import (
 	"bytes"
 	"compress/gzip"
+	"context"
 	"github.com/Orendev/shortener/internal/config"
 	"github.com/Orendev/shortener/internal/models"
 	"github.com/Orendev/shortener/internal/routes"
@@ -22,6 +23,7 @@ var cfg = config.Configs{
 	Port:            "8080",
 	BaseURL:         "http://localhost:8080",
 	FileStoragePath: "/tmp/test-short-url-db.json",
+	DatabaseDSN:     "host=localhost user=shortener password=secret dbname=shortener sslmode=disable",
 }
 
 func TestGzipMiddlewareSendsGzip(t *testing.T) {
@@ -35,7 +37,7 @@ func TestGzipMiddlewareSendsGzip(t *testing.T) {
 		require.NoError(t, err)
 	}
 
-	db, err := storage.NewPostgresStorage(cfg.DatabaseDSN)
+	db, err := storage.NewPostgresStorage(context.Background(), cfg.DatabaseDSN)
 	if err != nil {
 		log.Fatal(err)
 		return
@@ -54,7 +56,7 @@ func TestGzipMiddlewareSendsGzip(t *testing.T) {
 		return
 	}
 
-	service := services.NewService(memoryStorage, &cfg)
+	service := services.NewService(memoryStorage)
 
 	r := routes.Routes(chi.NewRouter(), service, &cfg)
 
@@ -160,7 +162,7 @@ func TestGzipMiddlewareAcceptsGzip(t *testing.T) {
 		return
 	}
 
-	service := services.NewService(memoryStorage, &cfg)
+	service := services.NewService(memoryStorage)
 
 	r := routes.Routes(chi.NewRouter(), service, &cfg)
 

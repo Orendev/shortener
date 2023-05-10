@@ -2,33 +2,27 @@ package services
 
 import (
 	"context"
-	"fmt"
-	"github.com/Orendev/shortener/internal/config"
 	"github.com/Orendev/shortener/internal/models"
 	"github.com/Orendev/shortener/internal/storage"
-	"strings"
 )
 
 type Service struct {
 	storage storage.ShortLinkStorage
-	cfg     *config.Configs
 }
 
-func NewService(storage storage.ShortLinkStorage, cfg *config.Configs) *Service {
+func NewService(storage storage.ShortLinkStorage) *Service {
 
 	return &Service{
 		storage: storage,
-		cfg:     cfg,
 	}
 }
 
-func (s *Service) GetByCode(code string) (*models.ShortLink, error) {
-	return s.storage.GetByCode(code)
+func (s *Service) GetByCode(ctx context.Context, code string) (*models.ShortLink, error) {
+	return s.storage.GetByCode(ctx, code)
 }
 
-func (s *Service) Add(model *models.ShortLink) (string, error) {
-	model.ShortURL = fmt.Sprintf("%s/%s", strings.TrimPrefix(s.cfg.BaseURL, "/"), model.Code)
-	uuid, err := s.storage.Add(model)
+func (s *Service) Add(ctx context.Context, model *models.ShortLink) (string, error) {
+	uuid, err := s.storage.Add(ctx, model)
 	if err != nil {
 		return model.ShortURL, err
 	}
@@ -36,10 +30,10 @@ func (s *Service) Add(model *models.ShortLink) (string, error) {
 	return uuid, nil
 }
 
-func (s Service) UUID() string {
-	return s.storage.UUID()
-}
-
 func (s Service) Ping(ctx context.Context) error {
 	return s.storage.Ping(ctx)
+}
+
+func (s Service) Close() error {
+	return s.storage.Close()
 }

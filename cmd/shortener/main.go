@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"github.com/Orendev/shortener/internal/app"
 	"github.com/Orendev/shortener/internal/config"
 	"github.com/Orendev/shortener/internal/services"
@@ -21,26 +22,32 @@ func main() {
 		return
 	}
 
-	postgresStorage, err := storage.NewPostgresStorage(cfg.DatabaseDSN)
-	if err != nil {
-		log.Fatal(err)
-		return
-	}
+	var store storage.ShortLinkStorage
 
-	defer func() {
-		err := postgresStorage.Close()
+	if len(cfg.DatabaseDSN) > 0 {
+
+		store, err = storage.NewPostgresStorage(context.Background(), cfg.DatabaseDSN)
 		if err != nil {
 			log.Fatal(err)
+			return
 		}
-	}()
 
-	memoryStorage, err := storage.NewMemoryStorage(cfg, postgresStorage, file)
-	if err != nil {
-		log.Fatal(err)
-		return
+		defer func() {
+			err := store.Close()
+			if err != nil {
+				log.Fatal(err)
+			}
+		}()
+
+	} else {
+		store, err = storage.NewMemoryStorage(cfg, nil, file)
+		if err != nil {
+			log.Fatal(err)
+			return
+		}
 	}
 
-	srv, err := app.NewServer(cfg, services.NewService(memoryStorage, cfg))
+	srv, err := app.NewServer(cfg, services.NewService(store))
 	if err != nil {
 		log.Fatal(err)
 		return

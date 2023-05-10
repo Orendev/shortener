@@ -11,7 +11,7 @@ import (
 
 func Routes(router chi.Router, storage storage.ShortLinkStorage, cfg *config.Configs) chi.Router {
 
-	h := http.NewHandler(storage)
+	h := http.NewHandler(storage, cfg.BaseURL)
 
 	if err := logger.NewLogger(cfg.FlagLogLevel); err != nil {
 		panic(err)
