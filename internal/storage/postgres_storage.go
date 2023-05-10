@@ -13,16 +13,9 @@ type PostgresStorage struct {
 	db *sql.DB
 }
 
-func NewPostgresStorage(ctx context.Context, dsn string) (*PostgresStorage, error) {
+func NewPostgresStorage(dsn string) (*PostgresStorage, error) {
 
 	db, err := sql.Open("pgx", dsn)
-
-	if err != nil {
-		log.Fatal(err)
-		return nil, err
-	}
-
-	err = createTable(ctx, db)
 
 	if err != nil {
 		log.Fatal(err)
@@ -81,7 +74,7 @@ func (s *PostgresStorage) Ping(ctx context.Context) error {
 	return s.db.PingContext(ctx)
 }
 
-func createTable(ctx context.Context, db *sql.DB) error {
+func (s *PostgresStorage) CreateTable(ctx context.Context) error {
 	sqlStatement := `
 	CREATE TABLE IF NOT EXISTS short_links (
 	    id UUID NOT NULL primary key, 
@@ -90,7 +83,7 @@ func createTable(ctx context.Context, db *sql.DB) error {
 	    original_url TEXT NOT NULL
 	    )`
 
-	_, err := db.ExecContext(
+	_, err := s.db.ExecContext(
 		ctx,
 		sqlStatement,
 	)

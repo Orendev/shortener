@@ -3,7 +3,6 @@ package compress_test
 import (
 	"bytes"
 	"compress/gzip"
-	"context"
 	"github.com/Orendev/shortener/internal/config"
 	"github.com/Orendev/shortener/internal/models"
 	"github.com/Orendev/shortener/internal/routes"
@@ -37,7 +36,7 @@ func TestGzipMiddlewareSendsGzip(t *testing.T) {
 		require.NoError(t, err)
 	}
 
-	db, err := storage.NewPostgresStorage(context.Background(), cfg.DatabaseDSN)
+	db, err := storage.NewPostgresStorage(cfg.DatabaseDSN)
 	if err != nil {
 		log.Fatal(err)
 		return
