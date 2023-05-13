@@ -3,7 +3,10 @@ package storage
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"github.com/Orendev/shortener/internal/models"
+	"github.com/jackc/pgerrcode"
+	"github.com/jackc/pgx/v5/pgconn"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"log"
 )
@@ -78,10 +81,41 @@ func (s *PostgresStorage) GetByID(ctx context.Context, id string) (*models.Short
 	return &model, nil
 }
 
+func (s *PostgresStorage) GetByOriginalUrl(ctx context.Context, originalUrl string) (*models.ShortLink, error) {
+
+	model := models.ShortLink{}
+
+	stmt, err := s.db.PrepareContext(ctx,
+		`SELECT id, code, short_url, original_url  FROM short_links WHERE original_url = $1 LIMIT 1`)
+
+	if err != nil {
+		return nil, err
+	}
+
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			log.Fatal(err)
+		}
+	}()
+
+	// делаем запрос
+	row := stmt.QueryRowContext(ctx, originalUrl)
+
+	// разбираем результат
+	err = row.Scan(&model.UUID, &model.Code, &model.ShortURL, &model.OriginalURL)
+	if err != nil {
+		return nil, err
+	}
+
+	return &model, nil
+}
+
 func (s *PostgresStorage) Save(ctx context.Context, model models.ShortLink) error {
 	sqlStatement := `
 	INSERT INTO short_links (id, code, short_url, original_url)
-	VALUES ($1, $2, $3, $4)`
+	VALUES ($1, $2, $3, $4)
+	`
 
 	_, err := s.db.ExecContext(
 		ctx,
@@ -89,6 +123,11 @@ func (s *PostgresStorage) Save(ctx context.Context, model models.ShortLink) erro
 	)
 
 	if err != nil {
+		var pgErr *pgconn.PgError
+
+		if errors.As(err, &pgErr) && pgerrcode.UniqueViolation == pgErr.Code {
+			err = ErrConflict
+		}
 		return err
 	}
 
@@ -177,7 +216,7 @@ func (s *PostgresStorage) Bootstrap(ctx context.Context) error {
 	    id UUID NOT NULL primary key, 
 	    code VARCHAR(255) NOT NULL UNIQUE, 
 	    short_url TEXT NOT NULL, 
-	    original_url TEXT NOT NULL
+	    original_url TEXT NOT NULL UNIQUE
 	    )`
 
 	_, err := s.db.ExecContext(

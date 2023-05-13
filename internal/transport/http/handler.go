@@ -3,6 +3,7 @@ package http
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/Orendev/shortener/internal/models"
 	"github.com/Orendev/shortener/internal/random"
@@ -110,7 +111,7 @@ func (h *Handler) Shorten(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	code := random.Strn(8)
-	shortLink := models.ShortLink{
+	shortLink := &models.ShortLink{
 		UUID:        uuid.New().String(),
 		Code:        code,
 		OriginalURL: req.URL,
@@ -118,11 +119,20 @@ func (h *Handler) Shorten(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Сохраним модель
-	err := h.shortLinkStorage.Save(r.Context(), shortLink)
+	err := h.shortLinkStorage.Save(r.Context(), *shortLink)
 
-	if err != nil {
+	if err != nil && !errors.Is(err, storage.ErrConflict) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
+	}
+
+	if errors.Is(err, storage.ErrConflict) {
+		w.WriteHeader(http.StatusConflict)
+		shortLink, err = h.shortLinkStorage.GetByOriginalUrl(r.Context(), req.URL)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
 	}
 
 	// заполняем модель ответа

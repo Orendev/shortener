@@ -40,8 +40,35 @@ func (s *MemoryStorage) GetByID(_ context.Context, id string) (*models.ShortLink
 	return &shortLink, nil
 }
 
+func (s *MemoryStorage) GetByOriginalUrl(_ context.Context, originalUrl string) (*models.ShortLink, error) {
+	var shortLink models.ShortLink
+	ok := false
+
+	for _, link := range s.data {
+
+		if link.OriginalURL == originalUrl {
+			shortLink = link
+			ok = true
+			break
+		}
+	}
+
+	if !ok {
+		err := errors.New("not found")
+		return nil, err
+	}
+
+	return &shortLink, nil
+}
+
 func (s *MemoryStorage) Save(_ context.Context, model models.ShortLink) error {
 
+	for _, link := range s.data {
+
+		if link.OriginalURL == model.OriginalURL {
+			return ErrConflict
+		}
+	}
 	s.data[model.Code] = model
 
 	err := s.file.Save(s.data)
