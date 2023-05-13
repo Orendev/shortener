@@ -3,13 +3,11 @@ package storage
 import (
 	"context"
 	"errors"
-	"github.com/Orendev/shortener/internal/config"
 	"github.com/Orendev/shortener/internal/models"
 )
 
 type MemoryStorage struct {
 	data map[string]models.ShortLink
-	cfg  *config.Configs
 	file *File
 }
 
@@ -82,10 +80,9 @@ func (s MemoryStorage) Close() error {
 	return nil
 }
 
-func NewMemoryStorage(cfg *config.Configs, file *File) (*MemoryStorage, error) {
+func NewMemoryStorage(data map[string]models.ShortLink, file *File) (*MemoryStorage, error) {
 	return &MemoryStorage{
-		cfg:  cfg,
-		data: cfg.Memory,
+		data: data,
 		file: file,
 	}, nil
 }

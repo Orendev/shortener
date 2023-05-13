@@ -36,7 +36,7 @@ func TestGzipMiddlewareSendsGzip(t *testing.T) {
 		require.NoError(t, err)
 	}
 
-	memoryStorage, err := storage.NewMemoryStorage(&cfg, file)
+	memoryStorage, err := storage.NewMemoryStorage(cfg.Memory, file)
 	if err != nil {
 		log.Fatal(err)
 		return
@@ -142,7 +142,7 @@ func TestGzipMiddlewareAcceptsGzip(t *testing.T) {
 		require.NoError(t, err)
 	}
 
-	memoryStorage, err := storage.NewMemoryStorage(&cfg, file)
+	memoryStorage, err := storage.NewMemoryStorage(cfg.Memory, file)
 	if err != nil {
 		log.Fatal(err)
 		return

@@ -47,7 +47,7 @@ func main() {
 		store = pg
 
 	} else {
-		store, err = storage.NewMemoryStorage(cfg, file)
+		store, err = storage.NewMemoryStorage(cfg.Memory, file)
 		if err != nil {
 			log.Fatal(err)
 			return
