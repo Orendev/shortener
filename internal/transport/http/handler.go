@@ -88,7 +88,7 @@ func (h *Handler) ShortLinkAdd(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (h *Handler) APIShorten(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) Shorten(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return

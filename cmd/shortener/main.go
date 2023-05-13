@@ -16,12 +16,6 @@ func main() {
 		return
 	}
 
-	file, err := storage.NewFile(cfg)
-	if err != nil {
-		log.Fatal(err)
-		return
-	}
-
 	var store storage.ShortLinkStorage
 	var ctx = context.Background()
 
@@ -47,6 +41,12 @@ func main() {
 		store = pg
 
 	} else {
+		file, err := storage.NewFile(cfg)
+		if err != nil {
+			log.Fatal(err)
+			return
+		}
+
 		store, err = storage.NewMemoryStorage(cfg.Memory, file)
 		if err != nil {
 			log.Fatal(err)

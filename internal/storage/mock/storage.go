@@ -35,20 +35,6 @@ func (m *MockShortLinkStorage) EXPECT() *MockShortLinkStorageMockRecorder {
 	return m.recorder
 }
 
-// Add mocks base method.
-func (m *MockShortLinkStorage) Save(ctx context.Context, model models.ShortLink) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Save", ctx, model)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// Add indicates an expected call of Add.
-func (mr *MockShortLinkStorageMockRecorder) Save(ctx, model interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Save", reflect.TypeOf((*MockShortLinkStorage)(nil).Save), ctx, model)
-}
-
 // Close mocks base method.
 func (m *MockShortLinkStorage) Close() error {
 	m.ctrl.T.Helper()
@@ -87,10 +73,24 @@ func (m *MockShortLinkStorage) GetByID(ctx context.Context, id string) (*models.
 	return ret0, ret1
 }
 
-// GetByID indicates an expected call of GetByCode.
-func (mr *MockShortLinkStorageMockRecorder) GetByID(ctx, code interface{}) *gomock.Call {
+// GetByID indicates an expected call of GetByID.
+func (mr *MockShortLinkStorageMockRecorder) GetByID(ctx, id interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByID", reflect.TypeOf((*MockShortLinkStorage)(nil).GetByID), ctx, code)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByID", reflect.TypeOf((*MockShortLinkStorage)(nil).GetByID), ctx, id)
+}
+
+// InsertBatch mocks base method.
+func (m *MockShortLinkStorage) InsertBatch(ctx context.Context, models []models.ShortLink) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "InsertBatch", ctx, models)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// InsertBatch indicates an expected call of InsertBatch.
+func (mr *MockShortLinkStorageMockRecorder) InsertBatch(ctx, models interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertBatch", reflect.TypeOf((*MockShortLinkStorage)(nil).InsertBatch), ctx, models)
 }
 
 // Ping mocks base method.
@@ -107,18 +107,18 @@ func (mr *MockShortLinkStorageMockRecorder) Ping(ctx interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Ping", reflect.TypeOf((*MockShortLinkStorage)(nil).Ping), ctx)
 }
 
-// InsertBatch mocks base method.
-func (m *MockShortLinkStorage) InsertBatch(ctx context.Context, models []models.ShortLink) error {
+// Save mocks base method.
+func (m *MockShortLinkStorage) Save(ctx context.Context, model models.ShortLink) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "InsertBatch", ctx, models)
+	ret := m.ctrl.Call(m, "Save", ctx, model)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// InsertBatch indicates an expected call of InsertBatch.
-func (mr *MockShortLinkStorageMockRecorder) InsertBatch(ctx, models []interface{}) *gomock.Call {
+// Save indicates an expected call of Save.
+func (mr *MockShortLinkStorageMockRecorder) Save(ctx, model interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertBatch", reflect.TypeOf((*MockShortLinkStorage)(nil).InsertBatch))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Save", reflect.TypeOf((*MockShortLinkStorage)(nil).Save), ctx, model)
 }
 
 // UpdateBatch mocks base method.
@@ -129,8 +129,8 @@ func (m *MockShortLinkStorage) UpdateBatch(ctx context.Context, models []models.
 	return ret0
 }
 
-// UpdateBatch indicates an expected call of InsertBatch.
-func (mr *MockShortLinkStorageMockRecorder) UpdateBatch(ctx, models []interface{}) *gomock.Call {
+// UpdateBatch indicates an expected call of UpdateBatch.
+func (mr *MockShortLinkStorageMockRecorder) UpdateBatch(ctx, models interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateBatch", reflect.TypeOf((*MockShortLinkStorage)(nil).UpdateBatch))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateBatch", reflect.TypeOf((*MockShortLinkStorage)(nil).UpdateBatch), ctx, models)
 }

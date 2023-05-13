@@ -87,7 +87,7 @@ func TestHandlers_ShortLink(t *testing.T) {
 	}
 }
 
-func TestHandlers_ShortLinkSave(t *testing.T) {
+func TestHandlers_ShortLinkAdd(t *testing.T) {
 
 	// создадим конроллер моков и экземпляр мок-хранилища
 	ctrl := gomock.NewController(t)
@@ -176,7 +176,7 @@ func TestHandlers_ShortLinkSave(t *testing.T) {
 	}
 }
 
-func Test_handler_ApiShorten(t *testing.T) {
+func Test_handler_Shorten(t *testing.T) {
 
 	// создадим конроллер моков и экземпляр мок-хранилища
 	ctrl := gomock.NewController(t)
@@ -191,7 +191,7 @@ func Test_handler_ApiShorten(t *testing.T) {
 	// создадим экземпляр приложения и передадим ему «хранилище»
 	h := transportHttp.NewHandler(s, "http://localhost")
 
-	srv := httptest.NewServer(http.HandlerFunc(h.APIShorten))
+	srv := httptest.NewServer(http.HandlerFunc(h.Shorten))
 	defer srv.Close()
 
 	type want struct {
@@ -261,6 +261,107 @@ func Test_handler_ApiShorten(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
+			var bodyReader io.Reader
+
+			if len(tt.body) > 0 {
+				jsonBody := []byte(tt.body)
+				bodyReader = bytes.NewReader(jsonBody)
+			}
+
+			req, err := http.NewRequest(tt.method, srv.URL, bodyReader)
+			require.NoError(t, err)
+
+			if len(tt.body) > 0 {
+				req.Header.Set("Content-Type", "application/json")
+
+			}
+
+			resp, err := srv.Client().Do(req)
+			require.NoError(t, err)
+
+			defer func() {
+				err := resp.Body.Close()
+				if err != nil {
+					require.NoError(t, err)
+				}
+			}()
+
+			assert.NoError(t, err, "error making HTTP request")
+			assert.Equal(t, tt.want.expectedCode, resp.StatusCode, "code didn't match expected")
+
+			// проверяем корректность полученного тела ответа, если мы его ожидаем
+			if tt.want.expectedBody != "" {
+				body, err := io.ReadAll(resp.Body)
+				if err != nil {
+					require.NoError(t, err)
+				}
+				assert.Regexp(t, tt.want.expectedBody, string(body))
+			}
+		})
+	}
+}
+
+func TestHandler_ShortenBatchInsert(t *testing.T) {
+
+	// создадим конроллер моков и экземпляр мок-хранилища
+	ctrl := gomock.NewController(t)
+	s := mock.NewMockShortLinkStorage(ctrl)
+
+	// определим, какой результат будем получать от «хранилища»
+	code := random.Strn(8)
+	id := uuid.New().String()
+	// определим, какой результат будем получать от «хранилища»
+	model := models.ShortLink{
+		UUID:        id,
+		Code:        code,
+		ShortURL:    "http://localhost/" + code,
+		OriginalURL: "https://practicum.yandex.ru/",
+	}
+
+	// определим, какой результат будем получать от «хранилища»
+	// установим условие: при любом вызове метода Save возвращать uuid без ошибки
+	s.EXPECT().
+		InsertBatch(gomock.Any(), gomock.Any()).
+		Return(nil)
+
+	s.EXPECT().
+		UpdateBatch(gomock.Any(), gomock.Any()).
+		Return(nil)
+
+	s.EXPECT().
+		GetByID(gomock.Any(), gomock.Any()).
+		Return(&model, nil)
+
+	// создадим экземпляр приложения и передадим ему «хранилище»
+	h := transportHttp.NewHandler(s, "http://localhost")
+
+	srv := httptest.NewServer(http.HandlerFunc(h.ShortenBatch))
+	defer srv.Close()
+
+	type want struct {
+		expectedCode int
+		expectedBody string
+		contentType  string
+	}
+
+	tests := []struct {
+		name   string
+		method string
+		body   string // добавляем тело запроса в табличные тесты
+		want   want
+	}{
+		{
+			name:   "method post success ShortenBatchInsert",
+			method: http.MethodPost,
+			body:   `[{"correlation_id": "e8cd3fd9-d161-4d47-9337-e09eb6ec0124", "original_url":"https://practicum.yandex.ru/"}]`,
+			want: want{
+				expectedCode: http.StatusCreated,
+				expectedBody: `[{"correlation_id": "e8cd3fd9-d161-4d47-9337-e09eb6ec0124", "short_url":"http://localhost/.*"}]`,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
 			var bodyReader io.Reader
 
 			if len(tt.body) > 0 {
