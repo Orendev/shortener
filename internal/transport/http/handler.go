@@ -66,16 +66,27 @@ func (h *Handler) ShortLinkAdd(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	code := random.Strn(8)
-	shortLink := models.ShortLink{
+	shortLink := &models.ShortLink{
 		UUID:        uuid.New().String(),
 		Code:        code,
 		OriginalURL: req.URL,
 		ShortURL:    fmt.Sprintf("%s/%s", strings.TrimPrefix(h.baseURL, "/"), code),
 	}
 
-	if err = h.shortLinkStorage.Save(r.Context(), shortLink); err != nil {
+	err = h.shortLinkStorage.Save(r.Context(), *shortLink)
+
+	if err != nil && !errors.Is(err, storage.ErrConflict) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
+	}
+
+	if errors.Is(err, storage.ErrConflict) {
+		w.WriteHeader(http.StatusConflict)
+		shortLink, err = h.shortLinkStorage.GetByOriginalURL(r.Context(), req.URL)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
 	}
 
 	w.WriteHeader(http.StatusCreated)
@@ -128,7 +139,7 @@ func (h *Handler) Shorten(w http.ResponseWriter, r *http.Request) {
 
 	if errors.Is(err, storage.ErrConflict) {
 		w.WriteHeader(http.StatusConflict)
-		shortLink, err = h.shortLinkStorage.GetByOriginalUrl(r.Context(), req.URL)
+		shortLink, err = h.shortLinkStorage.GetByOriginalURL(r.Context(), req.URL)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return

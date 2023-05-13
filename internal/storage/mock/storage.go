@@ -80,9 +80,9 @@ func (mr *MockShortLinkStorageMockRecorder) GetByID(ctx, id interface{}) *gomock
 }
 
 // GetByOriginalUrl mocks base method.
-func (m *MockShortLinkStorage) GetByOriginalUrl(ctx context.Context, originalUrl string) (*models.ShortLink, error) {
+func (m *MockShortLinkStorage) GetByOriginalURL(ctx context.Context, originalUrl string) (*models.ShortLink, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetByOriginalUrl", ctx, originalUrl)
+	ret := m.ctrl.Call(m, "GetByOriginalURL", ctx, originalUrl)
 	ret0, _ := ret[0].(*models.ShortLink)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
@@ -91,7 +91,7 @@ func (m *MockShortLinkStorage) GetByOriginalUrl(ctx context.Context, originalUrl
 // GetByOriginalUrl indicates an expected call of GetByOriginalUrl.
 func (mr *MockShortLinkStorageMockRecorder) GetByOriginalUrl(ctx, originalUrl interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByOriginalUrl", reflect.TypeOf((*MockShortLinkStorage)(nil).GetByOriginalUrl), ctx, originalUrl)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByOriginalURL", reflect.TypeOf((*MockShortLinkStorage)(nil).GetByOriginalURL), ctx, originalUrl)
 }
 
 // InsertBatch mocks base method.

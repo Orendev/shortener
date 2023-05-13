@@ -40,7 +40,7 @@ func (s *MemoryStorage) GetByID(_ context.Context, id string) (*models.ShortLink
 	return &shortLink, nil
 }
 
-func (s *MemoryStorage) GetByOriginalUrl(_ context.Context, originalUrl string) (*models.ShortLink, error) {
+func (s *MemoryStorage) GetByOriginalURL(_ context.Context, originalUrl string) (*models.ShortLink, error) {
 	var shortLink models.ShortLink
 	ok := false
 
