@@ -11,7 +11,6 @@ type MemoryStorage struct {
 	data map[string]models.ShortLink
 	cfg  *config.Configs
 	file *File
-	db   *PostgresStorage
 }
 
 func (s *MemoryStorage) GetByCode(_ context.Context, code string) (*models.ShortLink, error) {
@@ -67,6 +66,7 @@ func (s *MemoryStorage) InsertBatch(_ context.Context, shortLinks []models.Short
 
 	return nil
 }
+
 func (s *MemoryStorage) UpdateBatch(_ context.Context, shortLinks []models.ShortLink) error {
 	for _, link := range shortLinks {
 		s.data[link.Code] = link
@@ -82,15 +82,14 @@ func (s MemoryStorage) Close() error {
 	return nil
 }
 
-func NewMemoryStorage(cfg *config.Configs, db *PostgresStorage, file *File) (*MemoryStorage, error) {
+func NewMemoryStorage(cfg *config.Configs, file *File) (*MemoryStorage, error) {
 	return &MemoryStorage{
 		cfg:  cfg,
 		data: cfg.Memory,
 		file: file,
-		db:   db,
 	}, nil
 }
 
-func (s MemoryStorage) Ping(ctx context.Context) error {
-	return s.db.Ping(ctx)
+func (s MemoryStorage) Ping(_ context.Context) error {
+	return nil
 }

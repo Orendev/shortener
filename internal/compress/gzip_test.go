@@ -36,20 +36,7 @@ func TestGzipMiddlewareSendsGzip(t *testing.T) {
 		require.NoError(t, err)
 	}
 
-	db, err := storage.NewPostgresStorage(cfg.DatabaseDSN)
-	if err != nil {
-		log.Fatal(err)
-		return
-	}
-
-	defer func() {
-		err := db.Close()
-		if err != nil {
-			log.Fatal(err)
-		}
-	}()
-
-	memoryStorage, err := storage.NewMemoryStorage(&cfg, db, file)
+	memoryStorage, err := storage.NewMemoryStorage(&cfg, file)
 	if err != nil {
 		log.Fatal(err)
 		return
@@ -155,7 +142,7 @@ func TestGzipMiddlewareAcceptsGzip(t *testing.T) {
 		require.NoError(t, err)
 	}
 
-	memoryStorage, err := storage.NewMemoryStorage(&cfg, nil, file)
+	memoryStorage, err := storage.NewMemoryStorage(&cfg, file)
 	if err != nil {
 		log.Fatal(err)
 		return

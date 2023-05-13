@@ -25,27 +25,29 @@ func main() {
 	var store storage.ShortLinkStorage
 	var ctx = context.Background()
 
-	dbStore, err := storage.NewPostgresStorage(cfg.DatabaseDSN)
-	if err != nil {
-		log.Fatal(err)
-		return
-	}
-
-	defer func() {
-		err := dbStore.Close()
-		if err != nil {
-			log.Fatal(err)
-		}
-	}()
-
 	if len(cfg.DatabaseDSN) > 0 {
-		store = dbStore
-		err = dbStore.Bootstrap(ctx)
+		pg, err := storage.NewPostgresStorage(cfg.DatabaseDSN)
+		if err != nil {
+			log.Fatal(err)
+			return
+		}
+
+		defer func() {
+			err = pg.Close()
+			if err != nil {
+				log.Fatal(err)
+			}
+		}()
+
+		err = pg.Bootstrap(ctx)
 		if err != nil {
 			log.Fatal(err)
 		}
+
+		store = pg
+
 	} else {
-		store, err = storage.NewMemoryStorage(cfg, dbStore, file)
+		store, err = storage.NewMemoryStorage(cfg, file)
 		if err != nil {
 			log.Fatal(err)
 			return
