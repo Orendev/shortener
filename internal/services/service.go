@@ -21,13 +21,25 @@ func (s *Service) GetByCode(ctx context.Context, code string) (*models.ShortLink
 	return s.storage.GetByCode(ctx, code)
 }
 
-func (s *Service) Add(ctx context.Context, model *models.ShortLink) (string, error) {
-	uuid, err := s.storage.Add(ctx, model)
+func (s *Service) GetById(ctx context.Context, id string) (*models.ShortLink, error) {
+	return s.storage.GetById(ctx, id)
+}
+
+func (s *Service) Save(ctx context.Context, model models.ShortLink) error {
+	err := s.storage.Save(ctx, model)
 	if err != nil {
-		return model.ShortURL, err
+		return err
 	}
 
-	return uuid, nil
+	return nil
+}
+
+func (s *Service) InsertBatch(ctx context.Context, shortLinks []models.ShortLink) error {
+	return s.storage.InsertBatch(ctx, shortLinks)
+}
+
+func (s *Service) UpdateBatch(ctx context.Context, shortLinks []models.ShortLink) error {
+	return s.storage.UpdateBatch(ctx, shortLinks)
 }
 
 func (s Service) Ping(ctx context.Context) error {

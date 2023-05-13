@@ -32,11 +32,11 @@ func New() (*Configs, error) {
 		log.Fatal(err)
 		return nil, err
 	}
-
 	flag.StringVar(&addr, "a", "localhost:8080", "Адрес запуска сервера localhost:8080")
 	flag.StringVar(&baseURL, "b", "http://localhost:8080", "Базовый URL http://localhost:8080")
 	flag.StringVar(&flagLogLevel, "ll", "info", "log level")
 	flag.StringVar(&fileStoragePath, "f", "/tmp/short-url-db.json", "Полное имя файла")
+	//host=localhost user=shortener password=secret dbname=shortener sslmode=disable
 	flag.StringVar(&databaseDSN, "d", "", "Строка с адресом подключения")
 	flag.Parse()
 

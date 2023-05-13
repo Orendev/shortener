@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"github.com/Orendev/shortener/internal/models"
-	"github.com/google/uuid"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"log"
 )
@@ -31,7 +30,7 @@ func (s *PostgresStorage) Close() error {
 	return s.db.Close()
 }
 
-func (s PostgresStorage) GetByCode(ctx context.Context, code string) (*models.ShortLink, error) {
+func (s *PostgresStorage) GetByCode(ctx context.Context, code string) (*models.ShortLink, error) {
 
 	model := models.ShortLink{}
 
@@ -49,7 +48,37 @@ func (s PostgresStorage) GetByCode(ctx context.Context, code string) (*models.Sh
 	return &model, nil
 }
 
-func (s PostgresStorage) Add(ctx context.Context, model *models.ShortLink) (string, error) {
+func (s *PostgresStorage) GetById(ctx context.Context, id string) (*models.ShortLink, error) {
+
+	model := models.ShortLink{}
+
+	stmt, err := s.db.PrepareContext(ctx,
+		`SELECT id, code, short_url, original_url  FROM short_links WHERE id = $1 LIMIT 1`)
+
+	if err != nil {
+		return nil, err
+	}
+
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			log.Fatal(err)
+		}
+	}()
+
+	// делаем запрос
+	row := stmt.QueryRowContext(ctx, id)
+
+	// разбираем результат
+	err = row.Scan(&model.UUID, &model.Code, &model.ShortURL, &model.OriginalURL)
+	if err != nil {
+		return nil, err
+	}
+
+	return &model, nil
+}
+
+func (s *PostgresStorage) Save(ctx context.Context, model models.ShortLink) error {
 	sqlStatement := `
 	INSERT INTO short_links (id, code, short_url, original_url)
 	VALUES ($1, $2, $3, $4)`
@@ -60,21 +89,89 @@ func (s PostgresStorage) Add(ctx context.Context, model *models.ShortLink) (stri
 	)
 
 	if err != nil {
-		return "", err
+		return err
 	}
 
-	return model.UUID, nil
-}
-
-func (s PostgresStorage) UUID() string {
-	return uuid.New().String()
+	return nil
 }
 
 func (s *PostgresStorage) Ping(ctx context.Context) error {
 	return s.db.PingContext(ctx)
 }
 
-func (s *PostgresStorage) CreateTable(ctx context.Context) error {
+func (s PostgresStorage) InsertBatch(ctx context.Context, shortLinks []models.ShortLink) error {
+	// начинаем транзакцию
+	tx, err := s.db.Begin()
+	if err != nil {
+		return err
+	}
+
+	stmt, err := tx.PrepareContext(ctx,
+		`INSERT INTO short_links (id, code, short_url, original_url)
+				VALUES($1, $2, $3, $4)`)
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			log.Fatal(err)
+		}
+	}()
+
+	for _, sl := range shortLinks {
+		_, err = stmt.ExecContext(ctx, sl.UUID, sl.Code, sl.ShortURL, sl.OriginalURL)
+		if err != nil {
+			// если ошибка, то откатываем изменения
+			errRollback := tx.Rollback()
+			if errRollback != nil {
+				return errRollback
+			}
+			return err
+		}
+	}
+	return tx.Commit()
+}
+
+func (s PostgresStorage) UpdateBatch(ctx context.Context, shortLinks []models.ShortLink) error {
+	// начинаем транзакцию
+	tx, err := s.db.Begin()
+	if err != nil {
+		return err
+	}
+
+	stmt, err := tx.PrepareContext(ctx,
+		`UPDATE short_links SET original_url = $1 WHERE id = $2`)
+
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			log.Fatal(err)
+		}
+	}()
+
+	for _, sl := range shortLinks {
+		_, err = stmt.ExecContext(ctx, sl.OriginalURL, sl.UUID)
+		if err != nil {
+			// если ошибка, то откатываем изменения
+			errRollback := tx.Rollback()
+			if errRollback != nil {
+				return errRollback
+			}
+			return err
+		}
+	}
+	return tx.Commit()
+}
+
+// Bootstrap подготавливает БД к работе, создавая необходимые таблицы и индексы
+func (s *PostgresStorage) Bootstrap(ctx context.Context) error {
+
 	sqlStatement := `
 	CREATE TABLE IF NOT EXISTS short_links (
 	    id UUID NOT NULL primary key, 

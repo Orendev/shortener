@@ -53,9 +53,9 @@ func NewFile(cfg *config.Configs) (*File, error) {
 }
 
 // Save сохраняет данные в файле FileStoragePath.
-func (f *File) Save(model models.ShortLink) error {
+func (f *File) Save(models map[string]models.ShortLink) error {
 
-	file, err := os.OpenFile(f.cfg.FileStoragePath, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
+	file, err := os.OpenFile(f.cfg.FileStoragePath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)
 	if err != nil {
 		return err
 	}
@@ -65,15 +65,18 @@ func (f *File) Save(model models.ShortLink) error {
 		}
 	}()
 
-	// сериализуем структуру в JSON формат
-	writeData, err := json.Marshal(model)
-	if err != nil {
-		return err
+	for _, model := range models {
+		// сериализуем структуру в JSON формат
+		writeData, err := json.Marshal(model)
+		if err != nil {
+			return err
+		}
+		_, err = file.Write(append(writeData, '\n'))
+		if err != nil {
+			return err
+		}
 	}
-	_, err = file.Write(append(writeData, '\n'))
-	if err != nil {
-		return err
-	}
+
 	return nil
 }
 

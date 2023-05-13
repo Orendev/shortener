@@ -72,7 +72,7 @@ func (h *Handler) ShortLinkAdd(w http.ResponseWriter, r *http.Request) {
 		ShortURL:    fmt.Sprintf("%s/%s", strings.TrimPrefix(h.baseURL, "/"), code),
 	}
 
-	if _, err = h.shortLinkStorage.Add(r.Context(), &shortLink); err != nil {
+	if err = h.shortLinkStorage.Save(r.Context(), shortLink); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -118,7 +118,7 @@ func (h *Handler) APIShorten(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Сохраним модель
-	_, err := h.shortLinkStorage.Add(r.Context(), &shortLink)
+	err := h.shortLinkStorage.Save(r.Context(), shortLink)
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -131,6 +131,83 @@ func (h *Handler) APIShorten(w http.ResponseWriter, r *http.Request) {
 	}
 
 	enc, err := json.Marshal(resp)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusCreated)
+
+	_, err = w.Write(enc)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+}
+
+func (h *Handler) ShortenBatch(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+
+	var reqData []models.ShortLinkBatchRequest
+	dec := json.NewDecoder(r.Body)
+	// читаем тело запроса и декодируем
+	if err := dec.Decode(&reqData); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	shortLinksInsert := make([]models.ShortLink, 0, len(reqData))
+	shortLinksUpdate := make([]models.ShortLink, 0, len(reqData))
+	shortLinkBatchResponse := make([]models.ShortLinkBatchResponse, 0, len(reqData))
+
+	for _, req := range reqData {
+		code := random.Strn(8)
+		var model *models.ShortLink
+
+		model, err := h.shortLinkStorage.GetById(r.Context(), req.CorrelationID)
+
+		if err != nil {
+			model = &models.ShortLink{
+				UUID:        req.CorrelationID,
+				Code:        code,
+				OriginalURL: req.OriginalURL,
+				ShortURL:    fmt.Sprintf("%s/%s", strings.TrimPrefix(h.baseURL, "/"), code),
+			}
+
+			shortLinksInsert = append(shortLinksInsert, *model)
+
+		} else {
+
+			model.OriginalURL = req.OriginalURL
+			shortLinksUpdate = append(shortLinksUpdate, *model)
+		}
+
+		// заполняем модель ответа
+		shortLinkBatchResponse = append(shortLinkBatchResponse, models.ShortLinkBatchResponse{
+			CorrelationID: model.UUID,
+			ShortURL:      model.ShortURL,
+		})
+	}
+
+	// Сохраним модель
+	err := h.shortLinkStorage.InsertBatch(r.Context(), shortLinksInsert)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	err = h.shortLinkStorage.UpdateBatch(r.Context(), shortLinksUpdate)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	// заполняем модель ответа
+	enc, err := json.Marshal(shortLinkBatchResponse)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

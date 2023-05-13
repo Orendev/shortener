@@ -30,7 +30,7 @@ func TestService_Add(t *testing.T) {
 		want string
 	}{
 		{
-			name: "positive test #1 method Add storage",
+			name: "positive test #1 method Save storage",
 			args: args{
 				model: models.ShortLink{
 					UUID:        uuid.New().String(),
@@ -44,17 +44,16 @@ func TestService_Add(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			// установим условие: при любом вызове метода Add возвращать uuid без ошибки
+			// установим условие: при любом вызове метода Save возвращать uuid без ошибки
 			s.EXPECT().
-				Add(gomock.Any(), gomock.Any()).
-				Return(tt.args.model.UUID, nil)
+				Save(gomock.Any(), gomock.Any()).
+				Return(nil)
 
 			service := NewService(s)
 
-			val, err := service.Add(context.Background(), &tt.args.model)
+			err := service.Save(context.Background(), tt.args.model)
 			// и проверяем возвращаемые значения
 			require.NoError(t, err)
-			require.Equal(t, val, tt.args.model.UUID)
 		})
 	}
 }
@@ -77,7 +76,7 @@ func TestService_Close(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			// установим условие: при любом вызове метода Add возвращать uuid без ошибки
+			// установим условие: при любом вызове метода Save возвращать uuid без ошибки
 			s.EXPECT().
 				Close().
 				Return(nil)
@@ -133,7 +132,7 @@ func TestService_GetByCode(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			// установим условие: при любом вызове метода Add возвращать uuid без ошибки
+			// установим условие: при любом вызове метода Save возвращать uuid без ошибки
 
 			s.EXPECT().
 				GetByCode(gomock.Any(), gomock.Any()).

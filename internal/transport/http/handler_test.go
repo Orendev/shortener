@@ -32,7 +32,7 @@ func TestHandlers_ShortLink(t *testing.T) {
 		OriginalURL: "https://practicum.yandex.ru/",
 	}
 
-	// установим условие: при любом вызове метода Add возвращать uuid без ошибки
+	// установим условие: при любом вызове метода Save возвращать uuid без ошибки
 	s.EXPECT().
 		GetByCode(gomock.Any(), gomock.Any()).
 		Return(&model, nil)
@@ -87,17 +87,17 @@ func TestHandlers_ShortLink(t *testing.T) {
 	}
 }
 
-func TestHandlers_ShortLinkAdd(t *testing.T) {
+func TestHandlers_ShortLinkSave(t *testing.T) {
 
 	// создадим конроллер моков и экземпляр мок-хранилища
 	ctrl := gomock.NewController(t)
 	s := mock.NewMockShortLinkStorage(ctrl)
 
 	// определим, какой результат будем получать от «хранилища»
-	// установим условие: при любом вызове метода Add возвращать uuid без ошибки
+	// установим условие: при любом вызове метода Save возвращать uuid без ошибки
 	s.EXPECT().
-		Add(gomock.Any(), gomock.Any()).
-		Return(uuid.New().String(), nil)
+		Save(gomock.Any(), gomock.Any()).
+		Return(nil)
 
 	// создадим экземпляр приложения и передадим ему «хранилище»
 	h := transportHttp.NewHandler(s, "http://localhost")
@@ -183,10 +183,10 @@ func Test_handler_ApiShorten(t *testing.T) {
 	s := mock.NewMockShortLinkStorage(ctrl)
 
 	// определим, какой результат будем получать от «хранилища»
-	// установим условие: при любом вызове метода Add возвращать uuid без ошибки
+	// установим условие: при любом вызове метода Save возвращать uuid без ошибки
 	s.EXPECT().
-		Add(gomock.Any(), gomock.Any()).
-		Return(uuid.New().String(), nil)
+		Save(gomock.Any(), gomock.Any()).
+		Return(nil)
 
 	// создадим экземпляр приложения и передадим ему «хранилище»
 	h := transportHttp.NewHandler(s, "http://localhost")

@@ -10,9 +10,16 @@ import (
 
 func TestFileDB_Remove(t *testing.T) {
 	type args struct {
-		model models.ShortLink
+		models map[string]models.ShortLink
 	}
 	id := uuid.New().String()
+
+	model := models.ShortLink{
+		UUID:        id,
+		OriginalURL: "http://yandex.ru",
+		ShortURL:    "http://localhost:8080/4rSPg8ap",
+	}
+
 	tests := []struct {
 		name    string
 		cfg     *config.Configs
@@ -22,10 +29,8 @@ func TestFileDB_Remove(t *testing.T) {
 		{
 			name: "test File Remove",
 			args: args{
-				model: models.ShortLink{
-					UUID:        id,
-					OriginalURL: "http://yandex.ru",
-					ShortURL:    "http://localhost:8080/4rSPg8ap",
+				models: map[string]models.ShortLink{
+					"4rSPg8ap": model,
 				},
 			},
 			cfg: &config.Configs{
@@ -45,7 +50,7 @@ func TestFileDB_Remove(t *testing.T) {
 				cfg:  tt.cfg,
 			}
 
-			if err := f.Save(tt.args.model); (err != nil) != tt.wantErr {
+			if err := f.Save(tt.args.models); (err != nil) != tt.wantErr {
 				t.Errorf("Save() error = %v, wantErr %v", err, tt.wantErr)
 			}
 
@@ -59,9 +64,14 @@ func TestFileDB_Remove(t *testing.T) {
 func TestFileDB_Save(t *testing.T) {
 
 	type args struct {
-		fileDB models.ShortLink
+		models map[string]models.ShortLink
 	}
 	id := uuid.New().String()
+	model := models.ShortLink{
+		UUID:        id,
+		OriginalURL: "http://yandex.ru",
+		ShortURL:    "http://localhost:8080/4rSPg8ap",
+	}
 	tests := []struct {
 		name    string
 		cfg     *config.Configs
@@ -71,10 +81,8 @@ func TestFileDB_Save(t *testing.T) {
 		{
 			name: "test DB Save",
 			args: args{
-				fileDB: models.ShortLink{
-					UUID:        id,
-					OriginalURL: "http://yandex.ru",
-					ShortURL:    "http://localhost:8080/4rSPg8ap",
+				models: map[string]models.ShortLink{
+					"4rSPg8ap": model,
 				},
 			},
 			cfg: &config.Configs{
@@ -93,7 +101,7 @@ func TestFileDB_Save(t *testing.T) {
 				data: tt.cfg.Memory,
 				cfg:  tt.cfg,
 			}
-			if err := f.Save(tt.args.fileDB); (err != nil) != tt.wantErr {
+			if err := f.Save(tt.args.models); (err != nil) != tt.wantErr {
 				t.Errorf("Save() error = %v, wantErr %v", err, tt.wantErr)
 			}
 

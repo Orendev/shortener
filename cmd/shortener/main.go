@@ -40,7 +40,7 @@ func main() {
 
 	if len(cfg.DatabaseDSN) > 0 {
 		store = dbStore
-		err = dbStore.CreateTable(ctx)
+		err = dbStore.Bootstrap(ctx)
 		if err != nil {
 			log.Fatal(err)
 		}

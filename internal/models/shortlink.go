@@ -20,6 +20,18 @@ type ShortLinkRequest struct {
 	URL string `json:"url"`
 }
 
+// ShortLinkBatchRequest описывает запрос клиента.
+type ShortLinkBatchRequest struct {
+	CorrelationID string `json:"correlation_id"`
+	OriginalURL   string `json:"original_url"`
+}
+
+// ShortLinkBatchResponse описывает ответ сервера.
+type ShortLinkBatchResponse struct {
+	CorrelationID string `json:"correlation_id"`
+	ShortURL      string `json:"short_url"`
+}
+
 func (sl ShortLinkRequest) Validate() error {
 	var err error
 	if sl.URL == "" {
