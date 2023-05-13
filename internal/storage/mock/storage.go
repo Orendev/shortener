@@ -78,19 +78,19 @@ func (mr *MockShortLinkStorageMockRecorder) GetByCode(ctx, code interface{}) *go
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByCode", reflect.TypeOf((*MockShortLinkStorage)(nil).GetByCode), ctx, code)
 }
 
-// GetByCode mocks base method.
-func (m *MockShortLinkStorage) GetById(ctx context.Context, id string) (*models.ShortLink, error) {
+// GetByID mocks base method.
+func (m *MockShortLinkStorage) GetByID(ctx context.Context, id string) (*models.ShortLink, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetById", ctx, id)
+	ret := m.ctrl.Call(m, "GetByID", ctx, id)
 	ret0, _ := ret[0].(*models.ShortLink)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetByCode indicates an expected call of GetByCode.
-func (mr *MockShortLinkStorageMockRecorder) GetById(ctx, code interface{}) *gomock.Call {
+// GetByID indicates an expected call of GetByCode.
+func (mr *MockShortLinkStorageMockRecorder) GetByID(ctx, code interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetById", reflect.TypeOf((*MockShortLinkStorage)(nil).GetById), ctx, code)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByID", reflect.TypeOf((*MockShortLinkStorage)(nil).GetByID), ctx, code)
 }
 
 // Ping mocks base method.

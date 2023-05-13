@@ -23,7 +23,7 @@ func (s *MemoryStorage) GetByCode(_ context.Context, code string) (*models.Short
 	return &shortLink, nil
 }
 
-func (s *MemoryStorage) GetById(_ context.Context, id string) (*models.ShortLink, error) {
+func (s *MemoryStorage) GetByID(_ context.Context, id string) (*models.ShortLink, error) {
 	var shortLink models.ShortLink
 	ok := false
 

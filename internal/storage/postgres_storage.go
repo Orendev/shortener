@@ -48,7 +48,7 @@ func (s *PostgresStorage) GetByCode(ctx context.Context, code string) (*models.S
 	return &model, nil
 }
 
-func (s *PostgresStorage) GetById(ctx context.Context, id string) (*models.ShortLink, error) {
+func (s *PostgresStorage) GetByID(ctx context.Context, id string) (*models.ShortLink, error) {
 
 	model := models.ShortLink{}
 

@@ -168,7 +168,7 @@ func (h *Handler) ShortenBatch(w http.ResponseWriter, r *http.Request) {
 		code := random.Strn(8)
 		var model *models.ShortLink
 
-		model, err := h.shortLinkStorage.GetById(r.Context(), req.CorrelationID)
+		model, err := h.shortLinkStorage.GetByID(r.Context(), req.CorrelationID)
 
 		if err != nil {
 			model = &models.ShortLink{
