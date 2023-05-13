@@ -40,13 +40,13 @@ func (s *MemoryStorage) GetByID(_ context.Context, id string) (*models.ShortLink
 	return &shortLink, nil
 }
 
-func (s *MemoryStorage) GetByOriginalURL(_ context.Context, originalUrl string) (*models.ShortLink, error) {
+func (s *MemoryStorage) GetByOriginalURL(_ context.Context, originalURL string) (*models.ShortLink, error) {
 	var shortLink models.ShortLink
 	ok := false
 
 	for _, link := range s.data {
 
-		if link.OriginalURL == originalUrl {
+		if link.OriginalURL == originalURL {
 			shortLink = link
 			ok = true
 			break

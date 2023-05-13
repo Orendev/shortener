@@ -81,7 +81,7 @@ func (s *PostgresStorage) GetByID(ctx context.Context, id string) (*models.Short
 	return &model, nil
 }
 
-func (s *PostgresStorage) GetByOriginalURL(ctx context.Context, originalUrl string) (*models.ShortLink, error) {
+func (s *PostgresStorage) GetByOriginalURL(ctx context.Context, originalURL string) (*models.ShortLink, error) {
 
 	model := models.ShortLink{}
 
@@ -100,7 +100,7 @@ func (s *PostgresStorage) GetByOriginalURL(ctx context.Context, originalUrl stri
 	}()
 
 	// делаем запрос
-	row := stmt.QueryRowContext(ctx, originalUrl)
+	row := stmt.QueryRowContext(ctx, originalURL)
 
 	// разбираем результат
 	err = row.Scan(&model.UUID, &model.Code, &model.ShortURL, &model.OriginalURL)

@@ -24,8 +24,8 @@ func (s *Service) GetByCode(ctx context.Context, code string) (*models.ShortLink
 func (s *Service) GetByID(ctx context.Context, id string) (*models.ShortLink, error) {
 	return s.storage.GetByID(ctx, id)
 }
-func (s *Service) GetByOriginalURL(ctx context.Context, originalUrl string) (*models.ShortLink, error) {
-	return s.storage.GetByOriginalURL(ctx, originalUrl)
+func (s *Service) GetByOriginalURL(ctx context.Context, originalURL string) (*models.ShortLink, error) {
+	return s.storage.GetByOriginalURL(ctx, originalURL)
 }
 
 func (s *Service) Save(ctx context.Context, model models.ShortLink) error {
