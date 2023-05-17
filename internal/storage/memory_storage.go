@@ -1,18 +1,17 @@
 package storage
 
 import (
+	"context"
 	"errors"
-	"github.com/Orendev/shortener/internal/configs"
 	"github.com/Orendev/shortener/internal/models"
-	"github.com/google/uuid"
 )
 
 type MemoryStorage struct {
 	data map[string]models.ShortLink
-	cfg  *configs.Configs
+	file *File
 }
 
-func (s *MemoryStorage) GetByCode(code string) (*models.ShortLink, error) {
+func (s *MemoryStorage) GetByCode(_ context.Context, code string) (*models.ShortLink, error) {
 	shortLink, ok := s.data[code]
 	if !ok {
 		err := errors.New("not found")
@@ -21,19 +20,100 @@ func (s *MemoryStorage) GetByCode(code string) (*models.ShortLink, error) {
 	return &shortLink, nil
 }
 
-func (s *MemoryStorage) Add(model *models.ShortLink) (string, error) {
-	s.data[model.Code] = *model
+func (s *MemoryStorage) GetByID(_ context.Context, id string) (*models.ShortLink, error) {
+	var shortLink models.ShortLink
+	ok := false
 
-	return model.UUID, nil
+	for _, link := range s.data {
+
+		if link.UUID == id {
+			shortLink = link
+			ok = true
+			break
+		}
+	}
+
+	if !ok {
+		err := errors.New("not found")
+		return nil, err
+	}
+	return &shortLink, nil
 }
 
-func (s MemoryStorage) UUID() string {
-	return uuid.New().String()
+func (s *MemoryStorage) GetByOriginalURL(_ context.Context, originalURL string) (*models.ShortLink, error) {
+	var shortLink models.ShortLink
+	ok := false
+
+	for _, link := range s.data {
+
+		if link.OriginalURL == originalURL {
+			shortLink = link
+			ok = true
+			break
+		}
+	}
+
+	if !ok {
+		err := errors.New("not found")
+		return nil, err
+	}
+
+	return &shortLink, nil
 }
 
-func NewMemoryStorage(cfg *configs.Configs) (*MemoryStorage, error) {
+func (s *MemoryStorage) Save(_ context.Context, model models.ShortLink) error {
+
+	for _, link := range s.data {
+
+		if link.OriginalURL == model.OriginalURL {
+			return ErrConflict
+		}
+	}
+	s.data[model.Code] = model
+
+	err := s.file.Save(s.data)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *MemoryStorage) InsertBatch(_ context.Context, shortLinks []models.ShortLink) error {
+
+	for _, link := range shortLinks {
+		s.data[link.Code] = link
+	}
+	err := s.file.Save(s.data)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *MemoryStorage) UpdateBatch(_ context.Context, shortLinks []models.ShortLink) error {
+	for _, link := range shortLinks {
+		s.data[link.Code] = link
+	}
+	err := s.file.Save(s.data)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *MemoryStorage) Close() error {
+	return nil
+}
+
+func NewMemoryStorage(data map[string]models.ShortLink, file *File) (*MemoryStorage, error) {
 	return &MemoryStorage{
-		cfg:  cfg,
-		data: cfg.Memory,
+		data: data,
+		file: file,
 	}, nil
+}
+
+func (s *MemoryStorage) Ping(_ context.Context) error {
+	return nil
 }

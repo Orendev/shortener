@@ -3,10 +3,10 @@ package compress_test
 import (
 	"bytes"
 	"compress/gzip"
-	"github.com/Orendev/shortener/internal/app"
-	"github.com/Orendev/shortener/internal/configs"
+	"github.com/Orendev/shortener/internal/config"
 	"github.com/Orendev/shortener/internal/models"
 	"github.com/Orendev/shortener/internal/routes"
+	"github.com/Orendev/shortener/internal/services"
 	"github.com/Orendev/shortener/internal/storage"
 	"github.com/go-chi/chi/v5"
 	"github.com/stretchr/testify/require"
@@ -17,11 +17,18 @@ import (
 	"testing"
 )
 
-var cfg = configs.Configs{
-	Host:            "",
-	Port:            "8080",
-	BaseURL:         "http://localhost:8080",
-	FileStoragePath: "/tmp/test-short-url-db.json",
+var cfg = config.Configs{
+	Server: config.Server{
+		Host: "",
+		Port: "8080",
+	},
+	BaseURL: "http://localhost:8080",
+	File: config.File{
+		FileStoragePath: "/tmp/test-short-url-db.json",
+	},
+	Database: config.Database{
+		DatabaseDSN: "host=localhost user=shortener password=secret dbname=shortener sslmode=disable",
+	},
 }
 
 func TestGzipMiddlewareSendsGzip(t *testing.T) {
@@ -30,18 +37,18 @@ func TestGzipMiddlewareSendsGzip(t *testing.T) {
 
 	memory := cfg.Memory
 
-	fileDB, err := storage.NewFile(&cfg)
+	file, err := storage.NewFile(&cfg)
 	if err != nil {
 		require.NoError(t, err)
 	}
 
-	memoryStorage, err := storage.NewMemoryStorage(&cfg)
+	memoryStorage, err := storage.NewMemoryStorage(cfg.Memory, file)
 	if err != nil {
 		log.Fatal(err)
 		return
 	}
 
-	service := app.NewService(memoryStorage, fileDB, &cfg)
+	service := services.NewService(memoryStorage)
 
 	r := routes.Routes(chi.NewRouter(), service, &cfg)
 
@@ -50,7 +57,7 @@ func TestGzipMiddlewareSendsGzip(t *testing.T) {
 	defer srv.Close()
 
 	defer func() {
-		err := fileDB.Remove()
+		err := file.Remove()
 		if err != nil {
 			require.NoError(t, err)
 		}
@@ -136,18 +143,18 @@ func TestGzipMiddlewareAcceptsGzip(t *testing.T) {
 
 	memory := cfg.Memory
 
-	fileDB, err := storage.NewFile(&cfg)
+	file, err := storage.NewFile(&cfg)
 	if err != nil {
 		require.NoError(t, err)
 	}
 
-	memoryStorage, err := storage.NewMemoryStorage(&cfg)
+	memoryStorage, err := storage.NewMemoryStorage(cfg.Memory, file)
 	if err != nil {
 		log.Fatal(err)
 		return
 	}
 
-	service := app.NewService(memoryStorage, fileDB, &cfg)
+	service := services.NewService(memoryStorage)
 
 	r := routes.Routes(chi.NewRouter(), service, &cfg)
 
@@ -156,7 +163,7 @@ func TestGzipMiddlewareAcceptsGzip(t *testing.T) {
 	defer srv.Close()
 
 	defer func() {
-		err := fileDB.Remove()
+		err := file.Remove()
 		if err != nil {
 			require.NoError(t, err)
 		}
