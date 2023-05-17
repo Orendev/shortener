@@ -7,6 +7,11 @@ import (
 	"github.com/Orendev/shortener/internal/services"
 	"github.com/Orendev/shortener/internal/storage"
 	"log"
+	"time"
+)
+
+const (
+	shutdownTimeout = 5 * time.Second
 )
 
 func main() {
@@ -17,10 +22,12 @@ func main() {
 	}
 
 	var store storage.ShortLinkStorage
-	var ctx = context.Background()
 
-	if len(cfg.DatabaseDSN) > 0 {
-		pg, err := storage.NewPostgresStorage(cfg.DatabaseDSN)
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
+	defer cancel()
+
+	if len(cfg.Database.DatabaseDSN) > 0 {
+		pg, err := storage.NewPostgresStorage(cfg.Database.DatabaseDSN)
 		if err != nil {
 			log.Fatal(err)
 			return
@@ -33,7 +40,7 @@ func main() {
 			}
 		}()
 
-		err = pg.Bootstrap(ctx)
+		err = pg.Bootstrap(shutdownCtx)
 		if err != nil {
 			log.Fatal(err)
 		}

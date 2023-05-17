@@ -45,10 +45,10 @@ func (s *Service) UpdateBatch(ctx context.Context, shortLinks []models.ShortLink
 	return s.storage.UpdateBatch(ctx, shortLinks)
 }
 
-func (s Service) Ping(ctx context.Context) error {
+func (s *Service) Ping(ctx context.Context) error {
 	return s.storage.Ping(ctx)
 }
 
-func (s Service) Close() error {
+func (s *Service) Close() error {
 	return s.storage.Close()
 }

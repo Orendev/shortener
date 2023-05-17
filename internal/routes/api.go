@@ -13,7 +13,7 @@ func Routes(router chi.Router, storage storage.ShortLinkStorage, cfg *config.Con
 
 	h := http.NewHandler(storage, cfg.BaseURL)
 
-	if err := logger.NewLogger(cfg.FlagLogLevel); err != nil {
+	if err := logger.NewLogger(cfg.Log.FlagLogLevel); err != nil {
 		panic(err)
 	}
 

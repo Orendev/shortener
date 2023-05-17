@@ -103,7 +103,7 @@ func (s *MemoryStorage) UpdateBatch(_ context.Context, shortLinks []models.Short
 	return nil
 }
 
-func (s MemoryStorage) Close() error {
+func (s *MemoryStorage) Close() error {
 	return nil
 }
 
@@ -114,6 +114,6 @@ func NewMemoryStorage(data map[string]models.ShortLink, file *File) (*MemoryStor
 	}, nil
 }
 
-func (s MemoryStorage) Ping(_ context.Context) error {
+func (s *MemoryStorage) Ping(_ context.Context) error {
 	return nil
 }

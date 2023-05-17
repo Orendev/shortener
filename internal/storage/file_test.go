@@ -34,11 +34,15 @@ func TestFileDB_Remove(t *testing.T) {
 				},
 			},
 			cfg: &config.Configs{
-				Host:            "",
-				Port:            "8080",
-				BaseURL:         "http://localhost:8080",
-				Memory:          map[string]models.ShortLink{},
-				FileStoragePath: "/tmp/test-short-url-file.json",
+				Server: config.Server{
+					Host: "",
+					Port: "8080",
+				},
+				BaseURL: "http://localhost:8080",
+				Memory:  map[string]models.ShortLink{},
+				File: config.File{
+					FileStoragePath: "/tmp/test-short-url-file.json",
+				},
 			},
 			wantErr: false,
 		},
@@ -86,11 +90,15 @@ func TestFileDB_Save(t *testing.T) {
 				},
 			},
 			cfg: &config.Configs{
-				Host:            "",
-				Port:            "8080",
-				BaseURL:         "http://localhost:8080",
-				Memory:          map[string]models.ShortLink{},
-				FileStoragePath: "/tmp/test-short-url-file.json",
+				Server: config.Server{
+					Host: "",
+					Port: "8080",
+				},
+				BaseURL: "http://localhost:8080",
+				Memory:  map[string]models.ShortLink{},
+				File: config.File{
+					FileStoragePath: "/tmp/test-short-url-file.json",
+				},
 			},
 			wantErr: false,
 		},

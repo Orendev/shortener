@@ -18,11 +18,17 @@ import (
 )
 
 var cfg = config.Configs{
-	Host:            "",
-	Port:            "8080",
-	BaseURL:         "http://localhost:8080",
-	FileStoragePath: "/tmp/test-short-url-db.json",
-	DatabaseDSN:     "host=localhost user=shortener password=secret dbname=shortener sslmode=disable",
+	Server: config.Server{
+		Host: "",
+		Port: "8080",
+	},
+	BaseURL: "http://localhost:8080",
+	File: config.File{
+		FileStoragePath: "/tmp/test-short-url-db.json",
+	},
+	Database: config.Database{
+		DatabaseDSN: "host=localhost user=shortener password=secret dbname=shortener sslmode=disable",
+	},
 }
 
 func TestGzipMiddlewareSendsGzip(t *testing.T) {

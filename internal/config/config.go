@@ -4,7 +4,6 @@ import (
 	"flag"
 	"github.com/Orendev/shortener/internal/models"
 	"github.com/caarlos0/env/v8"
-	"log"
 )
 
 var cfg Configs = Configs{}
@@ -14,22 +13,47 @@ var flagLogLevel string
 var fileStoragePath string
 var databaseDSN string
 
-type Configs struct {
-	Addr            string `env:"SERVER_ADDRESS"`
-	Host            string `env:"HOST"`
-	Port            string `env:"PORT"`
-	BaseURL         string `env:"BASE_URL"`
-	Memory          map[string]models.ShortLink
-	FlagLogLevel    string `env:"FLAG_LOG_LEVEL"`
+type Server struct {
+	Addr string `env:"SERVER_ADDRESS"`
+	Host string `env:"HOST"`
+	Port string `env:"PORT"`
+}
+
+type File struct {
 	FileStoragePath string `env:"FILE_STORAGE_PATH"`
-	DatabaseDSN     string `env:"DATABASE_DSN"`
+}
+
+type Log struct {
+	FlagLogLevel string `env:"FLAG_LOG_LEVEL"`
+}
+
+type Database struct {
+	DatabaseDSN string `env:"DATABASE_DSN"`
+}
+
+type Configs struct {
+	Database Database
+	Server   struct {
+		Addr string `env:"SERVER_ADDRESS"`
+		Host string `env:"HOST"`
+		Port string `env:"PORT"`
+	}
+	File File
+	Log  Log
+	//Addr            string `env:"SERVER_ADDRESS"`
+	//Host            string `env:"HOST"`
+	//Port            string `env:"PORT"`
+	BaseURL string `env:"BASE_URL"`
+	Memory  map[string]models.ShortLink
+
+	//FileStoragePath string `env:"FILE_STORAGE_PATH"`
+	//DatabaseDSN     string `env:"DATABASE_DSN"`
 }
 
 func New() (*Configs, error) {
 
 	err := env.Parse(&cfg)
 	if err != nil {
-		log.Fatal(err)
 		return nil, err
 	}
 	flag.StringVar(&addr, "a", "localhost:8080", "Адрес запуска сервера localhost:8080")
@@ -40,23 +64,23 @@ func New() (*Configs, error) {
 	flag.StringVar(&databaseDSN, "d", "", "Строка с адресом подключения")
 	flag.Parse()
 
-	if len(cfg.Addr) == 0 {
-		cfg.Addr = addr
+	if len(cfg.Server.Addr) == 0 {
+		cfg.Server.Addr = addr
 	}
 	if len(cfg.BaseURL) == 0 {
 		cfg.BaseURL = baseURL
 	}
 
-	if len(cfg.FlagLogLevel) == 0 {
-		cfg.FlagLogLevel = flagLogLevel
+	if len(cfg.Log.FlagLogLevel) == 0 {
+		cfg.Log.FlagLogLevel = flagLogLevel
 	}
 
-	if len(cfg.FileStoragePath) == 0 {
-		cfg.FileStoragePath = fileStoragePath
+	if len(cfg.File.FileStoragePath) == 0 {
+		cfg.File.FileStoragePath = fileStoragePath
 	}
 
-	if len(cfg.DatabaseDSN) == 0 {
-		cfg.DatabaseDSN = databaseDSN
+	if len(cfg.Database.DatabaseDSN) == 0 {
+		cfg.Database.DatabaseDSN = databaseDSN
 	}
 
 	cfg.Memory = map[string]models.ShortLink{}

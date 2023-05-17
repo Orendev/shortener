@@ -16,9 +16,9 @@ type File struct {
 
 func NewFile(cfg *config.Configs) (*File, error) {
 	//Прочитаем данные из файла FileStoragePath
-	file, err := os.OpenFile(cfg.FileStoragePath, os.O_RDONLY|os.O_CREATE, 0666)
+	file, err := os.OpenFile(cfg.File.FileStoragePath, os.O_RDONLY|os.O_CREATE, 0666)
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
 	defer func() {
@@ -39,7 +39,7 @@ func NewFile(cfg *config.Configs) (*File, error) {
 		err = json.Unmarshal(data, &model)
 
 		if err != nil {
-			log.Fatal(err)
+			return nil, err
 		}
 
 		cfg.Memory[model.Code] = model
@@ -55,7 +55,7 @@ func NewFile(cfg *config.Configs) (*File, error) {
 // Save сохраняет данные в файле FileStoragePath.
 func (f *File) Save(models map[string]models.ShortLink) error {
 
-	file, err := os.OpenFile(f.cfg.FileStoragePath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)
+	file, err := os.OpenFile(f.cfg.File.FileStoragePath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)
 	if err != nil {
 		return err
 	}
@@ -82,5 +82,5 @@ func (f *File) Save(models map[string]models.ShortLink) error {
 
 // Remove Удалим файл FileStoragePath
 func (f *File) Remove() error {
-	return os.Remove(f.cfg.FileStoragePath)
+	return os.Remove(f.cfg.File.FileStoragePath)
 }

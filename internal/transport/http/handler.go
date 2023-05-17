@@ -243,7 +243,7 @@ func (h *Handler) ShortenBatch(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h Handler) Ping(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) Ping(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return

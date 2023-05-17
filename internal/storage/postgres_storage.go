@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"github.com/Orendev/shortener/internal/models"
 	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -20,7 +21,6 @@ func NewPostgresStorage(dsn string) (*PostgresStorage, error) {
 	db, err := sql.Open("pgx", dsn)
 
 	if err != nil {
-		log.Fatal(err)
 		return nil, err
 	}
 
@@ -65,7 +65,7 @@ func (s *PostgresStorage) GetByID(ctx context.Context, id string) (*models.Short
 	defer func() {
 		err := stmt.Close()
 		if err != nil {
-			log.Fatal(err)
+			_ = fmt.Errorf("db shutdown: %w", err)
 		}
 	}()
 
@@ -138,7 +138,7 @@ func (s *PostgresStorage) Ping(ctx context.Context) error {
 	return s.db.PingContext(ctx)
 }
 
-func (s PostgresStorage) InsertBatch(ctx context.Context, shortLinks []models.ShortLink) error {
+func (s *PostgresStorage) InsertBatch(ctx context.Context, shortLinks []models.ShortLink) error {
 	// начинаем транзакцию
 	tx, err := s.db.Begin()
 	if err != nil {
@@ -173,7 +173,7 @@ func (s PostgresStorage) InsertBatch(ctx context.Context, shortLinks []models.Sh
 	return tx.Commit()
 }
 
-func (s PostgresStorage) UpdateBatch(ctx context.Context, shortLinks []models.ShortLink) error {
+func (s *PostgresStorage) UpdateBatch(ctx context.Context, shortLinks []models.ShortLink) error {
 	// начинаем транзакцию
 	tx, err := s.db.Begin()
 	if err != nil {

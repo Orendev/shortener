@@ -18,9 +18,9 @@ func NewServer(cfg *config.Configs, storage storage.ShortLinkStorage) (*Server, 
 
 	r := routes.Routes(chi.NewRouter(), storage, cfg)
 
-	addr := fmt.Sprintf("%s:%s", cfg.Host, cfg.Port)
-	if len(cfg.Addr) > 0 {
-		addr = cfg.Addr
+	addr := fmt.Sprintf("%s:%s", cfg.Server.Host, cfg.Server.Port)
+	if len(cfg.Server.Addr) > 0 {
+		addr = cfg.Server.Addr
 	}
 
 	httpServer := &http.Server{
