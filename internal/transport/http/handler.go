@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/Orendev/shortener/internal/auth"
 	"github.com/Orendev/shortener/internal/models"
 	"github.com/Orendev/shortener/internal/random"
 	"github.com/Orendev/shortener/internal/storage"
@@ -65,9 +66,17 @@ func (h *Handler) ShortLinkAdd(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+
+	userID, err := auth.GetAuthIdentifier(r.Context())
+	if err != nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
 	code := random.Strn(8)
 	shortLink := &models.ShortLink{
 		UUID:        uuid.New().String(),
+		UserID:      userID,
 		Code:        code,
 		OriginalURL: req.URL,
 		ShortURL:    fmt.Sprintf("%s/%s", strings.TrimPrefix(h.baseURL, "/"), code),
@@ -106,6 +115,12 @@ func (h *Handler) Shorten(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	userID, err := auth.GetAuthIdentifier(r.Context())
+	if err != nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
 	var req models.ShortLinkRequest
 	dec := json.NewDecoder(r.Body)
 	// читаем тело запроса и декодируем
@@ -124,13 +139,14 @@ func (h *Handler) Shorten(w http.ResponseWriter, r *http.Request) {
 	code := random.Strn(8)
 	shortLink := &models.ShortLink{
 		UUID:        uuid.New().String(),
+		UserID:      userID,
 		Code:        code,
 		OriginalURL: req.URL,
 		ShortURL:    fmt.Sprintf("%s/%s", strings.TrimPrefix(h.baseURL, "/"), code),
 	}
 
 	// Сохраним модель
-	err := h.shortLinkStorage.Save(r.Context(), *shortLink)
+	err = h.shortLinkStorage.Save(r.Context(), *shortLink)
 
 	if err != nil && !errors.Is(err, storage.ErrConflict) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -185,6 +201,12 @@ func (h *Handler) ShortenBatch(w http.ResponseWriter, r *http.Request) {
 	shortLinksUpdate := make([]models.ShortLink, 0, len(reqData))
 	shortLinkBatchResponse := make([]models.ShortLinkBatchResponse, 0, len(reqData))
 
+	userID, err := auth.GetAuthIdentifier(r.Context())
+	if err != nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
 	for _, req := range reqData {
 		code := random.Strn(8)
 		var model *models.ShortLink
@@ -194,6 +216,7 @@ func (h *Handler) ShortenBatch(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			model = &models.ShortLink{
 				UUID:        req.CorrelationID,
+				UserID:      userID,
 				Code:        code,
 				OriginalURL: req.OriginalURL,
 				ShortURL:    fmt.Sprintf("%s/%s", strings.TrimPrefix(h.baseURL, "/"), code),
@@ -215,7 +238,7 @@ func (h *Handler) ShortenBatch(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Сохраним модель
-	err := h.shortLinkStorage.InsertBatch(r.Context(), shortLinksInsert)
+	err = h.shortLinkStorage.InsertBatch(r.Context(), shortLinksInsert)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -260,4 +283,49 @@ func (h *Handler) Ping(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
+}
+
+func (h *Handler) UserUrls(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+	limit := 100
+	w.Header().Set("Content-Type", "application/json")
+	shortLinkBatchResponse := make([]models.ShortLinkBatchResponse, 0, limit)
+
+	userID, err := auth.GetAuthIdentifier(r.Context())
+	if err != nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	shortLinks, err := h.shortLinkStorage.ShortLinksByUserId(r.Context(), userID, limit)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	for _, model := range shortLinks {
+		// заполняем модель ответа
+		shortLinkBatchResponse = append(shortLinkBatchResponse, models.ShortLinkBatchResponse{
+			CorrelationID: model.UUID,
+			ShortURL:      model.ShortURL,
+		})
+	}
+
+	// заполняем модель ответа
+	enc, err := json.Marshal(shortLinkBatchResponse)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusCreated)
+
+	_, err = w.Write(enc)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
 }

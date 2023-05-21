@@ -2,10 +2,12 @@ package http_test
 
 import (
 	"bytes"
+	"github.com/Orendev/shortener/internal/middlewares"
 	"github.com/Orendev/shortener/internal/models"
 	"github.com/Orendev/shortener/internal/random"
 	"github.com/Orendev/shortener/internal/storage/mock"
 	transportHttp "github.com/Orendev/shortener/internal/transport/http"
+	"github.com/go-chi/chi/v5"
 	"github.com/golang/mock/gomock"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
@@ -102,7 +104,11 @@ func TestHandlers_ShortLinkAdd(t *testing.T) {
 	// создадим экземпляр приложения и передадим ему «хранилище»
 	h := transportHttp.NewHandler(s, "http://localhost")
 
-	srv := httptest.NewServer(http.HandlerFunc(h.ShortLinkAdd))
+	r := chi.NewRouter()
+	r.Use(middlewares.Auth)
+	r.Post("/", h.ShortLinkAdd)
+
+	srv := httptest.NewServer(r)
 	defer srv.Close()
 
 	type want struct {
@@ -146,7 +152,7 @@ func TestHandlers_ShortLinkAdd(t *testing.T) {
 				bodyReader = bytes.NewReader([]byte(tt.body))
 			}
 
-			req, err := http.NewRequest(tt.method, srv.URL, bodyReader)
+			req, err := http.NewRequest(tt.method, srv.URL+"/", bodyReader)
 			require.NoError(t, err)
 
 			resp, err := srv.Client().Do(req)
@@ -190,8 +196,10 @@ func Test_handler_Shorten(t *testing.T) {
 
 	// создадим экземпляр приложения и передадим ему «хранилище»
 	h := transportHttp.NewHandler(s, "http://localhost")
-
-	srv := httptest.NewServer(http.HandlerFunc(h.Shorten))
+	r := chi.NewRouter()
+	r.Use(middlewares.Auth)
+	r.Post("/api/shorten", h.Shorten)
+	srv := httptest.NewServer(r)
 	defer srv.Close()
 
 	type want struct {
@@ -268,14 +276,13 @@ func Test_handler_Shorten(t *testing.T) {
 				bodyReader = bytes.NewReader(jsonBody)
 			}
 
-			req, err := http.NewRequest(tt.method, srv.URL, bodyReader)
+			req, err := http.NewRequest(tt.method, srv.URL+"/api/shorten", bodyReader)
 			require.NoError(t, err)
 
 			if len(tt.body) > 0 {
 				req.Header.Set("Content-Type", "application/json")
 
 			}
-
 			resp, err := srv.Client().Do(req)
 			require.NoError(t, err)
 
@@ -335,7 +342,11 @@ func TestHandler_ShortenBatchInsert(t *testing.T) {
 	// создадим экземпляр приложения и передадим ему «хранилище»
 	h := transportHttp.NewHandler(s, "http://localhost")
 
-	srv := httptest.NewServer(http.HandlerFunc(h.ShortenBatch))
+	r := chi.NewRouter()
+	r.Use(middlewares.Auth)
+	r.Post("/api/shorten/batch", h.ShortenBatch)
+
+	srv := httptest.NewServer(r)
 	defer srv.Close()
 
 	type want struct {
@@ -369,12 +380,11 @@ func TestHandler_ShortenBatchInsert(t *testing.T) {
 				bodyReader = bytes.NewReader(jsonBody)
 			}
 
-			req, err := http.NewRequest(tt.method, srv.URL, bodyReader)
+			req, err := http.NewRequest(tt.method, srv.URL+"/api/shorten/batch", bodyReader)
 			require.NoError(t, err)
 
 			if len(tt.body) > 0 {
 				req.Header.Set("Content-Type", "application/json")
-
 			}
 
 			resp, err := srv.Client().Do(req)

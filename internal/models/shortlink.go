@@ -5,6 +5,7 @@ import "errors"
 // ShortLink модель коротких ссылок
 type ShortLink struct {
 	UUID        string `json:"uuid"`
+	UserID      string `json:"user_id"`
 	Code        string `json:"code"`
 	ShortURL    string `json:"short_url"`
 	OriginalURL string `json:"original_url"`
