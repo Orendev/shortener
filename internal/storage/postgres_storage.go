@@ -208,7 +208,7 @@ func (s *PostgresStorage) UpdateBatch(ctx context.Context, shortLinks []models.S
 	return tx.Commit()
 }
 
-func (s *PostgresStorage) ShortLinksByUserId(ctx context.Context, userID string, limit int) ([]models.ShortLink, error) {
+func (s *PostgresStorage) ShortLinksByUserID(ctx context.Context, userID string, limit int) ([]models.ShortLink, error) {
 	shortLinks := make([]models.ShortLink, 0, limit)
 
 	stmt, err := s.db.PrepareContext(ctx,

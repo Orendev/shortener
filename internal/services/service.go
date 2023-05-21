@@ -25,8 +25,8 @@ func (s *Service) GetByID(ctx context.Context, id string) (*models.ShortLink, er
 	return s.storage.GetByID(ctx, id)
 }
 
-func (s *Service) ShortLinksByUserId(ctx context.Context, userID string, limit int) ([]models.ShortLink, error) {
-	return s.storage.ShortLinksByUserId(ctx, userID, limit)
+func (s *Service) ShortLinksByUserID(ctx context.Context, userID string, limit int) ([]models.ShortLink, error) {
+	return s.storage.ShortLinksByUserID(ctx, userID, limit)
 }
 func (s *Service) GetByOriginalURL(ctx context.Context, originalURL string) (*models.ShortLink, error) {
 	return s.storage.GetByOriginalURL(ctx, originalURL)

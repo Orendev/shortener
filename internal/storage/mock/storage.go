@@ -137,9 +137,9 @@ func (mr *MockShortLinkStorageMockRecorder) Save(ctx, model interface{}) *gomock
 }
 
 // ShortLinksByUserId mocks base method.
-func (m *MockShortLinkStorage) ShortLinksByUserId(ctx context.Context, userID string, limit int) ([]models.ShortLink, error) {
+func (m *MockShortLinkStorage) ShortLinksByUserID(ctx context.Context, userID string, limit int) ([]models.ShortLink, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ShortLinksByUserId", ctx, userID, limit)
+	ret := m.ctrl.Call(m, "ShortLinksByUserID", ctx, userID, limit)
 	ret0, _ := ret[0].([]models.ShortLink)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
@@ -148,7 +148,7 @@ func (m *MockShortLinkStorage) ShortLinksByUserId(ctx context.Context, userID st
 // ShortLinksByUserId indicates an expected call of ShortLinksByUserId.
 func (mr *MockShortLinkStorageMockRecorder) ShortLinksByUserId(ctx, userID, limit interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ShortLinksByUserId", reflect.TypeOf((*MockShortLinkStorage)(nil).ShortLinksByUserId), ctx, userID, limit)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ShortLinksByUserID", reflect.TypeOf((*MockShortLinkStorage)(nil).ShortLinksByUserID), ctx, userID, limit)
 }
 
 // UpdateBatch mocks base method.

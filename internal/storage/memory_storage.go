@@ -40,7 +40,7 @@ func (s *MemoryStorage) GetByID(_ context.Context, id string) (*models.ShortLink
 	return &shortLink, nil
 }
 
-func (s *MemoryStorage) ShortLinksByUserId(_ context.Context, userID string, limit int) ([]models.ShortLink, error) {
+func (s *MemoryStorage) ShortLinksByUserID(_ context.Context, userID string, limit int) ([]models.ShortLink, error) {
 	shortLinks := make([]models.ShortLink, 0, limit)
 
 	for _, link := range s.data {

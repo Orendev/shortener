@@ -300,7 +300,7 @@ func (h *Handler) UserUrls(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	shortLinks, err := h.shortLinkStorage.ShortLinksByUserId(r.Context(), userID, limit)
+	shortLinks, err := h.shortLinkStorage.ShortLinksByUserID(r.Context(), userID, limit)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
