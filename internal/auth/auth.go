@@ -35,11 +35,12 @@ var (
 )
 
 const (
-	TokenExp                        = time.Hour * 3
-	SecretKey                       = "supersecretkey"
-	JwtContextKey        contextKey = "JWTToken"
-	JwtUserIDContextKey  contextKey = "JWTUserID"
-	CookieAccessTokenKey string     = "access_token"
+	TokenExp                          = time.Hour * 3
+	SecretKey                         = "supersecretkey"
+	JwtContextKey          contextKey = "JWTToken"
+	JwtUserIDContextKey    contextKey = "JWTUserID"
+	CookieAccessTokenKey   string     = "access_token"
+	HeaderAuthorizationKey string     = "Authorization"
 )
 
 func GetAuthIdentifier(ctx context.Context) (string, error) {

@@ -3,11 +3,18 @@ package middlewares
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/Orendev/shortener/internal/auth"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
 	"net/http"
+	"strings"
 	"time"
+)
+
+const (
+	bearer       string = "bearer"
+	bearerFormat string = "Bearer %s"
 )
 
 func Auth(next http.Handler) http.Handler {
@@ -16,8 +23,7 @@ func Auth(next http.Handler) http.Handler {
 		// который будем передавать следующей функции
 		ow := w
 		or := r
-		ctx, err := cookieToContext(or)
-
+		ctx, err := HTTPToContext(or)
 		if err != nil {
 			switch {
 			case errors.Is(err, http.ErrNoCookie) || errors.Is(err, auth.ErrorTokenExpired):
@@ -32,14 +38,11 @@ func Auth(next http.Handler) http.Handler {
 					return
 				}
 
-				or = or.WithContext(ctx)
-				cookie, err := contextToCookie(or.Context())
+				or, err = contextToHTTP(ow, or.WithContext(ctx))
 				if err != nil {
 					http.Error(ow, "server error", http.StatusInternalServerError)
 					return
 				}
-
-				http.SetCookie(ow, cookie)
 
 			default:
 				http.Error(ow, "server error", http.StatusInternalServerError)
@@ -93,22 +96,29 @@ func NewSigner(ctx context.Context) (context.Context, error) {
 	return context.WithValue(ctx, auth.JwtContextKey, tokenString), nil
 }
 
-func cookieToContext(r *http.Request) (context.Context, error) {
-	token, err := r.Cookie(auth.CookieAccessTokenKey)
-	if err != nil {
-		return nil, err
+func HTTPToContext(r *http.Request) (context.Context, error) {
+	token, ok := extractTokenFromAuthHeader(r.Header.Get(auth.HeaderAuthorizationKey))
+	if !ok {
+		tokenValue, err := r.Cookie(auth.CookieAccessTokenKey)
+		if err != nil {
+			return nil, err
+		}
+		token = tokenValue.Value
 	}
-	return newParse(context.WithValue(r.Context(), auth.JwtContextKey, token.Value))
+
+	return newParse(context.WithValue(r.Context(), auth.JwtContextKey, token))
 }
 
-func contextToCookie(ctx context.Context) (*http.Cookie, error) {
+func contextToHTTP(w http.ResponseWriter, r *http.Request) (*http.Request, error) {
+	ctx := r.Context()
 	tokenString, ok := ctx.Value(auth.JwtContextKey).(string)
 
 	if !ok {
 		return nil, auth.ErrorTokenContextMissing
 	}
 
-	return &http.Cookie{
+	w.Header().Add(auth.HeaderAuthorizationKey, generateAuthHeaderFromToken(tokenString))
+	http.SetCookie(w, &http.Cookie{
 		Name:     auth.CookieAccessTokenKey,
 		Value:    tokenString,
 		Path:     "/",
@@ -116,7 +126,9 @@ func contextToCookie(ctx context.Context) (*http.Cookie, error) {
 		HttpOnly: true,
 		Secure:   true,
 		SameSite: http.SameSiteLaxMode,
-	}, nil
+	})
+
+	return r, nil
 }
 
 func newParse(ctx context.Context) (context.Context, error) {
@@ -158,4 +170,17 @@ func newParse(ctx context.Context) (context.Context, error) {
 	}
 
 	return context.WithValue(ctx, auth.JwtUserIDContextKey, claims.UserID), nil
+}
+
+func extractTokenFromAuthHeader(val string) (token string, ok bool) {
+	authHeaderParts := strings.Split(val, " ")
+	if len(authHeaderParts) != 2 || !strings.EqualFold(authHeaderParts[0], bearer) {
+		return "", false
+	}
+
+	return authHeaderParts[1], true
+}
+
+func generateAuthHeaderFromToken(token string) string {
+	return fmt.Sprintf(bearerFormat, token)
 }
