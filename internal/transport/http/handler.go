@@ -307,8 +307,8 @@ func (h *Handler) UserUrls(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if len(shortLinks) == 0 {
-		w.WriteHeader(http.StatusNoContent)
-		return
+		//w.WriteHeader(http.StatusNoContent)
+		//return
 	}
 
 	for _, model := range shortLinks {
