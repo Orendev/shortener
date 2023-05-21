@@ -19,12 +19,13 @@ func Auth(next http.Handler) http.Handler {
 		ctx, err := cookieToContext(or)
 
 		if err != nil {
-
 			switch {
 			case errors.Is(err, http.ErrNoCookie) || errors.Is(err, auth.ErrorTokenExpired):
+
 				if ctx != nil {
 					or = or.WithContext(ctx)
 				}
+
 				ctx, err = NewSigner(or.Context())
 				if err != nil {
 					http.Error(ow, "server error", http.StatusInternalServerError)
@@ -39,6 +40,7 @@ func Auth(next http.Handler) http.Handler {
 				}
 
 				http.SetCookie(ow, cookie)
+
 			default:
 				http.Error(ow, "server error", http.StatusInternalServerError)
 				return
@@ -68,9 +70,9 @@ func Auth(next http.Handler) http.Handler {
 // NewSigner создаёт JWT, указывая идентификатор ключа,
 func NewSigner(ctx context.Context) (context.Context, error) {
 
-	userId, err := auth.GetAuthIdentifier(ctx)
+	userID, err := auth.GetAuthIdentifier(ctx)
 	if err != nil {
-		userId = uuid.New().String()
+		userID = uuid.New().String()
 	}
 	// создаём новый токен с алгоритмом подписи HS256 и утверждениями — Claims
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, auth.Claims{
@@ -79,7 +81,7 @@ func NewSigner(ctx context.Context) (context.Context, error) {
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(auth.TokenExp)),
 		},
 		// собственное утверждение
-		UserID: userId,
+		UserID: userID,
 	})
 
 	// создаём строку токена

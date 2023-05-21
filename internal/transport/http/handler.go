@@ -286,6 +286,7 @@ func (h *Handler) Ping(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) UserUrls(w http.ResponseWriter, r *http.Request) {
+
 	if r.Method != http.MethodGet {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
@@ -305,6 +306,10 @@ func (h *Handler) UserUrls(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+	if len(shortLinks) == 0 {
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
 
 	for _, model := range shortLinks {
 		// заполняем модель ответа
@@ -321,7 +326,7 @@ func (h *Handler) UserUrls(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.WriteHeader(http.StatusCreated)
+	w.WriteHeader(http.StatusOK)
 
 	_, err = w.Write(enc)
 	if err != nil {
