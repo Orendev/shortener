@@ -313,7 +313,7 @@ func (h *Handler) UserUrls(w http.ResponseWriter, r *http.Request) {
 	for _, model := range shortLinks {
 		// заполняем модель ответа
 		shortLinkUserResponse = append(shortLinkUserResponse, models.ShortLinkUserResponse{
-			OriginalUrl: model.OriginalURL,
+			OriginalURL: model.OriginalURL,
 			ShortURL:    model.ShortURL,
 		})
 	}
