@@ -33,6 +33,12 @@ type ShortLinkBatchResponse struct {
 	ShortURL      string `json:"short_url"`
 }
 
+// ShortLinkUserResponse описывает ответ сервера.
+type ShortLinkUserResponse struct {
+	OriginalUrl string `json:"original_url"`
+	ShortURL    string `json:"short_url"`
+}
+
 func (sl ShortLinkRequest) Validate() error {
 	var err error
 	if sl.URL == "" {

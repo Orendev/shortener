@@ -293,7 +293,7 @@ func (h *Handler) UserUrls(w http.ResponseWriter, r *http.Request) {
 	}
 	limit := 100
 	w.Header().Set("Content-Type", "application/json")
-	shortLinkBatchResponse := make([]models.ShortLinkBatchResponse, 0, limit)
+	shortLinkUserResponse := make([]models.ShortLinkUserResponse, 0, limit)
 
 	userID, err := auth.GetAuthIdentifier(r.Context())
 	if err != nil {
@@ -307,20 +307,19 @@ func (h *Handler) UserUrls(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if len(shortLinks) == 0 {
-		//w.WriteHeader(http.StatusNoContent)
-		//return
+		w.WriteHeader(http.StatusNoContent)
 	}
 
 	for _, model := range shortLinks {
 		// заполняем модель ответа
-		shortLinkBatchResponse = append(shortLinkBatchResponse, models.ShortLinkBatchResponse{
-			CorrelationID: model.UUID,
-			ShortURL:      model.ShortURL,
+		shortLinkUserResponse = append(shortLinkUserResponse, models.ShortLinkUserResponse{
+			OriginalUrl: model.OriginalURL,
+			ShortURL:    model.ShortURL,
 		})
 	}
 
 	// заполняем модель ответа
-	enc, err := json.Marshal(shortLinkBatchResponse)
+	enc, err := json.Marshal(shortLinkUserResponse)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
