@@ -81,7 +81,7 @@ func (h *Handler) ShortLinkAdd(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
-
+	logger.Log.Info("userID", zap.String("userID", userID))
 	code := random.Strn(8)
 	shortLink := &models.ShortLink{
 		UUID:        uuid.New().String(),
@@ -89,6 +89,7 @@ func (h *Handler) ShortLinkAdd(w http.ResponseWriter, r *http.Request) {
 		Code:        code,
 		OriginalURL: req.URL,
 		ShortURL:    fmt.Sprintf("%s/%s", strings.TrimPrefix(h.baseURL, "/"), code),
+		DeletedFlag: false,
 	}
 
 	err = h.shortLinkStorage.Save(r.Context(), *shortLink)
@@ -359,7 +360,7 @@ func (h *Handler) DeleteUserUrls(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
-	logger.Log.Info("userID", zap.String("userID", userID))
+
 	// Получим тело запроса
 	var reqData []string
 	dec := json.NewDecoder(r.Body)
@@ -368,10 +369,11 @@ func (h *Handler) DeleteUserUrls(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
+	logger.Log.Info("userID", zap.String("userID", userID))
+	logger.Log.Info("reqData", zap.Any("reqData", reqData))
 	inputCh := generator(reqData)
-	a := h.fanOut(r.Context(), inputCh, userID)
-	resultCh := fanIn(a...)
+	channels := h.fanOut(r.Context(), inputCh, userID)
+	resultCh := fanIn(channels...)
 
 	go h.flushShortLink(r.Context(), resultCh)
 
@@ -412,7 +414,7 @@ func (h *Handler) fanOut(ctx context.Context, inputCh chan string, userID string
 // getShortLinkCode принимает на вход конткст для прекращения работы и канал с входными данными для работы,
 // а возвращает канал, в который будет отправляться результат запроса чтения из БД.
 // На фоне будет запущена горутина, выполняющая запрос чтения из БД до момента закрытия doneCh.
-func (h *Handler) getShortLink(ctx context.Context, inputCh chan string, _ string) chan models.ShortLink {
+func (h *Handler) getShortLink(ctx context.Context, inputCh chan string, userID string) chan models.ShortLink {
 	// канал с результатом
 	resultCh := make(chan models.ShortLink)
 
@@ -430,10 +432,10 @@ func (h *Handler) getShortLink(ctx context.Context, inputCh chan string, _ strin
 				continue
 			}
 
-			//if model.UserID == userID {
-			//	model.DeletedFlag = true
-			//}
-			model.DeletedFlag = true
+			if model.UserID == userID {
+				model.DeletedFlag = true
+			}
+
 			resultCh <- *model
 		}
 	}()
