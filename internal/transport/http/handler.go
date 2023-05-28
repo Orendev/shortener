@@ -387,9 +387,7 @@ func generator(input []string) chan string {
 	go func() {
 		defer close(inputCh)
 		for _, data := range input {
-			select {
-			case inputCh <- data:
-			}
+			inputCh <- data
 		}
 	}()
 
@@ -414,7 +412,7 @@ func (h *Handler) fanOut(ctx context.Context, inputCh chan string, userID string
 // getShortLinkCode принимает на вход конткст для прекращения работы и канал с входными данными для работы,
 // а возвращает канал, в который будет отправляться результат запроса чтения из БД.
 // На фоне будет запущена горутина, выполняющая запрос чтения из БД до момента закрытия doneCh.
-func (h *Handler) getShortLink(ctx context.Context, inputCh chan string, userID string) chan models.ShortLink {
+func (h *Handler) getShortLink(ctx context.Context, inputCh chan string, _ string) chan models.ShortLink {
 	// канал с результатом
 	resultCh := make(chan models.ShortLink)
 
@@ -432,10 +430,10 @@ func (h *Handler) getShortLink(ctx context.Context, inputCh chan string, userID 
 				continue
 			}
 
-			if model.UserID == userID {
-				model.DeletedFlag = true
-			}
-
+			//if model.UserID == userID {
+			//	model.DeletedFlag = true
+			//}
+			model.DeletedFlag = true
 			resultCh <- *model
 		}
 	}()
