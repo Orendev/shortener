@@ -81,7 +81,7 @@ func (h *Handler) ShortLinkAdd(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
-	logger.Log.Info("userID", zap.String("userID", userID))
+	fmt.Println("userID", userID)
 	code := random.Strn(8)
 	shortLink := &models.ShortLink{
 		UUID:        uuid.New().String(),
