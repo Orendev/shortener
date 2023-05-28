@@ -4,11 +4,12 @@ import "errors"
 
 // ShortLink модель коротких ссылок
 type ShortLink struct {
-	UUID        string `json:"uuid"`
-	UserID      string `json:"user_id"`
-	Code        string `json:"code"`
-	ShortURL    string `json:"short_url"`
-	OriginalURL string `json:"original_url"`
+	UUID        string `json:"uuid" db:"id"`
+	UserID      string `json:"user_id" db:"user_id"`
+	Code        string `json:"code" db:"-"`
+	ShortURL    string `json:"short_url" db:"short_url"`
+	OriginalURL string `json:"original_url" db:"original_url"`
+	DeletedFlag bool   `json:"-" db:"is_deleted"`
 }
 
 // ShortLinkResponse описывает ответ сервера.

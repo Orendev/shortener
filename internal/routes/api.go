@@ -29,6 +29,7 @@ func Routes(router chi.Router, storage storage.ShortLinkStorage, cfg *config.Con
 		r.Post("/", h.ShortLinkAdd)
 		r.Post("/api/shorten", h.Shorten)
 		r.Post("/api/shorten/batch", h.ShortenBatch)
+		r.Delete("/api/user/urls", h.DeleteUserUrls)
 	})
 
 	return router

@@ -38,12 +38,12 @@ func (s *PostgresStorage) GetByCode(ctx context.Context, code string) (*models.S
 	model := models.ShortLink{}
 
 	// делаем запрос
-	sqlStatement := `SELECT id, code, short_url, original_url  FROM short_links WHERE code = $1 LIMIT 1`
+	sqlStatement := `SELECT id, user_id, code, short_url, original_url, is_deleted FROM short_links WHERE code = $1 LIMIT 1`
 	row := s.db.QueryRowContext(ctx,
 		sqlStatement, code)
 
 	// разбираем результат
-	err := row.Scan(&model.UUID, &model.Code, &model.ShortURL, &model.OriginalURL)
+	err := row.Scan(&model.UUID, &model.UserID, &model.Code, &model.ShortURL, &model.OriginalURL, &model.DeletedFlag)
 	if err != nil {
 		return nil, err
 	}
@@ -56,7 +56,7 @@ func (s *PostgresStorage) GetByID(ctx context.Context, id string) (*models.Short
 	model := models.ShortLink{}
 
 	stmt, err := s.db.PrepareContext(ctx,
-		`SELECT id, user_id, code, short_url, original_url  FROM short_links WHERE id = $1 LIMIT 1`)
+		`SELECT id, user_id, code, short_url, original_url, is_deleted  FROM short_links WHERE id = $1 LIMIT 1`)
 
 	if err != nil {
 		return nil, err
@@ -73,7 +73,7 @@ func (s *PostgresStorage) GetByID(ctx context.Context, id string) (*models.Short
 	row := stmt.QueryRowContext(ctx, id)
 
 	// разбираем результат
-	err = row.Scan(&model.UUID, &model.UserID, &model.Code, &model.ShortURL, &model.OriginalURL)
+	err = row.Scan(&model.UUID, &model.UserID, &model.Code, &model.ShortURL, &model.OriginalURL, &model.DeletedFlag)
 	if err != nil {
 		return nil, err
 	}
@@ -86,7 +86,7 @@ func (s *PostgresStorage) GetByOriginalURL(ctx context.Context, originalURL stri
 	model := models.ShortLink{}
 
 	stmt, err := s.db.PrepareContext(ctx,
-		`SELECT id, user_id, code, short_url, original_url  FROM short_links WHERE original_url = $1 LIMIT 1`)
+		`SELECT id, user_id, code, short_url, original_url, is_deleted  FROM short_links WHERE original_url = $1 LIMIT 1`)
 
 	if err != nil {
 		return nil, err
@@ -103,7 +103,7 @@ func (s *PostgresStorage) GetByOriginalURL(ctx context.Context, originalURL stri
 	row := stmt.QueryRowContext(ctx, originalURL)
 
 	// разбираем результат
-	err = row.Scan(&model.UUID, &model.UserID, &model.Code, &model.ShortURL, &model.OriginalURL)
+	err = row.Scan(&model.UUID, &model.UserID, &model.Code, &model.ShortURL, &model.OriginalURL, &model.DeletedFlag)
 	if err != nil {
 		return nil, err
 	}
@@ -181,7 +181,7 @@ func (s *PostgresStorage) UpdateBatch(ctx context.Context, shortLinks []models.S
 	}
 
 	stmt, err := tx.PrepareContext(ctx,
-		`UPDATE short_links SET original_url = $1 WHERE id = $2`)
+		`UPDATE short_links SET original_url = $1, is_deleted=$2 WHERE id = $3`)
 
 	if err != nil {
 		return err
@@ -195,7 +195,7 @@ func (s *PostgresStorage) UpdateBatch(ctx context.Context, shortLinks []models.S
 	}()
 
 	for _, sl := range shortLinks {
-		_, err = stmt.ExecContext(ctx, sl.OriginalURL, sl.UUID)
+		_, err = stmt.ExecContext(ctx, sl.OriginalURL, sl.DeletedFlag, sl.UUID)
 		if err != nil {
 			// если ошибка, то откатываем изменения
 			errRollback := tx.Rollback()
@@ -212,7 +212,7 @@ func (s *PostgresStorage) ShortLinksByUserID(ctx context.Context, userID string,
 	shortLinks := make([]models.ShortLink, 0, limit)
 
 	stmt, err := s.db.PrepareContext(ctx,
-		`SELECT id, user_id, code, short_url, original_url  FROM short_links WHERE user_id = $1 LIMIT $2`)
+		`SELECT id, user_id, code, short_url, original_url, is_deleted  FROM short_links WHERE user_id = $1 LIMIT $2`)
 
 	if err != nil {
 		return nil, err
@@ -242,7 +242,7 @@ func (s *PostgresStorage) ShortLinksByUserID(ctx context.Context, userID string,
 	// пробегаем по всем записям
 	for rows.Next() {
 		var m models.ShortLink
-		err = rows.Scan(&m.UUID, &m.UserID, &m.Code, &m.ShortURL, &m.OriginalURL)
+		err = rows.Scan(&m.UUID, &m.UserID, &m.Code, &m.ShortURL, &m.OriginalURL, &m.DeletedFlag)
 		if err != nil {
 			return nil, err
 		}
@@ -265,10 +265,11 @@ func (s *PostgresStorage) Bootstrap(ctx context.Context) error {
 	sqlStatement := `
 	CREATE TABLE IF NOT EXISTS short_links (
 	    id UUID NOT NULL primary key, 
-	    user_id UUID NOT NULL, 
-	    code VARCHAR(255) NOT NULL UNIQUE, 
-	    short_url TEXT NOT NULL, 
-	    original_url TEXT NOT NULL UNIQUE
+	    user_id UUID NOT NULL,
+	    code VARCHAR(255) NOT NULL UNIQUE,
+	    short_url TEXT NOT NULL UNIQUE, 
+	    original_url TEXT NOT NULL UNIQUE,
+	    is_deleted BOOL DEFAULT false
 	    )`
 
 	_, err := s.db.ExecContext(
