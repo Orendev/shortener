@@ -81,7 +81,7 @@ func (h *Handler) ShortLinkAdd(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
-	fmt.Println("userID", userID)
+
 	code := random.Strn(8)
 	shortLink := &models.ShortLink{
 		UUID:        uuid.New().String(),
@@ -369,17 +369,20 @@ func (h *Handler) DeleteUserUrls(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	logger.Log.Info("userID", zap.String("userID", userID))
-	logger.Log.Info("reqData", zap.Any("reqData", reqData))
-	inputCh := generator(reqData)
-	channels := h.fanOut(r.Context(), inputCh, userID)
-	resultCh := fanIn(channels...)
 
-	go h.flushShortLink(r.Context(), resultCh)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	inputCh := generator(reqData)
+	channels := h.fanOut(ctx, inputCh, userID)
+	resultCh := h.fanIn(ctx, channels...)
+
+	go h.flushShortLink(ctx, resultCh)
 
 	// Запрос получен, но еще не обработан
 	w.WriteHeader(http.StatusAccepted)
 
+	time.Sleep(10 * time.Second)
 }
 
 // generator создаем каналы
@@ -425,7 +428,6 @@ func (h *Handler) getShortLink(ctx context.Context, inputCh chan string, userID 
 
 		// берём из канала inputCh значения, которые надо изменить
 		for data := range inputCh {
-
 			model, err := h.shortLinkStorage.GetByCode(ctx, data)
 			if err != nil {
 				logger.Log.Debug("cannot get shortLink", zap.Error(err))
@@ -436,7 +438,11 @@ func (h *Handler) getShortLink(ctx context.Context, inputCh chan string, userID 
 				model.DeletedFlag = true
 			}
 
-			resultCh <- *model
+			select {
+			case <-ctx.Done():
+				return
+			case resultCh <- *model:
+			}
 		}
 	}()
 
@@ -445,12 +451,9 @@ func (h *Handler) getShortLink(ctx context.Context, inputCh chan string, userID 
 
 }
 
-func (h *Handler) flushShortLink(_ context.Context, resultCh chan models.ShortLink) {
+func (h *Handler) flushShortLink(ctx context.Context, resultCh chan models.ShortLink) {
 
 	var shortLinks []models.ShortLink
-
-	ctx, cancel := context.WithTimeout(context.Background(), 55*time.Second)
-	defer cancel()
 
 	ticker := time.NewTicker(1 * time.Second)
 	defer ticker.Stop()
@@ -470,7 +473,7 @@ func (h *Handler) flushShortLink(_ context.Context, resultCh chan models.ShortLi
 			}
 			err := h.shortLinkStorage.UpdateBatch(ctx, shortLinks)
 			if err != nil {
-				logger.Log.Info("cannot save shortLink", zap.Error(err))
+				logger.Log.Debug("cannot save shortLink", zap.Error(err))
 				continue
 			}
 			shortLinks = nil
@@ -480,7 +483,7 @@ func (h *Handler) flushShortLink(_ context.Context, resultCh chan models.ShortLi
 }
 
 // Merge объединяет несколько каналов resultChs в один.
-func fanIn(resultChs ...chan models.ShortLink) chan models.ShortLink {
+func (h *Handler) fanIn(ctx context.Context, resultChs ...chan models.ShortLink) chan models.ShortLink {
 	// конечный выходной канал в который отправляем данные из всех каналов из слайса, назовём его результирующим
 	finalCh := make(chan models.ShortLink)
 	// понадобится для ожидания всех горутин
@@ -500,7 +503,13 @@ func fanIn(resultChs ...chan models.ShortLink) chan models.ShortLink {
 
 			// получаем данные из канала
 			for data := range chClosure {
-				finalCh <- data
+				select {
+				// выходим из горутины, если канал закрылся
+				case <-ctx.Done():
+					return
+				// если не закрылся, отправляем данные в конечный выходной канал
+				case finalCh <- data:
+				}
 			}
 		}()
 	}
