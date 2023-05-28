@@ -152,6 +152,7 @@ func (h *Handler) Shorten(w http.ResponseWriter, r *http.Request) {
 		Code:        code,
 		OriginalURL: req.URL,
 		ShortURL:    fmt.Sprintf("%s/%s", strings.TrimPrefix(h.baseURL, "/"), code),
+		DeletedFlag: false,
 	}
 
 	// Сохраним модель
@@ -229,6 +230,7 @@ func (h *Handler) ShortenBatch(w http.ResponseWriter, r *http.Request) {
 				Code:        code,
 				OriginalURL: req.OriginalURL,
 				ShortURL:    fmt.Sprintf("%s/%s", strings.TrimPrefix(h.baseURL, "/"), code),
+				DeletedFlag: false,
 			}
 
 			shortLinksInsert = append(shortLinksInsert, *model)
@@ -236,6 +238,7 @@ func (h *Handler) ShortenBatch(w http.ResponseWriter, r *http.Request) {
 		} else {
 
 			model.OriginalURL = req.OriginalURL
+			model.DeletedFlag = false
 			shortLinksUpdate = append(shortLinksUpdate, *model)
 		}
 

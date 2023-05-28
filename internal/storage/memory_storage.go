@@ -82,6 +82,7 @@ func (s *MemoryStorage) Save(_ context.Context, model models.ShortLink) error {
 			return ErrConflict
 		}
 	}
+	model.DeletedFlag = false
 	s.data[model.Code] = model
 
 	err := s.file.Save(s.data)
@@ -95,6 +96,7 @@ func (s *MemoryStorage) Save(_ context.Context, model models.ShortLink) error {
 func (s *MemoryStorage) InsertBatch(_ context.Context, shortLinks []models.ShortLink) error {
 
 	for _, link := range shortLinks {
+		link.DeletedFlag = false
 		s.data[link.Code] = link
 	}
 	err := s.file.Save(s.data)

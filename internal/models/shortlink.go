@@ -9,7 +9,7 @@ type ShortLink struct {
 	Code        string `json:"code" db:"-"`
 	ShortURL    string `json:"short_url" db:"short_url"`
 	OriginalURL string `json:"original_url" db:"original_url"`
-	DeletedFlag bool   `json:"-" db:"is_deleted"`
+	DeletedFlag bool   `json:"is_deleted" db:"is_deleted"`
 }
 
 // ShortLinkResponse описывает ответ сервера.
