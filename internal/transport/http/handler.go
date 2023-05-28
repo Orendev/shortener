@@ -359,7 +359,7 @@ func (h *Handler) DeleteUserUrls(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
-
+	logger.Log.Info("userID", zap.String("userID", userID))
 	// Получим тело запроса
 	var reqData []string
 	dec := json.NewDecoder(r.Body)
@@ -369,23 +369,11 @@ func (h *Handler) DeleteUserUrls(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ctx, cancel := context.WithCancel(r.Context())
-	defer cancel()
+	inputCh := generator(reqData)
+	a := h.fanOut(r.Context(), inputCh, userID)
+	resultCh := fanIn(a...)
 
-	resultCh := Merge(ctx, h.fanOut(ctx, gen(ctx, reqData))...)
-
-	var shortLinks []models.ShortLink
-	for data := range resultCh {
-		if data.UserID == userID {
-			data.DeletedFlag = true
-			shortLinks = append(shortLinks, data)
-		}
-	}
-
-	err = h.shortLinkStorage.UpdateBatch(ctx, shortLinks)
-	if err != nil {
-		logger.Log.Info("cannot save shortLink", zap.Error(err))
-	}
+	go h.flushShortLink(r.Context(), resultCh)
 
 	// Запрос получен, но еще не обработан
 	w.WriteHeader(http.StatusAccepted)
@@ -393,16 +381,13 @@ func (h *Handler) DeleteUserUrls(w http.ResponseWriter, r *http.Request) {
 }
 
 // generator создаем каналы
-func gen(ctx context.Context, input []string) chan string {
+func generator(input []string) chan string {
 	inputCh := make(chan string)
 
 	go func() {
 		defer close(inputCh)
-
 		for _, data := range input {
 			select {
-			case <-ctx.Done():
-				return
 			case inputCh <- data:
 			}
 		}
@@ -411,15 +396,15 @@ func gen(ctx context.Context, input []string) chan string {
 	return inputCh
 }
 
-// fanOut принимает канал данных, порождает горутин равное количеству проц
-func (h *Handler) fanOut(ctx context.Context, inputCh chan string) []chan models.ShortLink {
+func (h *Handler) fanOut(ctx context.Context, inputCh chan string, userID string) []chan models.ShortLink {
 	// количество горутин add
 	numWorkers := 10
 	// каналы, в которые отправляются результаты
 	channels := make([]chan models.ShortLink, numWorkers)
 
 	for i := 0; i < numWorkers; i++ {
-		channels[i] = h.getShortLink(ctx, inputCh)
+		addResultCh := h.getShortLink(ctx, inputCh, userID)
+		channels[i] = addResultCh
 	}
 
 	// возвращаем слайс каналов
@@ -429,7 +414,7 @@ func (h *Handler) fanOut(ctx context.Context, inputCh chan string) []chan models
 // getShortLinkCode принимает на вход конткст для прекращения работы и канал с входными данными для работы,
 // а возвращает канал, в который будет отправляться результат запроса чтения из БД.
 // На фоне будет запущена горутина, выполняющая запрос чтения из БД до момента закрытия doneCh.
-func (h *Handler) getShortLink(ctx context.Context, inputCh chan string) chan models.ShortLink {
+func (h *Handler) getShortLink(ctx context.Context, inputCh chan string, userID string) chan models.ShortLink {
 	// канал с результатом
 	resultCh := make(chan models.ShortLink)
 
@@ -440,17 +425,18 @@ func (h *Handler) getShortLink(ctx context.Context, inputCh chan string) chan mo
 
 		// берём из канала inputCh значения, которые надо изменить
 		for data := range inputCh {
+
 			model, err := h.shortLinkStorage.GetByCode(ctx, data)
 			if err != nil {
 				logger.Log.Debug("cannot get shortLink", zap.Error(err))
 				continue
 			}
-			result := *model
-			select {
-			case <-ctx.Done():
-				return
-			case resultCh <- result:
+
+			if model.UserID == userID {
+				model.DeletedFlag = true
 			}
+
+			resultCh <- *model
 		}
 	}()
 
@@ -459,8 +445,42 @@ func (h *Handler) getShortLink(ctx context.Context, inputCh chan string) chan mo
 
 }
 
+func (h *Handler) flushShortLink(_ context.Context, resultCh chan models.ShortLink) {
+
+	var shortLinks []models.ShortLink
+
+	ctx, cancel := context.WithTimeout(context.Background(), 55*time.Second)
+	defer cancel()
+
+	ticker := time.NewTicker(1 * time.Second)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case shortLink, ok := <-resultCh:
+			if !ok {
+				continue
+			}
+			shortLinks = append(shortLinks, shortLink)
+		case <-ticker.C:
+			if len(shortLinks) == 0 {
+				continue
+			}
+			err := h.shortLinkStorage.UpdateBatch(ctx, shortLinks)
+			if err != nil {
+				logger.Log.Info("cannot save shortLink", zap.Error(err))
+				continue
+			}
+			shortLinks = nil
+		}
+	}
+
+}
+
 // Merge объединяет несколько каналов resultChs в один.
-func Merge(ctx context.Context, resultChs ...chan models.ShortLink) chan models.ShortLink {
+func fanIn(resultChs ...chan models.ShortLink) chan models.ShortLink {
 	// конечный выходной канал в который отправляем данные из всех каналов из слайса, назовём его результирующим
 	finalCh := make(chan models.ShortLink)
 	// понадобится для ожидания всех горутин
@@ -480,13 +500,7 @@ func Merge(ctx context.Context, resultChs ...chan models.ShortLink) chan models.
 
 			// получаем данные из канала
 			for data := range chClosure {
-				select {
-				// выходим из горутины, если канал закрылся
-				case <-ctx.Done():
-					return
-				// если не закрылся, отправляем данные в конечный выходной канал
-				case finalCh <- data:
-				}
+				finalCh <- data
 			}
 		}()
 	}
