@@ -415,7 +415,7 @@ func (h *Handler) fanOut(ctx context.Context, inputCh chan string, userID string
 // getShortLinkCode принимает на вход конткст для прекращения работы и канал с входными данными для работы,
 // а возвращает канал, в который будет отправляться результат запроса чтения из БД.
 // На фоне будет запущена горутина, выполняющая запрос чтения из БД до момента закрытия doneCh.
-func (h *Handler) getShortLink(_ context.Context, inputCh chan string, userID string) chan models.ShortLink {
+func (h *Handler) getShortLink(_ context.Context, inputCh chan string, _ string) chan models.ShortLink {
 	// канал с результатом
 	resultCh := make(chan models.ShortLink)
 
@@ -434,9 +434,10 @@ func (h *Handler) getShortLink(_ context.Context, inputCh chan string, userID st
 				continue
 			}
 
-			if model.UserID == userID {
-				model.DeletedFlag = true
-			}
+			//if model.UserID == userID {
+			//	model.DeletedFlag = true
+			//}
+			model.DeletedFlag = true
 
 			select {
 			case <-ctx.Done():
@@ -451,7 +452,7 @@ func (h *Handler) getShortLink(_ context.Context, inputCh chan string, userID st
 
 }
 
-func (h *Handler) flushShortLink(ctx context.Context, resultCh chan models.ShortLink) {
+func (h *Handler) flushShortLink(_ context.Context, resultCh chan models.ShortLink) {
 
 	var shortLinks []models.ShortLink
 
