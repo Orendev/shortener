@@ -61,7 +61,7 @@ func New() (*Configs, error) {
 	flag.StringVar(&flagLogLevel, "ll", "info", "log level")
 	flag.StringVar(&fileStoragePath, "f", "/tmp/short-url-db.json", "Полное имя файла")
 	//host=localhost user=shortener password=secret dbname=shortener sslmode=disable
-	flag.StringVar(&databaseDSN, "d", "", "Строка с адресом подключения")
+	flag.StringVar(&databaseDSN, "d", "host=localhost user=shortener password=secret dbname=shortener sslmode=disable", "Строка с адресом подключения")
 	flag.Parse()
 
 	if len(cfg.Server.Addr) == 0 {
