@@ -40,6 +40,19 @@ func (s *MemoryStorage) GetByID(_ context.Context, id string) (*models.ShortLink
 	return &shortLink, nil
 }
 
+func (s *MemoryStorage) ShortLinksByUserID(_ context.Context, userID string, limit int) ([]models.ShortLink, error) {
+	shortLinks := make([]models.ShortLink, 0, limit)
+
+	for _, link := range s.data {
+		if link.UserID == userID {
+			shortLinks = append(shortLinks, link)
+			break
+		}
+	}
+
+	return shortLinks, nil
+}
+
 func (s *MemoryStorage) GetByOriginalURL(_ context.Context, originalURL string) (*models.ShortLink, error) {
 	var shortLink models.ShortLink
 	ok := false
@@ -69,6 +82,7 @@ func (s *MemoryStorage) Save(_ context.Context, model models.ShortLink) error {
 			return ErrConflict
 		}
 	}
+	model.DeletedFlag = false
 	s.data[model.Code] = model
 
 	err := s.file.Save(s.data)
@@ -82,6 +96,7 @@ func (s *MemoryStorage) Save(_ context.Context, model models.ShortLink) error {
 func (s *MemoryStorage) InsertBatch(_ context.Context, shortLinks []models.ShortLink) error {
 
 	for _, link := range shortLinks {
+		link.DeletedFlag = false
 		s.data[link.Code] = link
 	}
 	err := s.file.Save(s.data)

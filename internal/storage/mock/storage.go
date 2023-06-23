@@ -79,19 +79,19 @@ func (mr *MockShortLinkStorageMockRecorder) GetByID(ctx, id interface{}) *gomock
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByID", reflect.TypeOf((*MockShortLinkStorage)(nil).GetByID), ctx, id)
 }
 
-// GetByOriginalUrl mocks base method.
-func (m *MockShortLinkStorage) GetByOriginalURL(ctx context.Context, originalUrl string) (*models.ShortLink, error) {
+// GetByOriginalURL mocks base method.
+func (m *MockShortLinkStorage) GetByOriginalURL(ctx context.Context, originalURL string) (*models.ShortLink, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetByOriginalURL", ctx, originalUrl)
+	ret := m.ctrl.Call(m, "GetByOriginalURL", ctx, originalURL)
 	ret0, _ := ret[0].(*models.ShortLink)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetByOriginalUrl indicates an expected call of GetByOriginalUrl.
-func (mr *MockShortLinkStorageMockRecorder) GetByOriginalUrl(ctx, originalUrl interface{}) *gomock.Call {
+// GetByOriginalURL indicates an expected call of GetByOriginalURL.
+func (mr *MockShortLinkStorageMockRecorder) GetByOriginalURL(ctx, originalURL interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByOriginalURL", reflect.TypeOf((*MockShortLinkStorage)(nil).GetByOriginalURL), ctx, originalUrl)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByOriginalURL", reflect.TypeOf((*MockShortLinkStorage)(nil).GetByOriginalURL), ctx, originalURL)
 }
 
 // InsertBatch mocks base method.
@@ -134,6 +134,21 @@ func (m *MockShortLinkStorage) Save(ctx context.Context, model models.ShortLink)
 func (mr *MockShortLinkStorageMockRecorder) Save(ctx, model interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Save", reflect.TypeOf((*MockShortLinkStorage)(nil).Save), ctx, model)
+}
+
+// ShortLinksByUserId mocks base method.
+func (m *MockShortLinkStorage) ShortLinksByUserID(ctx context.Context, userID string, limit int) ([]models.ShortLink, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ShortLinksByUserID", ctx, userID, limit)
+	ret0, _ := ret[0].([]models.ShortLink)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ShortLinksByUserId indicates an expected call of ShortLinksByUserId.
+func (mr *MockShortLinkStorageMockRecorder) ShortLinksByUserId(ctx, userID, limit interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ShortLinksByUserID", reflect.TypeOf((*MockShortLinkStorage)(nil).ShortLinksByUserID), ctx, userID, limit)
 }
 
 // UpdateBatch mocks base method.

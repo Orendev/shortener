@@ -38,12 +38,12 @@ func (s *PostgresStorage) GetByCode(ctx context.Context, code string) (*models.S
 	model := models.ShortLink{}
 
 	// делаем запрос
-	sqlStatement := `SELECT id, code, short_url, original_url  FROM short_links WHERE code = $1 LIMIT 1`
+	sqlStatement := `SELECT id, user_id, code, short_url, original_url, is_deleted FROM short_links WHERE code = $1 LIMIT 1`
 	row := s.db.QueryRowContext(ctx,
 		sqlStatement, code)
 
 	// разбираем результат
-	err := row.Scan(&model.UUID, &model.Code, &model.ShortURL, &model.OriginalURL)
+	err := row.Scan(&model.UUID, &model.UserID, &model.Code, &model.ShortURL, &model.OriginalURL, &model.DeletedFlag)
 	if err != nil {
 		return nil, err
 	}
@@ -56,7 +56,7 @@ func (s *PostgresStorage) GetByID(ctx context.Context, id string) (*models.Short
 	model := models.ShortLink{}
 
 	stmt, err := s.db.PrepareContext(ctx,
-		`SELECT id, code, short_url, original_url  FROM short_links WHERE id = $1 LIMIT 1`)
+		`SELECT id, user_id, code, short_url, original_url, is_deleted  FROM short_links WHERE id = $1 LIMIT 1`)
 
 	if err != nil {
 		return nil, err
@@ -73,7 +73,7 @@ func (s *PostgresStorage) GetByID(ctx context.Context, id string) (*models.Short
 	row := stmt.QueryRowContext(ctx, id)
 
 	// разбираем результат
-	err = row.Scan(&model.UUID, &model.Code, &model.ShortURL, &model.OriginalURL)
+	err = row.Scan(&model.UUID, &model.UserID, &model.Code, &model.ShortURL, &model.OriginalURL, &model.DeletedFlag)
 	if err != nil {
 		return nil, err
 	}
@@ -86,7 +86,7 @@ func (s *PostgresStorage) GetByOriginalURL(ctx context.Context, originalURL stri
 	model := models.ShortLink{}
 
 	stmt, err := s.db.PrepareContext(ctx,
-		`SELECT id, code, short_url, original_url  FROM short_links WHERE original_url = $1 LIMIT 1`)
+		`SELECT id, user_id, code, short_url, original_url, is_deleted  FROM short_links WHERE original_url = $1 LIMIT 1`)
 
 	if err != nil {
 		return nil, err
@@ -103,7 +103,7 @@ func (s *PostgresStorage) GetByOriginalURL(ctx context.Context, originalURL stri
 	row := stmt.QueryRowContext(ctx, originalURL)
 
 	// разбираем результат
-	err = row.Scan(&model.UUID, &model.Code, &model.ShortURL, &model.OriginalURL)
+	err = row.Scan(&model.UUID, &model.UserID, &model.Code, &model.ShortURL, &model.OriginalURL, &model.DeletedFlag)
 	if err != nil {
 		return nil, err
 	}
@@ -113,13 +113,13 @@ func (s *PostgresStorage) GetByOriginalURL(ctx context.Context, originalURL stri
 
 func (s *PostgresStorage) Save(ctx context.Context, model models.ShortLink) error {
 	sqlStatement := `
-	INSERT INTO short_links (id, code, short_url, original_url)
-	VALUES ($1, $2, $3, $4)
+	INSERT INTO short_links (id, user_id, code, short_url, original_url)
+	VALUES ($1, $2, $3, $4, $5)
 	`
 
 	_, err := s.db.ExecContext(
 		ctx,
-		sqlStatement, model.UUID, model.Code, model.ShortURL, model.OriginalURL,
+		sqlStatement, model.UUID, model.UserID, model.Code, model.ShortURL, model.OriginalURL,
 	)
 
 	if err != nil {
@@ -146,8 +146,8 @@ func (s *PostgresStorage) InsertBatch(ctx context.Context, shortLinks []models.S
 	}
 
 	stmt, err := tx.PrepareContext(ctx,
-		`INSERT INTO short_links (id, code, short_url, original_url)
-				VALUES($1, $2, $3, $4)`)
+		`INSERT INTO short_links (id, user_id, code, short_url, original_url)
+				VALUES($1, $2, $3, $4, $5)`)
 	if err != nil {
 		return err
 	}
@@ -160,7 +160,7 @@ func (s *PostgresStorage) InsertBatch(ctx context.Context, shortLinks []models.S
 	}()
 
 	for _, sl := range shortLinks {
-		_, err = stmt.ExecContext(ctx, sl.UUID, sl.Code, sl.ShortURL, sl.OriginalURL)
+		_, err = stmt.ExecContext(ctx, sl.UUID, sl.UserID, sl.Code, sl.ShortURL, sl.OriginalURL)
 		if err != nil {
 			// если ошибка, то откатываем изменения
 			errRollback := tx.Rollback()
@@ -181,7 +181,7 @@ func (s *PostgresStorage) UpdateBatch(ctx context.Context, shortLinks []models.S
 	}
 
 	stmt, err := tx.PrepareContext(ctx,
-		`UPDATE short_links SET original_url = $1 WHERE id = $2`)
+		`UPDATE short_links SET original_url = $1, is_deleted=$2 WHERE id = $3`)
 
 	if err != nil {
 		return err
@@ -195,7 +195,7 @@ func (s *PostgresStorage) UpdateBatch(ctx context.Context, shortLinks []models.S
 	}()
 
 	for _, sl := range shortLinks {
-		_, err = stmt.ExecContext(ctx, sl.OriginalURL, sl.UUID)
+		_, err = stmt.ExecContext(ctx, sl.OriginalURL, sl.DeletedFlag, sl.UUID)
 		if err != nil {
 			// если ошибка, то откатываем изменения
 			errRollback := tx.Rollback()
@@ -208,15 +208,68 @@ func (s *PostgresStorage) UpdateBatch(ctx context.Context, shortLinks []models.S
 	return tx.Commit()
 }
 
+func (s *PostgresStorage) ShortLinksByUserID(ctx context.Context, userID string, limit int) ([]models.ShortLink, error) {
+	shortLinks := make([]models.ShortLink, 0, limit)
+
+	stmt, err := s.db.PrepareContext(ctx,
+		`SELECT id, user_id, code, short_url, original_url, is_deleted  FROM short_links WHERE user_id = $1 LIMIT $2`)
+
+	if err != nil {
+		return nil, err
+	}
+
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			_ = fmt.Errorf("db shutdown: %w", err)
+		}
+	}()
+
+	// делаем запрос
+	rows, err := stmt.QueryContext(ctx, userID, limit)
+	if err != nil {
+		return nil, err
+	}
+
+	// обязательно закрываем перед возвратом функции
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			log.Fatal(err)
+		}
+	}()
+
+	// пробегаем по всем записям
+	for rows.Next() {
+		var m models.ShortLink
+		err = rows.Scan(&m.UUID, &m.UserID, &m.Code, &m.ShortURL, &m.OriginalURL, &m.DeletedFlag)
+		if err != nil {
+			return nil, err
+		}
+
+		shortLinks = append(shortLinks, m)
+	}
+
+	// проверяем на ошибки
+	err = rows.Err()
+	if err != nil {
+		return nil, err
+	}
+
+	return shortLinks, nil
+}
+
 // Bootstrap подготавливает БД к работе, создавая необходимые таблицы и индексы
 func (s *PostgresStorage) Bootstrap(ctx context.Context) error {
 
 	sqlStatement := `
 	CREATE TABLE IF NOT EXISTS short_links (
 	    id UUID NOT NULL primary key, 
-	    code VARCHAR(255) NOT NULL UNIQUE, 
-	    short_url TEXT NOT NULL, 
-	    original_url TEXT NOT NULL UNIQUE
+	    user_id UUID NOT NULL,
+	    code VARCHAR(255) NOT NULL UNIQUE,
+	    short_url TEXT NOT NULL UNIQUE, 
+	    original_url TEXT NOT NULL UNIQUE,
+	    is_deleted BOOL DEFAULT false
 	    )`
 
 	_, err := s.db.ExecContext(

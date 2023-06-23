@@ -12,6 +12,7 @@ var ErrConflict = errors.New("data conflict")
 type ShortLinkStorage interface {
 	GetByCode(ctx context.Context, code string) (*models.ShortLink, error)
 	GetByID(ctx context.Context, id string) (*models.ShortLink, error)
+	ShortLinksByUserID(ctx context.Context, userID string, limit int) ([]models.ShortLink, error)
 	GetByOriginalURL(ctx context.Context, originalURL string) (*models.ShortLink, error)
 	Save(ctx context.Context, model models.ShortLink) error
 	InsertBatch(ctx context.Context, models []models.ShortLink) error
