@@ -1,4 +1,4 @@
-package storage
+package repository
 
 import (
 	"context"
@@ -10,7 +10,7 @@ import (
 // ErrConflict указывает на конфликт данных в хранилище
 var ErrConflict = errors.New("data conflict")
 
-type ShortLinkStorage interface {
+type Storage interface {
 	GetByCode(ctx context.Context, code string) (*models.ShortLink, error)
 	GetByID(ctx context.Context, id string) (*models.ShortLink, error)
 	ShortLinksByUserID(ctx context.Context, userID string, limit int) ([]models.ShortLink, error)

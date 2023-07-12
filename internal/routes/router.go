@@ -1,23 +1,15 @@
 package routes
 
 import (
-	"log"
-
-	"github.com/Orendev/shortener/internal/config"
-	"github.com/Orendev/shortener/internal/logger"
+	"github.com/Orendev/shortener/internal/handler"
 	"github.com/Orendev/shortener/internal/middlewares"
-	"github.com/Orendev/shortener/internal/storage"
-	"github.com/Orendev/shortener/internal/transport/http"
+	"github.com/Orendev/shortener/internal/repository"
 	"github.com/go-chi/chi/v5"
 )
 
-func Routes(router chi.Router, storage storage.ShortLinkStorage, cfg *config.Configs) chi.Router {
+func Router(router chi.Router, repo repository.Storage, baseURL string) chi.Router {
 
-	h := http.NewHandler(storage, cfg.BaseURL)
-
-	if err := logger.NewLogger(cfg.Log.FlagLogLevel); err != nil {
-		log.Fatal(err)
-	}
+	h := handler.NewHandler(repo, baseURL)
 
 	router.Use(middlewares.Logger)
 	router.Use(middlewares.Gzip)
