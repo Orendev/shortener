@@ -28,6 +28,7 @@ func Run(cfg *config.Configs) {
 	ctx := gracefulShutdown()
 
 	var repo repository.Storage
+
 	if len(cfg.Database.DatabaseDSN) > 0 {
 		pg, err := postgres.NewRepository(cfg.Database.DatabaseDSN)
 		if err != nil {
@@ -35,12 +36,6 @@ func Run(cfg *config.Configs) {
 			return
 		}
 
-		defer func() {
-			err = pg.Close()
-			if err != nil {
-				log.Fatal(err)
-			}
-		}()
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
 		defer cancel()
 		err = pg.Bootstrap(shutdownCtx)
