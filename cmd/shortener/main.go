@@ -2,12 +2,13 @@ package main
 
 import (
 	"context"
+	"log"
+	"time"
+
 	"github.com/Orendev/shortener/internal/app"
 	"github.com/Orendev/shortener/internal/config"
 	"github.com/Orendev/shortener/internal/services"
 	"github.com/Orendev/shortener/internal/storage"
-	"log"
-	"time"
 )
 
 const (

@@ -1,10 +1,11 @@
 package middlewares
 
 import (
-	"github.com/Orendev/shortener/internal/logger"
-	"go.uber.org/zap"
 	"net/http"
 	"time"
+
+	"github.com/Orendev/shortener/internal/logger"
+	"go.uber.org/zap"
 )
 
 func Logger(next http.Handler) http.Handler {

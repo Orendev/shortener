@@ -1,9 +1,10 @@
 package middlewares
 
 import (
-	"github.com/Orendev/shortener/internal/compress"
 	"net/http"
 	"strings"
+
+	"github.com/Orendev/shortener/internal/compress"
 )
 
 func Gzip(next http.Handler) http.Handler {

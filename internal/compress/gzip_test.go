@@ -3,6 +3,12 @@ package compress_test
 import (
 	"bytes"
 	"compress/gzip"
+	"io"
+	"log"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+
 	"github.com/Orendev/shortener/internal/config"
 	"github.com/Orendev/shortener/internal/models"
 	"github.com/Orendev/shortener/internal/routes"
@@ -10,11 +16,6 @@ import (
 	"github.com/Orendev/shortener/internal/storage"
 	"github.com/go-chi/chi/v5"
 	"github.com/stretchr/testify/require"
-	"io"
-	"log"
-	"net/http"
-	"net/http/httptest"
-	"testing"
 )
 
 var cfg = config.Configs{

@@ -1,11 +1,12 @@
 package storage
 
 import (
+	"testing"
+
 	"github.com/Orendev/shortener/internal/config"
 	"github.com/Orendev/shortener/internal/models"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestFileDB_Remove(t *testing.T) {
