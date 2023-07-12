@@ -4,10 +4,6 @@ import (
 	"context"
 	"log"
 	"net/http"
-	"os"
-	"os/signal"
-	"sync"
-	"syscall"
 	"time"
 
 	"github.com/Orendev/shortener/internal/config"
@@ -25,7 +21,7 @@ type App struct {
 var shutdownTimeout = 10 * time.Second
 
 func Run(cfg *config.Configs) {
-	ctx := gracefulShutdown()
+	ctx := context.Background()
 
 	var repo repository.Storage
 
@@ -36,7 +32,7 @@ func Run(cfg *config.Configs) {
 			return
 		}
 
-		shutdownCtx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
+		shutdownCtx, cancel := context.WithTimeout(ctx, shutdownTimeout)
 		defer cancel()
 		err = pg.Bootstrap(shutdownCtx)
 		if err != nil {
@@ -78,38 +74,9 @@ func NewApp(_ context.Context, repo repository.Storage) *App {
 	return &App{repo: repo}
 }
 
-func (a *App) startServer(ctx context.Context, srv *http.Server) {
-	var wg sync.WaitGroup
-
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		err := srv.ListenAndServe()
-		if err != nil {
-			log.Fatalf("failed to start server %s", err)
-		}
-	}()
-
-	<-ctx.Done()
-	shutdownCtx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
-	defer cancel()
-
-	err := srv.Shutdown(shutdownCtx)
+func (a *App) startServer(_ context.Context, srv *http.Server) {
+	err := srv.ListenAndServe()
 	if err != nil {
-		log.Fatalf("failed to shudown server %s", err)
+		log.Fatalf("failed to start server %s", err)
 	}
-
-	wg.Wait()
-}
-
-func gracefulShutdown() context.Context {
-	ctx, cancel := context.WithCancel(context.Background())
-	irqSig := make(chan os.Signal, 1)
-	// Получено сообщение о завершении работы от операционной системы.
-	signal.Notify(irqSig, syscall.SIGTERM, syscall.SIGHUP, syscall.SIGINT, syscall.SIGQUIT)
-	go func() {
-		<-irqSig
-		cancel()
-	}()
-	return ctx
 }
