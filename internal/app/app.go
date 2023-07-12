@@ -62,19 +62,19 @@ func Run(cfg *config.Configs) {
 		}
 	}()
 
-	a := NewApp(ctx, repo)
+	a := NewApp(repo)
 
-	a.startServer(ctx, &http.Server{
+	a.startServer(&http.Server{
 		Addr:    cfg.Server.Addr,
 		Handler: routes.Router(chi.NewRouter(), a.repo, cfg.BaseURL),
 	})
 }
 
-func NewApp(_ context.Context, repo repository.Storage) *App {
+func NewApp(repo repository.Storage) *App {
 	return &App{repo: repo}
 }
 
-func (a *App) startServer(_ context.Context, srv *http.Server) {
+func (a *App) startServer(srv *http.Server) {
 	err := srv.ListenAndServe()
 	if err != nil {
 		log.Fatalf("failed to start server %s", err)

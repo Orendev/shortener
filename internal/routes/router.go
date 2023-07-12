@@ -15,14 +15,17 @@ func Router(router chi.Router, repo repository.Storage, baseURL string) chi.Rout
 	router.Use(middlewares.Gzip)
 	router.Use(middlewares.Auth)
 
+	router.Route("/api", func(r chi.Router) {
+		r.Get("/user/urls", h.UserUrls)
+		r.Post("/shorten", h.Shorten)
+		r.Post("/shorten/batch", h.ShortenBatch)
+		r.Delete("/user/urls", h.DeleteUserUrls)
+	})
+
 	router.Route("/", func(r chi.Router) {
 		r.Get("/{id}", h.ShortLink)
 		r.Get("/ping", h.Ping)
-		r.Get("/api/user/urls", h.UserUrls)
 		r.Post("/", h.ShortLinkAdd)
-		r.Post("/api/shorten", h.Shorten)
-		r.Post("/api/shorten/batch", h.ShortenBatch)
-		r.Delete("/api/user/urls", h.DeleteUserUrls)
 	})
 
 	return router
