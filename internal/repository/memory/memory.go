@@ -48,7 +48,6 @@ func (s *Repository) ShortLinksByUserID(_ context.Context, userID string, limit 
 	for _, link := range s.data {
 		if link.UserID == userID {
 			shortLinks = append(shortLinks, link)
-			break
 		}
 	}
 

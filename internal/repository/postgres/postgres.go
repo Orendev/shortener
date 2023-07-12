@@ -4,14 +4,14 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"fmt"
-	"log"
 
+	"github.com/Orendev/shortener/internal/logger"
 	"github.com/Orendev/shortener/internal/models"
 	"github.com/Orendev/shortener/internal/repository"
 	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5/pgconn"
 	_ "github.com/jackc/pgx/v5/stdlib"
+	"go.uber.org/zap"
 )
 
 type Repository struct {
@@ -67,7 +67,7 @@ func (s *Repository) GetByID(ctx context.Context, id string) (*models.ShortLink,
 	defer func() {
 		err := stmt.Close()
 		if err != nil {
-			_ = fmt.Errorf("db shutdown: %w", err)
+			logger.Log.Error("error", zap.Error(err))
 		}
 	}()
 
@@ -97,7 +97,7 @@ func (s *Repository) GetByOriginalURL(ctx context.Context, originalURL string) (
 	defer func() {
 		err := stmt.Close()
 		if err != nil {
-			log.Fatal(err)
+			logger.Log.Error("error", zap.Error(err))
 		}
 	}()
 
@@ -157,7 +157,7 @@ func (s *Repository) InsertBatch(ctx context.Context, shortLinks []models.ShortL
 	defer func() {
 		err := stmt.Close()
 		if err != nil {
-			log.Fatal(err)
+			logger.Log.Error("error", zap.Error(err))
 		}
 	}()
 
@@ -192,7 +192,7 @@ func (s *Repository) UpdateBatch(ctx context.Context, shortLinks []models.ShortL
 	defer func() {
 		err := stmt.Close()
 		if err != nil {
-			log.Fatal(err)
+			logger.Log.Error("error", zap.Error(err))
 		}
 	}()
 
@@ -223,7 +223,7 @@ func (s *Repository) ShortLinksByUserID(ctx context.Context, userID string, limi
 	defer func() {
 		err := stmt.Close()
 		if err != nil {
-			_ = fmt.Errorf("db shutdown: %w", err)
+			logger.Log.Error("error", zap.Error(err))
 		}
 	}()
 
@@ -237,7 +237,7 @@ func (s *Repository) ShortLinksByUserID(ctx context.Context, userID string, limi
 	defer func() {
 		err := rows.Close()
 		if err != nil {
-			log.Fatal(err)
+			logger.Log.Error("error", zap.Error(err))
 		}
 	}()
 
