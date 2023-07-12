@@ -4,12 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/Orendev/shortener/internal/auth"
-	"github.com/golang-jwt/jwt/v4"
-	"github.com/google/uuid"
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/Orendev/shortener/internal/auth"
+	"github.com/golang-jwt/jwt/v4"
+	"github.com/google/uuid"
 )
 
 const (

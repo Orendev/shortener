@@ -2,6 +2,9 @@ package services
 
 import (
 	"context"
+	"reflect"
+	"testing"
+
 	"github.com/Orendev/shortener/internal/models"
 	"github.com/Orendev/shortener/internal/random"
 	"github.com/Orendev/shortener/internal/storage"
@@ -9,8 +12,6 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
-	"reflect"
-	"testing"
 )
 
 func TestService_Save(t *testing.T) {

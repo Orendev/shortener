@@ -5,6 +5,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
+	"net/http"
+	"strings"
+	"sync"
+	"time"
+
 	"github.com/Orendev/shortener/internal/auth"
 	"github.com/Orendev/shortener/internal/logger"
 	"github.com/Orendev/shortener/internal/models"
@@ -12,11 +18,6 @@ import (
 	"github.com/Orendev/shortener/internal/storage"
 	"github.com/google/uuid"
 	"go.uber.org/zap"
-	"io"
-	"net/http"
-	"strings"
-	"sync"
-	"time"
 )
 
 type Handler struct {

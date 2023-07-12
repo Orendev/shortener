@@ -2,11 +2,12 @@ package app
 
 import (
 	"fmt"
+	"net/http"
+
 	"github.com/Orendev/shortener/internal/config"
 	"github.com/Orendev/shortener/internal/routes"
 	"github.com/Orendev/shortener/internal/storage"
 	"github.com/go-chi/chi/v5"
-	"net/http"
 )
 
 type Server struct {

@@ -2,6 +2,11 @@ package http_test
 
 import (
 	"bytes"
+	"io"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+
 	"github.com/Orendev/shortener/internal/middlewares"
 	"github.com/Orendev/shortener/internal/models"
 	"github.com/Orendev/shortener/internal/random"
@@ -12,10 +17,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"io"
-	"net/http"
-	"net/http/httptest"
-	"testing"
 )
 
 func TestHandlers_ShortLink(t *testing.T) {
