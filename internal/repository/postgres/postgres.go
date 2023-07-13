@@ -1,22 +1,24 @@
-package storage
+package postgres
 
 import (
 	"context"
 	"database/sql"
 	"errors"
-	"fmt"
+
+	"github.com/Orendev/shortener/internal/logger"
 	"github.com/Orendev/shortener/internal/models"
+	"github.com/Orendev/shortener/internal/repository"
 	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5/pgconn"
 	_ "github.com/jackc/pgx/v5/stdlib"
-	"log"
+	"go.uber.org/zap"
 )
 
-type PostgresStorage struct {
+type Repository struct {
 	db *sql.DB
 }
 
-func NewPostgresStorage(dsn string) (*PostgresStorage, error) {
+func NewRepository(dsn string) (*Repository, error) {
 
 	db, err := sql.Open("pgx", dsn)
 
@@ -24,16 +26,16 @@ func NewPostgresStorage(dsn string) (*PostgresStorage, error) {
 		return nil, err
 	}
 
-	return &PostgresStorage{
+	return &Repository{
 		db: db,
 	}, nil
 }
 
-func (s *PostgresStorage) Close() error {
+func (s *Repository) Close() error {
 	return s.db.Close()
 }
 
-func (s *PostgresStorage) GetByCode(ctx context.Context, code string) (*models.ShortLink, error) {
+func (s *Repository) GetByCode(ctx context.Context, code string) (*models.ShortLink, error) {
 
 	model := models.ShortLink{}
 
@@ -51,7 +53,7 @@ func (s *PostgresStorage) GetByCode(ctx context.Context, code string) (*models.S
 	return &model, nil
 }
 
-func (s *PostgresStorage) GetByID(ctx context.Context, id string) (*models.ShortLink, error) {
+func (s *Repository) GetByID(ctx context.Context, id string) (*models.ShortLink, error) {
 
 	model := models.ShortLink{}
 
@@ -65,7 +67,7 @@ func (s *PostgresStorage) GetByID(ctx context.Context, id string) (*models.Short
 	defer func() {
 		err := stmt.Close()
 		if err != nil {
-			_ = fmt.Errorf("db shutdown: %w", err)
+			logger.Log.Error("error", zap.Error(err))
 		}
 	}()
 
@@ -81,7 +83,7 @@ func (s *PostgresStorage) GetByID(ctx context.Context, id string) (*models.Short
 	return &model, nil
 }
 
-func (s *PostgresStorage) GetByOriginalURL(ctx context.Context, originalURL string) (*models.ShortLink, error) {
+func (s *Repository) GetByOriginalURL(ctx context.Context, originalURL string) (*models.ShortLink, error) {
 
 	model := models.ShortLink{}
 
@@ -95,7 +97,7 @@ func (s *PostgresStorage) GetByOriginalURL(ctx context.Context, originalURL stri
 	defer func() {
 		err := stmt.Close()
 		if err != nil {
-			log.Fatal(err)
+			logger.Log.Error("error", zap.Error(err))
 		}
 	}()
 
@@ -111,7 +113,7 @@ func (s *PostgresStorage) GetByOriginalURL(ctx context.Context, originalURL stri
 	return &model, nil
 }
 
-func (s *PostgresStorage) Save(ctx context.Context, model models.ShortLink) error {
+func (s *Repository) Save(ctx context.Context, model models.ShortLink) error {
 	sqlStatement := `
 	INSERT INTO short_links (id, user_id, code, short_url, original_url)
 	VALUES ($1, $2, $3, $4, $5)
@@ -126,7 +128,7 @@ func (s *PostgresStorage) Save(ctx context.Context, model models.ShortLink) erro
 		var pgErr *pgconn.PgError
 
 		if errors.As(err, &pgErr) && pgerrcode.UniqueViolation == pgErr.Code {
-			err = ErrConflict
+			err = repository.ErrConflict
 		}
 		return err
 	}
@@ -134,11 +136,11 @@ func (s *PostgresStorage) Save(ctx context.Context, model models.ShortLink) erro
 	return nil
 }
 
-func (s *PostgresStorage) Ping(ctx context.Context) error {
+func (s *Repository) Ping(ctx context.Context) error {
 	return s.db.PingContext(ctx)
 }
 
-func (s *PostgresStorage) InsertBatch(ctx context.Context, shortLinks []models.ShortLink) error {
+func (s *Repository) InsertBatch(ctx context.Context, shortLinks []models.ShortLink) error {
 	// начинаем транзакцию
 	tx, err := s.db.Begin()
 	if err != nil {
@@ -155,7 +157,7 @@ func (s *PostgresStorage) InsertBatch(ctx context.Context, shortLinks []models.S
 	defer func() {
 		err := stmt.Close()
 		if err != nil {
-			log.Fatal(err)
+			logger.Log.Error("error", zap.Error(err))
 		}
 	}()
 
@@ -173,7 +175,7 @@ func (s *PostgresStorage) InsertBatch(ctx context.Context, shortLinks []models.S
 	return tx.Commit()
 }
 
-func (s *PostgresStorage) UpdateBatch(ctx context.Context, shortLinks []models.ShortLink) error {
+func (s *Repository) UpdateBatch(ctx context.Context, shortLinks []models.ShortLink) error {
 	// начинаем транзакцию
 	tx, err := s.db.Begin()
 	if err != nil {
@@ -190,7 +192,7 @@ func (s *PostgresStorage) UpdateBatch(ctx context.Context, shortLinks []models.S
 	defer func() {
 		err := stmt.Close()
 		if err != nil {
-			log.Fatal(err)
+			logger.Log.Error("error", zap.Error(err))
 		}
 	}()
 
@@ -208,7 +210,7 @@ func (s *PostgresStorage) UpdateBatch(ctx context.Context, shortLinks []models.S
 	return tx.Commit()
 }
 
-func (s *PostgresStorage) ShortLinksByUserID(ctx context.Context, userID string, limit int) ([]models.ShortLink, error) {
+func (s *Repository) ShortLinksByUserID(ctx context.Context, userID string, limit int) ([]models.ShortLink, error) {
 	shortLinks := make([]models.ShortLink, 0, limit)
 
 	stmt, err := s.db.PrepareContext(ctx,
@@ -221,7 +223,7 @@ func (s *PostgresStorage) ShortLinksByUserID(ctx context.Context, userID string,
 	defer func() {
 		err := stmt.Close()
 		if err != nil {
-			_ = fmt.Errorf("db shutdown: %w", err)
+			logger.Log.Error("error", zap.Error(err))
 		}
 	}()
 
@@ -235,7 +237,7 @@ func (s *PostgresStorage) ShortLinksByUserID(ctx context.Context, userID string,
 	defer func() {
 		err := rows.Close()
 		if err != nil {
-			log.Fatal(err)
+			logger.Log.Error("error", zap.Error(err))
 		}
 	}()
 
@@ -260,7 +262,7 @@ func (s *PostgresStorage) ShortLinksByUserID(ctx context.Context, userID string,
 }
 
 // Bootstrap подготавливает БД к работе, создавая необходимые таблицы и индексы
-func (s *PostgresStorage) Bootstrap(ctx context.Context) error {
+func (s *Repository) Bootstrap(ctx context.Context) error {
 
 	sqlStatement := `
 	CREATE TABLE IF NOT EXISTS short_links (

@@ -1,31 +1,32 @@
-package http
+package handler
 
 import (
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/Orendev/shortener/internal/auth"
-	"github.com/Orendev/shortener/internal/logger"
-	"github.com/Orendev/shortener/internal/models"
-	"github.com/Orendev/shortener/internal/random"
-	"github.com/Orendev/shortener/internal/storage"
-	"github.com/google/uuid"
-	"go.uber.org/zap"
 	"io"
 	"net/http"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/Orendev/shortener/internal/auth"
+	"github.com/Orendev/shortener/internal/logger"
+	"github.com/Orendev/shortener/internal/models"
+	"github.com/Orendev/shortener/internal/random"
+	"github.com/Orendev/shortener/internal/repository"
+	"github.com/google/uuid"
+	"go.uber.org/zap"
 )
 
 type Handler struct {
-	shortLinkStorage storage.ShortLinkStorage
-	baseURL          string
+	repo    repository.Storage
+	baseURL string
 }
 
-func NewHandler(storage storage.ShortLinkStorage, baseURL string) Handler {
-	return Handler{shortLinkStorage: storage, baseURL: baseURL}
+func NewHandler(repo repository.Storage, baseURL string) Handler {
+	return Handler{repo: repo, baseURL: baseURL}
 }
 
 func (h *Handler) ShortLink(w http.ResponseWriter, r *http.Request) {
@@ -36,7 +37,7 @@ func (h *Handler) ShortLink(w http.ResponseWriter, r *http.Request) {
 
 	code := strings.TrimPrefix(r.URL.Path, "/")
 
-	shortLink, err := h.shortLinkStorage.GetByCode(r.Context(), code)
+	shortLink, err := h.repo.GetByCode(r.Context(), code)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
@@ -92,16 +93,16 @@ func (h *Handler) ShortLinkAdd(w http.ResponseWriter, r *http.Request) {
 		DeletedFlag: false,
 	}
 
-	err = h.shortLinkStorage.Save(r.Context(), *shortLink)
+	err = h.repo.Save(r.Context(), *shortLink)
 
-	if err != nil && !errors.Is(err, storage.ErrConflict) {
+	if err != nil && !errors.Is(err, repository.ErrConflict) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	if errors.Is(err, storage.ErrConflict) {
+	if errors.Is(err, repository.ErrConflict) {
 		w.WriteHeader(http.StatusConflict)
-		shortLink, err = h.shortLinkStorage.GetByOriginalURL(r.Context(), req.URL)
+		shortLink, err = h.repo.GetByOriginalURL(r.Context(), req.URL)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
@@ -157,16 +158,16 @@ func (h *Handler) Shorten(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Сохраним модель
-	err = h.shortLinkStorage.Save(r.Context(), *shortLink)
+	err = h.repo.Save(r.Context(), *shortLink)
 
-	if err != nil && !errors.Is(err, storage.ErrConflict) {
+	if err != nil && !errors.Is(err, repository.ErrConflict) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	if errors.Is(err, storage.ErrConflict) {
+	if errors.Is(err, repository.ErrConflict) {
 		w.WriteHeader(http.StatusConflict)
-		shortLink, err = h.shortLinkStorage.GetByOriginalURL(r.Context(), req.URL)
+		shortLink, err = h.repo.GetByOriginalURL(r.Context(), req.URL)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
@@ -222,7 +223,7 @@ func (h *Handler) ShortenBatch(w http.ResponseWriter, r *http.Request) {
 		code := random.Strn(8)
 		var model *models.ShortLink
 
-		model, err := h.shortLinkStorage.GetByID(r.Context(), req.CorrelationID)
+		model, err := h.repo.GetByID(r.Context(), req.CorrelationID)
 
 		if err != nil {
 			model = &models.ShortLink{
@@ -251,13 +252,13 @@ func (h *Handler) ShortenBatch(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Сохраним модель
-	err = h.shortLinkStorage.InsertBatch(r.Context(), shortLinksInsert)
+	err = h.repo.InsertBatch(r.Context(), shortLinksInsert)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	err = h.shortLinkStorage.UpdateBatch(r.Context(), shortLinksUpdate)
+	err = h.repo.UpdateBatch(r.Context(), shortLinksUpdate)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -288,7 +289,7 @@ func (h *Handler) Ping(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), 1*time.Second)
 	defer cancel()
 
-	err := h.shortLinkStorage.Ping(ctx)
+	err := h.repo.Ping(ctx)
 
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -314,7 +315,7 @@ func (h *Handler) UserUrls(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	shortLinks, err := h.shortLinkStorage.ShortLinksByUserID(r.Context(), userID, limit)
+	shortLinks, err := h.repo.ShortLinksByUserID(r.Context(), userID, limit)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -428,7 +429,7 @@ func (h *Handler) getShortLink(ctx context.Context, inputCh chan string, _ strin
 		// берём из канала inputCh значения, которые надо изменить
 		for data := range inputCh {
 
-			model, err := h.shortLinkStorage.GetByCode(ctx, data)
+			model, err := h.repo.GetByCode(ctx, data)
 			if err != nil {
 				logger.Log.Info("cannot get shortLink", zap.Error(err))
 				continue
@@ -472,7 +473,7 @@ func (h *Handler) flushShortLink(ctx context.Context, resultCh chan models.Short
 			if len(shortLinks) == 0 {
 				continue
 			}
-			err := h.shortLinkStorage.UpdateBatch(ctx, shortLinks)
+			err := h.repo.UpdateBatch(ctx, shortLinks)
 			if err != nil {
 				logger.Log.Info("cannot save shortLink", zap.Error(err))
 				continue

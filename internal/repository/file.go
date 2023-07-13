@@ -1,12 +1,13 @@
-package storage
+package repository
 
 import (
 	"bufio"
 	"encoding/json"
-	"github.com/Orendev/shortener/internal/config"
-	"github.com/Orendev/shortener/internal/models"
 	"log"
 	"os"
+
+	"github.com/Orendev/shortener/internal/config"
+	"github.com/Orendev/shortener/internal/models"
 )
 
 type File struct {

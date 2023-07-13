@@ -1,21 +1,22 @@
-package http_test
+package handler_test
 
 import (
 	"bytes"
+	"io"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+
+	transportHttp "github.com/Orendev/shortener/internal/handler"
 	"github.com/Orendev/shortener/internal/middlewares"
 	"github.com/Orendev/shortener/internal/models"
 	"github.com/Orendev/shortener/internal/random"
-	"github.com/Orendev/shortener/internal/storage/mock"
-	transportHttp "github.com/Orendev/shortener/internal/transport/http"
+	"github.com/Orendev/shortener/internal/repository/mock"
 	"github.com/go-chi/chi/v5"
 	"github.com/golang/mock/gomock"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"io"
-	"net/http"
-	"net/http/httptest"
-	"testing"
 )
 
 func TestHandlers_ShortLink(t *testing.T) {

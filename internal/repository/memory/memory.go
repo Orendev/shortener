@@ -1,17 +1,19 @@
-package storage
+package memory
 
 import (
 	"context"
 	"errors"
+
 	"github.com/Orendev/shortener/internal/models"
+	"github.com/Orendev/shortener/internal/repository"
 )
 
-type MemoryStorage struct {
+type Repository struct {
 	data map[string]models.ShortLink
-	file *File
+	file *repository.File
 }
 
-func (s *MemoryStorage) GetByCode(_ context.Context, code string) (*models.ShortLink, error) {
+func (s *Repository) GetByCode(_ context.Context, code string) (*models.ShortLink, error) {
 	shortLink, ok := s.data[code]
 	if !ok {
 		err := errors.New("not found")
@@ -20,7 +22,7 @@ func (s *MemoryStorage) GetByCode(_ context.Context, code string) (*models.Short
 	return &shortLink, nil
 }
 
-func (s *MemoryStorage) GetByID(_ context.Context, id string) (*models.ShortLink, error) {
+func (s *Repository) GetByID(_ context.Context, id string) (*models.ShortLink, error) {
 	var shortLink models.ShortLink
 	ok := false
 
@@ -40,20 +42,19 @@ func (s *MemoryStorage) GetByID(_ context.Context, id string) (*models.ShortLink
 	return &shortLink, nil
 }
 
-func (s *MemoryStorage) ShortLinksByUserID(_ context.Context, userID string, limit int) ([]models.ShortLink, error) {
+func (s *Repository) ShortLinksByUserID(_ context.Context, userID string, limit int) ([]models.ShortLink, error) {
 	shortLinks := make([]models.ShortLink, 0, limit)
 
 	for _, link := range s.data {
 		if link.UserID == userID {
 			shortLinks = append(shortLinks, link)
-			break
 		}
 	}
 
 	return shortLinks, nil
 }
 
-func (s *MemoryStorage) GetByOriginalURL(_ context.Context, originalURL string) (*models.ShortLink, error) {
+func (s *Repository) GetByOriginalURL(_ context.Context, originalURL string) (*models.ShortLink, error) {
 	var shortLink models.ShortLink
 	ok := false
 
@@ -74,12 +75,12 @@ func (s *MemoryStorage) GetByOriginalURL(_ context.Context, originalURL string) 
 	return &shortLink, nil
 }
 
-func (s *MemoryStorage) Save(_ context.Context, model models.ShortLink) error {
+func (s *Repository) Save(_ context.Context, model models.ShortLink) error {
 
 	for _, link := range s.data {
 
 		if link.OriginalURL == model.OriginalURL {
-			return ErrConflict
+			return repository.ErrConflict
 		}
 	}
 	model.DeletedFlag = false
@@ -93,7 +94,7 @@ func (s *MemoryStorage) Save(_ context.Context, model models.ShortLink) error {
 	return nil
 }
 
-func (s *MemoryStorage) InsertBatch(_ context.Context, shortLinks []models.ShortLink) error {
+func (s *Repository) InsertBatch(_ context.Context, shortLinks []models.ShortLink) error {
 
 	for _, link := range shortLinks {
 		link.DeletedFlag = false
@@ -107,7 +108,7 @@ func (s *MemoryStorage) InsertBatch(_ context.Context, shortLinks []models.Short
 	return nil
 }
 
-func (s *MemoryStorage) UpdateBatch(_ context.Context, shortLinks []models.ShortLink) error {
+func (s *Repository) UpdateBatch(_ context.Context, shortLinks []models.ShortLink) error {
 	for _, link := range shortLinks {
 		s.data[link.Code] = link
 	}
@@ -118,17 +119,17 @@ func (s *MemoryStorage) UpdateBatch(_ context.Context, shortLinks []models.Short
 	return nil
 }
 
-func (s *MemoryStorage) Close() error {
+func (s *Repository) Close() error {
 	return nil
 }
 
-func NewMemoryStorage(data map[string]models.ShortLink, file *File) (*MemoryStorage, error) {
-	return &MemoryStorage{
+func NewRepository(data map[string]models.ShortLink, file *repository.File) (*Repository, error) {
+	return &Repository{
 		data: data,
 		file: file,
 	}, nil
 }
 
-func (s *MemoryStorage) Ping(_ context.Context) error {
+func (s *Repository) Ping(_ context.Context) error {
 	return nil
 }
