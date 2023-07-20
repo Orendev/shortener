@@ -3,7 +3,6 @@ package config
 import (
 	"flag"
 
-	"github.com/Orendev/shortener/internal/models"
 	"github.com/caarlos0/env/v8"
 )
 
@@ -39,16 +38,9 @@ type Configs struct {
 		Host string `env:"HOST"`
 		Port string `env:"PORT"`
 	}
-	File File
-	Log  Log
-	//Addr            string `env:"SERVER_ADDRESS"`
-	//Host            string `env:"HOST"`
-	//Port            string `env:"PORT"`
+	File    File
+	Log     Log
 	BaseURL string `env:"BASE_URL"`
-	Memory  map[string]models.ShortLink
-
-	//FileStoragePath string `env:"FILE_STORAGE_PATH"`
-	//DatabaseDSN     string `env:"DATABASE_DSN"`
 }
 
 func New() (*Configs, error) {
@@ -83,8 +75,6 @@ func New() (*Configs, error) {
 	if len(cfg.Database.DatabaseDSN) == 0 {
 		cfg.Database.DatabaseDSN = databaseDSN
 	}
-
-	cfg.Memory = map[string]models.ShortLink{}
 
 	return &cfg, nil
 }
