@@ -1,4 +1,4 @@
-package repository
+package memory
 
 import (
 	"testing"
@@ -40,7 +40,6 @@ func TestFileDB_Remove(t *testing.T) {
 					Port: "8080",
 				},
 				BaseURL: "http://localhost:8080",
-				Memory:  map[string]models.ShortLink{},
 				File: config.File{
 					FileStoragePath: "/tmp/test-short-url-file.json",
 				},
@@ -51,8 +50,7 @@ func TestFileDB_Remove(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			f := File{
-				data: tt.cfg.Memory,
-				cfg:  tt.cfg,
+				filePath: tt.cfg.File.FileStoragePath,
 			}
 
 			if err := f.Save(tt.args.models); (err != nil) != tt.wantErr {
@@ -96,7 +94,6 @@ func TestFileDB_Save(t *testing.T) {
 					Port: "8080",
 				},
 				BaseURL: "http://localhost:8080",
-				Memory:  map[string]models.ShortLink{},
 				File: config.File{
 					FileStoragePath: "/tmp/test-short-url-file.json",
 				},
@@ -107,8 +104,7 @@ func TestFileDB_Save(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			f := File{
-				data: tt.cfg.Memory,
-				cfg:  tt.cfg,
+				filePath: tt.cfg.File.FileStoragePath,
 			}
 			if err := f.Save(tt.args.models); (err != nil) != tt.wantErr {
 				t.Errorf("Save() error = %v, wantErr %v", err, tt.wantErr)

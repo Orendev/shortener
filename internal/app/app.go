@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/Orendev/shortener/internal/config"
+	"github.com/Orendev/shortener/internal/logger"
 	"github.com/Orendev/shortener/internal/repository"
 	"github.com/Orendev/shortener/internal/repository/memory"
 	"github.com/Orendev/shortener/internal/repository/postgres"
@@ -42,17 +43,13 @@ func Run(cfg *config.Configs) {
 		repo = pg
 
 	} else {
-		file, err := repository.NewFile(cfg)
+
+		mem, err := memory.NewRepository(cfg.File.FileStoragePath)
 		if err != nil {
-			log.Fatal(err)
-			return
+			logger.Log.Sugar().Errorf("error memory init: %s", err)
 		}
 
-		repo, err = memory.NewRepository(cfg.Memory, file)
-		if err != nil {
-			log.Fatal(err)
-			return
-		}
+		repo = mem
 	}
 
 	defer func() {
