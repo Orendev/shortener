@@ -8,3 +8,9 @@ func TestStrn(t *testing.T) {
 		t.Errorf("string length is expected %s is equal to %d", str, n)
 	}
 }
+func BenchmarkStrn(b *testing.B) {
+	n := 8
+	for i := 0; i < b.N; i++ {
+		Strn(n)
+	}
+}
