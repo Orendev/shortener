@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	_ "net/http/pprof"
 
 	"github.com/Orendev/shortener/internal/app"
 	"github.com/Orendev/shortener/internal/config"

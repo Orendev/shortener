@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"net/http"
+	_ "net/http/pprof"
 	"time"
 
 	"github.com/Orendev/shortener/internal/config"
@@ -12,7 +13,6 @@ import (
 	"github.com/Orendev/shortener/internal/repository/memory"
 	"github.com/Orendev/shortener/internal/repository/postgres"
 	"github.com/Orendev/shortener/internal/routes"
-	"github.com/go-chi/chi/v5"
 )
 
 type App struct {
@@ -63,7 +63,7 @@ func Run(cfg *config.Configs) {
 
 	a.startServer(&http.Server{
 		Addr:    cfg.Server.Addr,
-		Handler: routes.Router(chi.NewRouter(), a.repo, cfg.BaseURL),
+		Handler: routes.Router(a.repo, cfg.BaseURL),
 	})
 }
 
