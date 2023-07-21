@@ -43,7 +43,7 @@ func TestHandlers_ShortLink(t *testing.T) {
 	// создадим экземпляр приложения и передадим ему «хранилище»
 	h := transportHttp.NewHandler(s, "http://localhost")
 
-	srv := httptest.NewServer(http.HandlerFunc(h.ShortLink))
+	srv := httptest.NewServer(http.HandlerFunc(h.GetShorten))
 	defer srv.Close()
 
 	type want struct {
@@ -107,7 +107,7 @@ func TestHandlers_ShortLinkAdd(t *testing.T) {
 
 	r := chi.NewRouter()
 	r.Use(middlewares.Auth)
-	r.Post("/", h.ShortLinkAdd)
+	r.Post("/", h.PostShorten)
 
 	srv := httptest.NewServer(r)
 	defer srv.Close()
@@ -199,7 +199,7 @@ func Test_handler_Shorten(t *testing.T) {
 	h := transportHttp.NewHandler(s, "http://localhost")
 	r := chi.NewRouter()
 	r.Use(middlewares.Auth)
-	r.Post("/api/shorten", h.Shorten)
+	r.Post("/api/shorten", h.PostApiShorten)
 	srv := httptest.NewServer(r)
 	defer srv.Close()
 
@@ -345,7 +345,7 @@ func TestHandler_ShortenBatchInsert(t *testing.T) {
 
 	r := chi.NewRouter()
 	r.Use(middlewares.Auth)
-	r.Post("/api/shorten/batch", h.ShortenBatch)
+	r.Post("/api/shorten/batch", h.PostApiShortenBatch)
 
 	srv := httptest.NewServer(r)
 	defer srv.Close()

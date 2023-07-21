@@ -19,16 +19,16 @@ func Router(repo repository.Storage, baseURL string) *chi.Mux {
 	router.Mount("/debug", middleware.Profiler())
 
 	router.Route("/api", func(r chi.Router) {
-		r.Get("/user/urls", h.UserUrls)
-		r.Post("/shorten", h.Shorten)
-		r.Post("/shorten/batch", h.ShortenBatch)
-		r.Delete("/user/urls", h.DeleteUserUrls)
+		r.Get("/user/urls", h.GetApiUserUrls)
+		r.Post("/shorten", h.PostApiShorten)
+		r.Post("/shorten/batch", h.PostApiShortenBatch)
+		r.Delete("/user/urls", h.DeleteApiUserUrls)
 	})
 
 	router.Route("/", func(r chi.Router) {
-		r.Get("/{id}", h.ShortLink)
-		r.Get("/ping", h.Ping)
-		r.Post("/", h.ShortLinkAdd)
+		r.Get("/{id}", h.GetShorten)
+		r.Get("/ping", h.GetPing)
+		r.Post("/", h.PostShorten)
 	})
 
 	return router
