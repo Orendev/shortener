@@ -16,7 +16,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func (h *Handler) PostApiShorten(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) PostAPIShorten(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
@@ -90,7 +90,7 @@ func (h *Handler) PostApiShorten(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *Handler) PostApiShortenBatch(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) PostAPIShortenBatch(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
@@ -176,7 +176,7 @@ func (h *Handler) PostApiShortenBatch(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *Handler) DeleteApiUserUrls(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) DeleteAPIUserUrls(w http.ResponseWriter, r *http.Request) {
 	// Проверим HTTP Method
 	if r.Method != http.MethodDelete {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -215,7 +215,7 @@ func (h *Handler) DeleteApiUserUrls(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (h *Handler) GetApiUserUrls(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) GetAPIUserUrls(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method != http.MethodGet {
 		w.WriteHeader(http.StatusMethodNotAllowed)

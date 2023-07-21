@@ -199,7 +199,7 @@ func Test_handler_Shorten(t *testing.T) {
 	h := transportHttp.NewHandler(s, "http://localhost")
 	r := chi.NewRouter()
 	r.Use(middlewares.Auth)
-	r.Post("/api/shorten", h.PostApiShorten)
+	r.Post("/api/shorten", h.PostAPIShorten)
 	srv := httptest.NewServer(r)
 	defer srv.Close()
 
@@ -345,7 +345,7 @@ func TestHandler_ShortenBatchInsert(t *testing.T) {
 
 	r := chi.NewRouter()
 	r.Use(middlewares.Auth)
-	r.Post("/api/shorten/batch", h.PostApiShortenBatch)
+	r.Post("/api/shorten/batch", h.PostAPIShortenBatch)
 
 	srv := httptest.NewServer(r)
 	defer srv.Close()
