@@ -117,7 +117,7 @@ func (h *Handler) flushShortLink(ctx context.Context, resultCh chan models.Short
 
 }
 
-// Merge объединяет несколько каналов resultChs в один.
+// fanIn объединяет несколько каналов resultChs в один.
 func (h *Handler) fanIn(ctx context.Context, resultChs ...chan models.ShortLink) chan models.ShortLink {
 	// конечный выходной канал в который отправляем данные из всех каналов из слайса, назовём его результирующим
 	finalCh := make(chan models.ShortLink)
