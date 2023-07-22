@@ -8,6 +8,7 @@ import (
 	"go.uber.org/zap"
 )
 
+// Logger  middlewares
 func Logger(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()

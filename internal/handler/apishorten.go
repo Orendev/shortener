@@ -16,6 +16,7 @@ import (
 	"github.com/google/uuid"
 )
 
+// PostAPIShorten сохраним ссылку и вернем короткую ссылку.
 func (h *Handler) PostAPIShorten(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -90,6 +91,7 @@ func (h *Handler) PostAPIShorten(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// PostAPIShortenBatch сохраним ссылку и вернем короткую ссылку.
 func (h *Handler) PostAPIShortenBatch(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -176,6 +178,7 @@ func (h *Handler) PostAPIShortenBatch(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// DeleteAPIUserUrls удалим ссылку пользователя.
 func (h *Handler) DeleteAPIUserUrls(w http.ResponseWriter, r *http.Request) {
 	// Проверим HTTP Method
 	if r.Method != http.MethodDelete {
@@ -215,6 +218,7 @@ func (h *Handler) DeleteAPIUserUrls(w http.ResponseWriter, r *http.Request) {
 
 }
 
+// GetAPIUserUrls получим ссылки пользователя
 func (h *Handler) GetAPIUserUrls(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method != http.MethodGet {

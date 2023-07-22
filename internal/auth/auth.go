@@ -44,6 +44,7 @@ const (
 	HeaderAuthorizationKey string     = "Authorization"
 )
 
+// GetAuthIdentifier получить uuid  пользователя.
 func GetAuthIdentifier(ctx context.Context) (string, error) {
 	userID, ok := ctx.Value(JwtUserIDContextKey).(string)
 	if !ok {

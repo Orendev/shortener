@@ -6,6 +6,7 @@ import (
 	"time"
 )
 
+// Strn получим рандомное число
 func Strn(n int) string {
 	rand.Seed(time.Now().UnixNano())
 	alphabet := "ABCDEFGHIJKLMNOPQRSTUVWXYZ"

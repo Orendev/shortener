@@ -6,6 +6,7 @@ import (
 	"time"
 )
 
+// GetPing Запрос состояния сервиса
 func (h *Handler) GetPing(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		w.WriteHeader(http.StatusMethodNotAllowed)

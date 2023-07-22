@@ -15,12 +15,14 @@ import (
 	"github.com/Orendev/shortener/internal/routes"
 )
 
+// App стуктура
 type App struct {
 	repo repository.Storage
 }
 
 var shutdownTimeout = 10 * time.Second
 
+// Run запускае ссоевое
 func Run(cfg *config.Configs) {
 	ctx := context.Background()
 

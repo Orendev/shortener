@@ -14,6 +14,7 @@ import (
 	"github.com/google/uuid"
 )
 
+// GetShorten получим коротку ссылку по ее коду code
 func (h *Handler) GetShorten(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -38,6 +39,7 @@ func (h *Handler) GetShorten(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusTemporaryRedirect)
 }
 
+// PostShorten сохраним короткую ссылку
 func (h *Handler) PostShorten(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method != http.MethodPost {

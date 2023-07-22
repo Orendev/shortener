@@ -16,6 +16,7 @@ type Handler struct {
 	baseURL string
 }
 
+// NewHandler конструктор создает структуру Handler
 func NewHandler(repo repository.Storage, baseURL string) Handler {
 	return Handler{repo: repo, baseURL: baseURL}
 }

@@ -40,6 +40,7 @@ type ShortLinkUserResponse struct {
 	ShortURL    string `json:"short_url"`
 }
 
+// Validate валидация.
 func (sl ShortLinkRequest) Validate() error {
 	var err error
 	if sl.URL == "" {
