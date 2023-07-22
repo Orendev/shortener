@@ -7,7 +7,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	transportHttp "github.com/Orendev/shortener/internal/handler"
+	"github.com/Orendev/shortener/internal/handler"
 	"github.com/Orendev/shortener/internal/middlewares"
 	"github.com/Orendev/shortener/internal/models"
 	"github.com/Orendev/shortener/internal/random"
@@ -19,7 +19,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestHandlers_ShortLink(t *testing.T) {
+func TestHandler_GetShorten(t *testing.T) {
 
 	// создадим конроллер моков и экземпляр мок-хранилища
 	ctrl := gomock.NewController(t)
@@ -41,7 +41,7 @@ func TestHandlers_ShortLink(t *testing.T) {
 		Return(&model, nil)
 
 	// создадим экземпляр приложения и передадим ему «хранилище»
-	h := transportHttp.NewHandler(s, "http://localhost")
+	h := handler.NewHandler(s, "http://localhost")
 
 	srv := httptest.NewServer(http.HandlerFunc(h.GetShorten))
 	defer srv.Close()
@@ -90,7 +90,7 @@ func TestHandlers_ShortLink(t *testing.T) {
 	}
 }
 
-func TestHandlers_ShortLinkAdd(t *testing.T) {
+func TestHandler_PostShorten(t *testing.T) {
 
 	// создадим конроллер моков и экземпляр мок-хранилища
 	ctrl := gomock.NewController(t)
@@ -103,7 +103,7 @@ func TestHandlers_ShortLinkAdd(t *testing.T) {
 		Return(nil)
 
 	// создадим экземпляр приложения и передадим ему «хранилище»
-	h := transportHttp.NewHandler(s, "http://localhost")
+	h := handler.NewHandler(s, "http://localhost")
 
 	r := chi.NewRouter()
 	r.Use(middlewares.Auth)
@@ -183,7 +183,7 @@ func TestHandlers_ShortLinkAdd(t *testing.T) {
 	}
 }
 
-func Test_handler_Shorten(t *testing.T) {
+func TestHandler_PostAPIShorten(t *testing.T) {
 
 	// создадим конроллер моков и экземпляр мок-хранилища
 	ctrl := gomock.NewController(t)
@@ -196,7 +196,7 @@ func Test_handler_Shorten(t *testing.T) {
 		Return(nil)
 
 	// создадим экземпляр приложения и передадим ему «хранилище»
-	h := transportHttp.NewHandler(s, "http://localhost")
+	h := handler.NewHandler(s, "http://localhost")
 	r := chi.NewRouter()
 	r.Use(middlewares.Auth)
 	r.Post("/api/shorten", h.PostAPIShorten)
@@ -309,7 +309,7 @@ func Test_handler_Shorten(t *testing.T) {
 	}
 }
 
-func TestHandler_ShortenBatchInsert(t *testing.T) {
+func TestHandler_PostAPIShortenBatch(t *testing.T) {
 
 	// создадим конроллер моков и экземпляр мок-хранилища
 	ctrl := gomock.NewController(t)
@@ -341,7 +341,7 @@ func TestHandler_ShortenBatchInsert(t *testing.T) {
 		Return(&model, nil)
 
 	// создадим экземпляр приложения и передадим ему «хранилище»
-	h := transportHttp.NewHandler(s, "http://localhost")
+	h := handler.NewHandler(s, "http://localhost")
 
 	r := chi.NewRouter()
 	r.Use(middlewares.Auth)
@@ -409,6 +409,161 @@ func TestHandler_ShortenBatchInsert(t *testing.T) {
 				}
 				assert.Regexp(t, tt.want.expectedBody, string(body))
 			}
+		})
+	}
+}
+
+func TestHandler_GetAPIUserUrls(t *testing.T) {
+	// создадим конроллер моков и экземпляр мок-хранилища
+	ctrl := gomock.NewController(t)
+	s := mock.NewMockShortLinkStorage(ctrl)
+
+	// определим, какой результат будем получать от «хранилища»
+	code := random.Strn(8)
+	id := uuid.New().String()
+	userID := uuid.New().String()
+	// определим, какой результат будем получать от «хранилища»
+	model := models.ShortLink{
+		UUID:        id,
+		UserID:      userID,
+		Code:        code,
+		ShortURL:    "http://localhost/" + code,
+		OriginalURL: "https://practicum.yandex.ru/",
+	}
+	shortLinks := make([]models.ShortLink, 0)
+
+	shortLinks = append(shortLinks, model)
+	// определим, какой результат будем получать от «хранилища»
+	s.EXPECT().
+		ShortLinksByUserId(gomock.Any(), gomock.Any(), gomock.Any()).
+		Return(shortLinks, nil)
+
+	// создадим экземпляр приложения и передадим ему «хранилище»
+	h := handler.NewHandler(s, "http://localhost")
+
+	r := chi.NewRouter()
+	r.Use(middlewares.Auth)
+	r.Get("/api/user/urls", h.GetAPIUserUrls)
+
+	srv := httptest.NewServer(r)
+	defer srv.Close()
+
+	type want struct {
+		expectedCode int
+		expectedBody string
+		contentType  string
+	}
+
+	type args struct {
+		userID string
+	}
+
+	tests := []struct {
+		name   string
+		method string
+		args   args
+		want   want
+	}{
+		{
+			name:   "method get success",
+			method: http.MethodGet,
+			args: args{
+				userID: userID,
+			},
+			want: want{
+				contentType:  "application/json",
+				expectedCode: http.StatusOK,
+				expectedBody: `[{"original_url": "https://practicum.yandex.ru/", "short_url":"http://localhost/.*"}]`,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var bodyReader io.Reader
+			req, err := http.NewRequest(tt.method, srv.URL+"/api/user/urls", bodyReader)
+			require.NoError(t, err)
+
+			resp, err := srv.Client().Do(req)
+			require.NoError(t, err)
+
+			defer func() {
+				err := resp.Body.Close()
+				if err != nil {
+					require.NoError(t, err)
+				}
+			}()
+
+			assert.NoError(t, err, "error making HTTP request")
+			assert.Equal(t, tt.want.expectedCode, resp.StatusCode, "code didn't match expected")
+
+			// проверяем корректность полученного тела ответа, если мы его ожидаем
+			if tt.want.expectedBody != "" {
+				body, err := io.ReadAll(resp.Body)
+				if err != nil {
+					require.NoError(t, err)
+				}
+				assert.Regexp(t, tt.want.expectedBody, string(body))
+			}
+		})
+	}
+}
+
+func TestHandler_GetPing(t *testing.T) {
+	// создадим конроллер моков и экземпляр мок-хранилища
+	ctrl := gomock.NewController(t)
+	s := mock.NewMockShortLinkStorage(ctrl)
+
+	// определим, какой результат будем получать от «хранилища»
+	s.EXPECT().
+		Ping(gomock.Any()).
+		Return(nil)
+
+	h := handler.NewHandler(s, "http://localhost")
+
+	r := chi.NewRouter()
+	r.Use(middlewares.Auth)
+	r.Get("/ping", h.GetPing)
+
+	srv := httptest.NewServer(r)
+	defer srv.Close()
+
+	type want struct {
+		expectedCode int
+	}
+
+	tests := []struct {
+		name   string
+		method string
+		want   want
+	}{
+		{
+			name:   "method get success",
+			method: http.MethodGet,
+			want: want{
+				expectedCode: http.StatusOK,
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var bodyReader io.Reader
+			req, err := http.NewRequest(tt.method, srv.URL+"/ping", bodyReader)
+			require.NoError(t, err)
+
+			resp, err := srv.Client().Do(req)
+			require.NoError(t, err)
+
+			defer func() {
+				err := resp.Body.Close()
+				if err != nil {
+					require.NoError(t, err)
+				}
+			}()
+
+			assert.NoError(t, err, "error making HTTP request")
+			assert.Equal(t, tt.want.expectedCode, resp.StatusCode, "code didn't match expected")
+
 		})
 	}
 }
