@@ -6,13 +6,7 @@ import (
 	"github.com/caarlos0/env/v8"
 )
 
-var cfg Configs = Configs{}
-
-//var addr string
-//var baseURL string
-//var flagLogLevel string
-//var fileStoragePath string
-//var databaseDSN string
+var cfg = Configs{}
 
 // Server конфигурация сервера
 type Server struct {
@@ -39,14 +33,10 @@ type Database struct {
 // Configs конфигурация конфигаа
 type Configs struct {
 	Database Database
-	Server   struct {
-		Addr string `env:"SERVER_ADDRESS"`
-		Host string `env:"HOST"`
-		Port string `env:"PORT"`
-	}
-	File    File
-	Log     Log
-	BaseURL string `env:"BASE_URL"`
+	Server   Server
+	File     File
+	Log      Log
+	BaseURL  string `env:"BASE_URL"`
 }
 
 // New констуктор
