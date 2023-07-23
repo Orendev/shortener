@@ -6,7 +6,7 @@ import (
 	"github.com/caarlos0/env/v8"
 )
 
-var cfg = Configs{}
+var cfg Configs = Configs{}
 
 // Server конфигурация сервера
 type Server struct {
