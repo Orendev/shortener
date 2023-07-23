@@ -4,10 +4,10 @@ import (
 	"go.uber.org/zap"
 )
 
-// Log - logger object
+// Log - logger object.
 var Log = zap.NewNop()
 
-// NewLogger конструктор создает глобальную переменную Log
+// NewLogger the constructor creates a global variable Log.
 func NewLogger(level string) error {
 	lvl, err := zap.ParseAtomicLevel(level)
 	if err != nil {

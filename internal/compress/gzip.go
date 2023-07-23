@@ -13,7 +13,7 @@ type GzipWriter struct {
 	writer *gzip.Writer
 }
 
-// NewGzipWriter
+// NewGzipWriter the constructor creates a GzipWriter
 func NewGzipWriter(w http.ResponseWriter) *GzipWriter {
 	return &GzipWriter{
 		rw:     w,
@@ -69,7 +69,7 @@ func (zr GzipReader) Read(p []byte) (n int, err error) {
 	return zr.reader.Read(p)
 }
 
-// Closer is the interface that wraps the basic Close method.
+// Close is the interface that wraps the basic Close method.
 func (zr GzipReader) Close() error {
 	if err := zr.r.Close(); err != nil {
 		return err

@@ -32,7 +32,7 @@ func (r loggingResponseWriter) WriteHeader(statusCode int) {
 	r.responseData.status = statusCode
 }
 
-// Logger  middleware для логирования запросов к серверу.
+// Logger  middleware to log requests to the server.
 func Logger(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()

@@ -16,7 +16,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	if err := logger.NewLogger("info"); err != nil {
+	if err := logger.NewLogger(cfg.Log.FlagLogLevel); err != nil {
 		log.Fatal(err)
 	}
 
