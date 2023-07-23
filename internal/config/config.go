@@ -7,6 +7,11 @@ import (
 )
 
 var cfg Configs = Configs{}
+var addr string
+var baseURL string
+var flagLogLevel string
+var fileStoragePath string
+var databaseDSN string
 
 // Server конфигурация сервера
 type Server struct {
@@ -50,27 +55,32 @@ func New() (*Configs, error) {
 	if err != nil {
 		return nil, err
 	}
+	flag.StringVar(&addr, "a", "localhost:8080", "Адрес запуска сервера localhost:8080")
+	flag.StringVar(&baseURL, "b", "http://localhost:8080", "Базовый URL http://localhost:8080")
+	flag.StringVar(&flagLogLevel, "ll", "info", "log level")
+	flag.StringVar(&fileStoragePath, "f", "/tmp/short-url-db.json", "Полное имя файла")
+	//host=localhost user=shortener password=secret dbname=shortener sslmode=disable
+	flag.StringVar(&databaseDSN, "d", "", "Строка с адресом подключения")
+	flag.Parse()
 
 	if len(cfg.Server.Addr) == 0 {
-		flag.StringVar(&cfg.Server.Addr, "a", "localhost:8080", "Адрес запуска сервера localhost:8080")
+		cfg.Server.Addr = addr
 	}
 	if len(cfg.BaseURL) == 0 {
-		flag.StringVar(&cfg.BaseURL, "b", "http://localhost:8080", "Базовый URL http://localhost:8080")
+		cfg.BaseURL = baseURL
 	}
 
 	if len(cfg.Log.FlagLogLevel) == 0 {
-		flag.StringVar(&cfg.Log.FlagLogLevel, "ll", "info", "log level")
+		cfg.Log.FlagLogLevel = flagLogLevel
 	}
 
 	if len(cfg.File.FileStoragePath) == 0 {
-		flag.StringVar(&cfg.File.FileStoragePath, "f", "/tmp/short-url-db.json", "Полное имя файла")
+		cfg.File.FileStoragePath = fileStoragePath
 	}
 
 	if len(cfg.Database.DatabaseDSN) == 0 {
-		flag.StringVar(&cfg.Database.DatabaseDSN, "d", "", "Строка с адресом подключения")
+		cfg.Database.DatabaseDSN = databaseDSN
 	}
-
-	flag.Parse()
 
 	return &cfg, nil
 }
