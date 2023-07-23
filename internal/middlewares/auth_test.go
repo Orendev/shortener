@@ -25,7 +25,7 @@ func TestAuth(t *testing.T) {
 		want   want
 	}{
 		{
-			name:   "positive test logger middleware",
+			name:   "positive test auth middleware",
 			method: http.MethodGet,
 			args: args{
 				next: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -44,7 +44,7 @@ func TestAuth(t *testing.T) {
 			defer ts.Close()
 
 			req, err := http.NewRequest(tt.method, ts.URL, nil)
-			req.Header.Set(auth.HeaderAuthorizationKey, "fff1")
+
 			if err != nil {
 				require.NoError(t, err)
 			}
