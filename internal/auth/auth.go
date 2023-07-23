@@ -10,13 +10,15 @@ import (
 
 type contextKey string
 
+// Claims structure describing the JWT Claims
 type Claims struct {
 	jwt.RegisteredClaims
 	UserID string
 }
 
+// Ошибки при работе с JWT Token.
 var (
-	// ErrorTokenContextMissing токен не был передан
+	// ErrorTokenContextMissing токен не был передан.
 	ErrorTokenContextMissing = errors.New("token up for parsing was not passed through the context")
 
 	// ErrorTokenInvalid означает, что токен не удалось проверить.
@@ -31,10 +33,11 @@ var (
 	// ErrorTokenExpired заголовок срока действия токена прошел.
 	ErrorTokenExpired = errors.New("JWT is expired")
 
-	// ErrorTokenNotActive Токен еще не действителен
+	// ErrorTokenNotActive Токен еще не действителен.
 	ErrorTokenNotActive = errors.New("token is not valid yet")
 )
 
+// Настройки JWT Token.
 const (
 	TokenExp                          = time.Hour * 3
 	SecretKey                         = "supersecretkey"

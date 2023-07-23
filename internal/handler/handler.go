@@ -11,6 +11,7 @@ import (
 	"go.uber.org/zap"
 )
 
+// Handler - structure describing the handler
 type Handler struct {
 	repo    repository.Storage
 	baseURL string
