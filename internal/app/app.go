@@ -29,7 +29,7 @@ func Run(cfg *config.Configs) {
 	var repo repository.Storage
 
 	if len(cfg.Database.DatabaseDSN) > 0 {
-		pg, err := postgres.NewRepository(cfg.Database.DatabaseDSN)
+		pg, err := postgres.NewPostgres(cfg.Database.DatabaseDSN)
 		if err != nil {
 			log.Fatal(err)
 			return
@@ -46,7 +46,7 @@ func Run(cfg *config.Configs) {
 
 	} else {
 
-		mem, err := memory.NewRepository(cfg.File.FileStoragePath)
+		mem, err := memory.NewMemory(cfg.File.FileStoragePath)
 		if err != nil {
 			logger.Log.Sugar().Errorf("error memory init: %s", err)
 		}

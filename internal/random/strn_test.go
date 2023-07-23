@@ -1,7 +1,6 @@
 package random
 
 import (
-	"fmt"
 	"testing"
 )
 
@@ -16,10 +15,4 @@ func BenchmarkStrn(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		Strn(n)
 	}
-}
-
-func ExampleStrn() {
-	n := 8
-	str := Strn(n)
-	fmt.Println(str)
 }

@@ -7,7 +7,7 @@ import (
 // Log - logger object
 var Log = zap.NewNop()
 
-// NewLogger конструктор создает глобавльную переменную Log
+// NewLogger конструктор создает глобальную переменную Log
 func NewLogger(level string) error {
 	lvl, err := zap.ParseAtomicLevel(level)
 	if err != nil {

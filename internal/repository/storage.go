@@ -11,22 +11,22 @@ import (
 var ErrConflict = errors.New("data conflict")
 
 type Storage interface {
-	// GetByCode получим ссылки по code
+	// GetByCode we get a model models.ShortLink of a short link by code.
 	GetByCode(ctx context.Context, code string) (*models.ShortLink, error)
-	// GetByID получим ссылки по id
+	// GetByID we get a model models.ShortLink of a short link by id.
 	GetByID(ctx context.Context, id string) (*models.ShortLink, error)
-	// ShortLinksByUserID получим ссылку рользователя
+	// ShortLinksByUserID we will get a list of the user's short link models.ShortLink.
 	ShortLinksByUserID(ctx context.Context, userID string, limit int) ([]models.ShortLink, error)
-	// GetByOriginalURL получим ссылки по originalUR
+	// GetByOriginalURL we will get the model with a short link models.ShortLink to the original URL.
 	GetByOriginalURL(ctx context.Context, originalURL string) (*models.ShortLink, error)
-	// Save сохраним ссылку
+	// Save let's save the model of the short link models.ShortLink.
 	Save(ctx context.Context, model models.ShortLink) error
-	// InsertBatch массовая вставка ссылок
+	// InsertBatch group insertion of short link models []models.ShortLink.
 	InsertBatch(ctx context.Context, models []models.ShortLink) error
-	// UpdateBatch массовое обновления
+	// UpdateBatch group update of short link models []models.ShortLink.
 	UpdateBatch(ctx context.Context, models []models.ShortLink) error
-	// Ping проверка сервиса
+	// Ping service check.
 	Ping(ctx context.Context) error
-	// Close закрываем сервис
+	// Close closing the service.
 	Close() error
 }
