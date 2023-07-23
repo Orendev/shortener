@@ -18,7 +18,7 @@ const (
 	bearerFormat string = "Bearer %s"
 )
 
-// Auth  middlewares авторизация
+// Auth  middlewares authorization.
 func Auth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// по умолчанию устанавливаем оригинальный http.ResponseWriter, http.Request как тот,
@@ -72,7 +72,7 @@ func Auth(next http.Handler) http.Handler {
 	})
 }
 
-// NewSigner создаёт JWT, указывая идентификатор ключа,
+// NewSigner создаёт JWT, указывая идентификатор ключа.
 func NewSigner(ctx context.Context) (context.Context, error) {
 
 	userID, err := auth.GetAuthIdentifier(ctx)
@@ -98,7 +98,7 @@ func NewSigner(ctx context.Context) (context.Context, error) {
 	return context.WithValue(ctx, auth.JwtContextKey, tokenString), nil
 }
 
-// HTTPToContext получаем данные из HTTP и сохраняем в контексте
+// HTTPToContext получаем данные из HTTP и сохраняем в контексте.
 func HTTPToContext(r *http.Request) (context.Context, error) {
 	token, ok := extractTokenFromAuthHeader(r.Header.Get(auth.HeaderAuthorizationKey))
 	if !ok {
