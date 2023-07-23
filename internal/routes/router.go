@@ -8,6 +8,7 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 )
 
+// Router api handlers
 func Router(repo repository.Storage, baseURL string) *chi.Mux {
 
 	h := handler.NewHandler(repo, baseURL)
