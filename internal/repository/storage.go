@@ -10,6 +10,7 @@ import (
 // ErrConflict указывает на конфликт данных в хранилище
 var ErrConflict = errors.New("data conflict")
 
+// Storage interface for link data storage.
 type Storage interface {
 	// GetByCode we get a model models.ShortLink of a short link by code.
 	GetByCode(ctx context.Context, code string) (*models.ShortLink, error)
