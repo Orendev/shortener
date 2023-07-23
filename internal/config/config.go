@@ -33,10 +33,14 @@ type Database struct {
 // Configs конфигурация конфигаа
 type Configs struct {
 	Database Database
-	Server   Server
-	File     File
-	Log      Log
-	BaseURL  string `env:"BASE_URL"`
+	Server   struct {
+		Addr string `env:"SERVER_ADDRESS"`
+		Host string `env:"HOST"`
+		Port string `env:"PORT"`
+	}
+	File    File
+	Log     Log
+	BaseURL string `env:"BASE_URL"`
 }
 
 // New констуктор
