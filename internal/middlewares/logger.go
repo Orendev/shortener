@@ -19,14 +19,14 @@ type loggingResponseWriter struct {
 	responseData *responseData
 }
 
-// Write writes the data to the connection as part of an HTTP reply
+// Write writes the data to the connection as part of an HTTP reply.
 func (r loggingResponseWriter) Write(b []byte) (int, error) {
 	size, err := r.ResponseWriter.Write(b)
 	r.responseData.size += size
 	return size, err
 }
 
-// WriteHeader sends an HTTP response header with the provided
+// WriteHeader sends an HTTP response header with the provided.
 func (r loggingResponseWriter) WriteHeader(statusCode int) {
 	r.ResponseWriter.WriteHeader(statusCode)
 	r.responseData.status = statusCode
@@ -42,13 +42,13 @@ func Logger(next http.Handler) http.Handler {
 			size:   0,
 		}
 
-		// создаем свой собственный ResponseWriter
+		// создаем свой собственный ResponseWriter.
 		lw := loggingResponseWriter{
 			ResponseWriter: w,
 			responseData:   responseData,
 		}
 
-		// внедряем оригинальную реализацию http.ResponseWriter
+		// внедряем оригинальную реализацию http.ResponseWriter.
 		next.ServeHTTP(&lw, r)
 
 		duration := time.Since(start)

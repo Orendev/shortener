@@ -21,7 +21,7 @@ func NewGzipWriter(w http.ResponseWriter) *GzipWriter {
 	}
 }
 
-// Header returns the header map that will be sent by
+// Header is a method of the GzipWriter struct
 func (zw *GzipWriter) Header() http.Header {
 	return zw.rw.Header()
 }

@@ -13,29 +13,29 @@ var flagLogLevel string
 var fileStoragePath string
 var databaseDSN string
 
-// Server конфигурация сервера
+// Server configuration
 type Server struct {
 	Addr string `env:"SERVER_ADDRESS"`
 	Host string `env:"HOST"`
 	Port string `env:"PORT"`
 }
 
-// File конфигурация файла
+// File configuration
 type File struct {
 	FileStoragePath string `env:"FILE_STORAGE_PATH"`
 }
 
-// Log конфигурация LOG
+// Log configuration
 type Log struct {
 	FlagLogLevel string `env:"FLAG_LOG_LEVEL"`
 }
 
-// Database конфигурация БД
+// Database configuration
 type Database struct {
 	DatabaseDSN string `env:"DATABASE_DSN"`
 }
 
-// Configs конфигурация конфигаа
+// Configs configuration
 type Configs struct {
 	Database Database
 	Server   struct {
@@ -48,7 +48,7 @@ type Configs struct {
 	BaseURL string `env:"BASE_URL"`
 }
 
-// New констуктор
+// New constructor a new instance of Configs
 func New() (*Configs, error) {
 
 	err := env.Parse(&cfg)

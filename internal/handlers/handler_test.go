@@ -1,4 +1,4 @@
-package handler_test
+package handlers_test
 
 import (
 	"bytes"
@@ -7,7 +7,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/Orendev/shortener/internal/handler"
+	"github.com/Orendev/shortener/internal/handlers"
 	"github.com/Orendev/shortener/internal/middlewares"
 	"github.com/Orendev/shortener/internal/models"
 	"github.com/Orendev/shortener/internal/random"
@@ -41,7 +41,7 @@ func TestHandler_GetShorten(t *testing.T) {
 		Return(&model, nil)
 
 	// создадим экземпляр приложения и передадим ему «хранилище»
-	h := handler.NewHandler(s, "http://localhost")
+	h := handlers.NewHandler(s, "http://localhost")
 
 	srv := httptest.NewServer(http.HandlerFunc(h.GetShorten))
 	defer srv.Close()
@@ -103,7 +103,7 @@ func TestHandler_PostShorten(t *testing.T) {
 		Return(nil)
 
 	// создадим экземпляр приложения и передадим ему «хранилище»
-	h := handler.NewHandler(s, "http://localhost")
+	h := handlers.NewHandler(s, "http://localhost")
 
 	r := chi.NewRouter()
 	r.Use(middlewares.Auth)
@@ -196,7 +196,7 @@ func TestHandler_PostAPIShorten(t *testing.T) {
 		Return(nil)
 
 	// создадим экземпляр приложения и передадим ему «хранилище»
-	h := handler.NewHandler(s, "http://localhost")
+	h := handlers.NewHandler(s, "http://localhost")
 	r := chi.NewRouter()
 	r.Use(middlewares.Auth)
 	r.Post("/api/shorten", h.PostAPIShorten)
@@ -341,7 +341,7 @@ func TestHandler_PostAPIShortenBatch(t *testing.T) {
 		Return(&model, nil)
 
 	// создадим экземпляр приложения и передадим ему «хранилище»
-	h := handler.NewHandler(s, "http://localhost")
+	h := handlers.NewHandler(s, "http://localhost")
 
 	r := chi.NewRouter()
 	r.Use(middlewares.Auth)
@@ -439,7 +439,7 @@ func TestHandler_GetAPIUserUrls(t *testing.T) {
 		Return(shortLinks, nil)
 
 	// создадим экземпляр приложения и передадим ему «хранилище»
-	h := handler.NewHandler(s, "http://localhost")
+	h := handlers.NewHandler(s, "http://localhost")
 
 	r := chi.NewRouter()
 	r.Use(middlewares.Auth)
@@ -518,7 +518,7 @@ func TestHandler_GetPing(t *testing.T) {
 		Ping(gomock.Any()).
 		Return(nil)
 
-	h := handler.NewHandler(s, "http://localhost")
+	h := handlers.NewHandler(s, "http://localhost")
 
 	r := chi.NewRouter()
 	r.Use(middlewares.Auth)

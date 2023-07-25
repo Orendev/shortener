@@ -2,7 +2,6 @@ package memory
 
 import (
 	"context"
-	"errors"
 
 	"github.com/Orendev/shortener/internal/models"
 	"github.com/Orendev/shortener/internal/repository"
@@ -34,7 +33,7 @@ func NewMemory(filePath string) (*Memory, error) {
 func (s *Memory) GetByCode(_ context.Context, code string) (*models.ShortLink, error) {
 	shortLink, ok := s.data[code]
 	if !ok {
-		return nil, errors.New("not found")
+		return nil, repository.ErrNotFound
 	}
 	return &shortLink, nil
 }
@@ -53,7 +52,7 @@ func (s *Memory) GetByID(_ context.Context, id string) (*models.ShortLink, error
 	}
 
 	if !ok {
-		return nil, errors.New("not found")
+		return nil, repository.ErrNotFound
 	}
 
 	return &shortLink, nil
@@ -87,7 +86,7 @@ func (s *Memory) GetByOriginalURL(_ context.Context, originalURL string) (*model
 	}
 
 	if !ok {
-		return nil, errors.New("not found")
+		return nil, repository.ErrNotFound
 	}
 
 	return &shortLink, nil

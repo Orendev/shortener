@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-// Strn получим рандомное число
+// Strn specify the length of the random string consisting of letters.
 func Strn(n int) string {
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 	alphabet := "ABCDEFGHIJKLMNOPQRSTUVWXYZ"

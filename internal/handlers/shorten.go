@@ -1,4 +1,4 @@
-package handler
+package handlers
 
 import (
 	"errors"
@@ -14,7 +14,7 @@ import (
 	"github.com/google/uuid"
 )
 
-// GetShorten получим коротку ссылку по ее коду code
+// GetShorten we will get a short link by its code.
 func (h *Handler) GetShorten(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -39,7 +39,7 @@ func (h *Handler) GetShorten(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusTemporaryRedirect)
 }
 
-// PostShorten сохраним короткую ссылку
+// PostShorten save the short link.
 func (h *Handler) PostShorten(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method != http.MethodPost {

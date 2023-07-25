@@ -16,7 +16,7 @@ type Claims struct {
 	UserID string
 }
 
-// Ошибки при работе с JWT Token.
+// Errors when working with the JWT Token.
 var (
 	// ErrorTokenContextMissing токен не был передан.
 	ErrorTokenContextMissing = errors.New("token up for parsing was not passed through the context")
@@ -37,7 +37,7 @@ var (
 	ErrorTokenNotActive = errors.New("token is not valid yet")
 )
 
-// Настройки JWT Token.
+// JWT Token settings.
 const (
 	TokenExp                          = time.Hour * 3
 	SecretKey                         = "supersecretkey"
@@ -47,7 +47,7 @@ const (
 	HeaderAuthorizationKey string     = "Authorization"
 )
 
-// GetAuthIdentifier получить uuid  пользователя.
+// GetAuthIdentifier get the uuid of the jwt token header Authorization user.
 func GetAuthIdentifier(ctx context.Context) (string, error) {
 	userID, ok := ctx.Value(JwtUserIDContextKey).(string)
 	if !ok {
