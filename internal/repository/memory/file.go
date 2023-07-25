@@ -9,17 +9,19 @@ import (
 	"github.com/Orendev/shortener/internal/models"
 )
 
+// File - structure describing the File.
 type File struct {
 	filePath string
 }
 
+// NewFile - constructor for the File.
 func NewFile(filePath string) *File {
 	return &File{
 		filePath: filePath,
 	}
 }
 
-// Save сохраняет данные в файле FileStoragePath.
+// Save saves data in a file.
 func (f *File) Save(models map[string]models.ShortLink) error {
 
 	file, err := os.OpenFile(f.filePath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)
@@ -33,7 +35,7 @@ func (f *File) Save(models map[string]models.ShortLink) error {
 	}()
 
 	for _, model := range models {
-		// сериализуем структуру в JSON формат
+		// serializing the structure in JSON format
 		writeData, err := json.Marshal(model)
 		if err != nil {
 			return err
@@ -47,12 +49,12 @@ func (f *File) Save(models map[string]models.ShortLink) error {
 	return nil
 }
 
-// Remove Удалим файл FileStoragePath
+// Remove delete the file.
 func (f *File) Remove() error {
 	return os.Remove(f.filePath)
 }
 
-// Data Прочитаем данные из файла FileStoragePath
+// Data read the data from the file.
 func (f *File) Data() (map[string]models.ShortLink, error) {
 	file, err := os.OpenFile(f.filePath, os.O_RDONLY|os.O_CREATE, 0666)
 	if err != nil {

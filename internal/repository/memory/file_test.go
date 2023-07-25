@@ -1,6 +1,7 @@
 package memory
 
 import (
+	"reflect"
 	"testing"
 
 	"github.com/Orendev/shortener/internal/config"
@@ -9,7 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestFileDB_Remove(t *testing.T) {
+func TestFile_Remove(t *testing.T) {
 	type args struct {
 		models map[string]models.ShortLink
 	}
@@ -64,7 +65,7 @@ func TestFileDB_Remove(t *testing.T) {
 	}
 }
 
-func TestFileDB_Save(t *testing.T) {
+func TestFile_Save(t *testing.T) {
 
 	type args struct {
 		models map[string]models.ShortLink
@@ -82,7 +83,7 @@ func TestFileDB_Save(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name: "test DB Save",
+			name: "test Save",
 			args: args{
 				models: map[string]models.ShortLink{
 					"4rSPg8ap": model,
@@ -111,6 +112,62 @@ func TestFileDB_Save(t *testing.T) {
 			}
 
 			err := f.Remove()
+			if err != nil {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestFile_Data(t *testing.T) {
+	id := uuid.New().String()
+
+	model := models.ShortLink{
+		UUID:        id,
+		Code:        "4rSPg8ap",
+		OriginalURL: "http://yandex.ru",
+		ShortURL:    "http://localhost:8080/4rSPg8ap",
+	}
+
+	type fields struct {
+		filePath string
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		want    map[string]models.ShortLink
+		wantErr bool
+	}{
+		{
+			name: "test file Data",
+			fields: fields{
+				filePath: "/tmp/test-short-url-file.json",
+			},
+			want: map[string]models.ShortLink{
+				"4rSPg8ap": model,
+			},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			f := &File{
+				filePath: tt.fields.filePath,
+			}
+			if err := f.Save(tt.want); (err != nil) != tt.wantErr {
+				t.Errorf("Save() error = %v, wantErr %v", err, tt.wantErr)
+			}
+
+			got, err := f.Data()
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Data() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Data() got = %v, want %v", got, tt.want)
+			}
+
+			err = f.Remove()
 			if err != nil {
 				require.NoError(t, err)
 			}

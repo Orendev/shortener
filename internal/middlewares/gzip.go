@@ -7,6 +7,7 @@ import (
 	"github.com/Orendev/shortener/internal/compress"
 )
 
+// Gzip middlewares to compress data.
 func Gzip(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// по умолчанию устанавливаем оригинальный http.ResponseWriter как тот,

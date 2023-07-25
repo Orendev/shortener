@@ -14,11 +14,13 @@ import (
 	"go.uber.org/zap"
 )
 
-type Repository struct {
+// Postgres - structure describing the Postgres.
+type Postgres struct {
 	db *sql.DB
 }
 
-func NewRepository(dsn string) (*Repository, error) {
+// NewPostgres - constructor a new instance of Postgres.
+func NewPostgres(dsn string) (*Postgres, error) {
 
 	db, err := sql.Open("pgx", dsn)
 
@@ -26,16 +28,13 @@ func NewRepository(dsn string) (*Repository, error) {
 		return nil, err
 	}
 
-	return &Repository{
+	return &Postgres{
 		db: db,
 	}, nil
 }
 
-func (s *Repository) Close() error {
-	return s.db.Close()
-}
-
-func (s *Repository) GetByCode(ctx context.Context, code string) (*models.ShortLink, error) {
+// GetByCode we get a model models.ShortLink of a short link by code.
+func (s *Postgres) GetByCode(ctx context.Context, code string) (*models.ShortLink, error) {
 
 	model := models.ShortLink{}
 
@@ -53,7 +52,8 @@ func (s *Repository) GetByCode(ctx context.Context, code string) (*models.ShortL
 	return &model, nil
 }
 
-func (s *Repository) GetByID(ctx context.Context, id string) (*models.ShortLink, error) {
+// GetByID we get a model models.ShortLink of a short link by id.
+func (s *Postgres) GetByID(ctx context.Context, id string) (*models.ShortLink, error) {
 
 	model := models.ShortLink{}
 
@@ -83,134 +83,8 @@ func (s *Repository) GetByID(ctx context.Context, id string) (*models.ShortLink,
 	return &model, nil
 }
 
-func (s *Repository) GetByOriginalURL(ctx context.Context, originalURL string) (*models.ShortLink, error) {
-
-	model := models.ShortLink{}
-
-	stmt, err := s.db.PrepareContext(ctx,
-		`SELECT id, user_id, code, short_url, original_url, is_deleted  FROM short_links WHERE original_url = $1 LIMIT 1`)
-
-	if err != nil {
-		return nil, err
-	}
-
-	defer func() {
-		err := stmt.Close()
-		if err != nil {
-			logger.Log.Error("error", zap.Error(err))
-		}
-	}()
-
-	// делаем запрос
-	row := stmt.QueryRowContext(ctx, originalURL)
-
-	// разбираем результат
-	err = row.Scan(&model.UUID, &model.UserID, &model.Code, &model.ShortURL, &model.OriginalURL, &model.DeletedFlag)
-	if err != nil {
-		return nil, err
-	}
-
-	return &model, nil
-}
-
-func (s *Repository) Save(ctx context.Context, model models.ShortLink) error {
-	sqlStatement := `
-	INSERT INTO short_links (id, user_id, code, short_url, original_url)
-	VALUES ($1, $2, $3, $4, $5)
-	`
-
-	_, err := s.db.ExecContext(
-		ctx,
-		sqlStatement, model.UUID, model.UserID, model.Code, model.ShortURL, model.OriginalURL,
-	)
-
-	if err != nil {
-		var pgErr *pgconn.PgError
-
-		if errors.As(err, &pgErr) && pgerrcode.UniqueViolation == pgErr.Code {
-			err = repository.ErrConflict
-		}
-		return err
-	}
-
-	return nil
-}
-
-func (s *Repository) Ping(ctx context.Context) error {
-	return s.db.PingContext(ctx)
-}
-
-func (s *Repository) InsertBatch(ctx context.Context, shortLinks []models.ShortLink) error {
-	// начинаем транзакцию
-	tx, err := s.db.Begin()
-	if err != nil {
-		return err
-	}
-
-	stmt, err := tx.PrepareContext(ctx,
-		`INSERT INTO short_links (id, user_id, code, short_url, original_url)
-				VALUES($1, $2, $3, $4, $5)`)
-	if err != nil {
-		return err
-	}
-
-	defer func() {
-		err := stmt.Close()
-		if err != nil {
-			logger.Log.Error("error", zap.Error(err))
-		}
-	}()
-
-	for _, sl := range shortLinks {
-		_, err = stmt.ExecContext(ctx, sl.UUID, sl.UserID, sl.Code, sl.ShortURL, sl.OriginalURL)
-		if err != nil {
-			// если ошибка, то откатываем изменения
-			errRollback := tx.Rollback()
-			if errRollback != nil {
-				return errRollback
-			}
-			return err
-		}
-	}
-	return tx.Commit()
-}
-
-func (s *Repository) UpdateBatch(ctx context.Context, shortLinks []models.ShortLink) error {
-	// начинаем транзакцию
-	tx, err := s.db.Begin()
-	if err != nil {
-		return err
-	}
-
-	stmt, err := tx.PrepareContext(ctx,
-		`UPDATE short_links SET original_url = $1, is_deleted=$2 WHERE id = $3`)
-
-	if err != nil {
-		return err
-	}
-
-	defer func() {
-		err := stmt.Close()
-		if err != nil {
-			logger.Log.Error("error", zap.Error(err))
-		}
-	}()
-
-	for _, sl := range shortLinks {
-		_, err = stmt.ExecContext(ctx, sl.OriginalURL, sl.DeletedFlag, sl.UUID)
-		if err != nil {
-			// если ошибка, то откатываем изменения
-			errRollback := tx.Rollback()
-			if errRollback != nil {
-				return errRollback
-			}
-			return err
-		}
-	}
-	return tx.Commit()
-}
-
-func (s *Repository) ShortLinksByUserID(ctx context.Context, userID string, limit int) ([]models.ShortLink, error) {
+// ShortLinksByUserID we will get a list of the user's short link models.ShortLink.
+func (s *Postgres) ShortLinksByUserID(ctx context.Context, userID string, limit int) ([]models.ShortLink, error) {
 	shortLinks := make([]models.ShortLink, 0, limit)
 
 	stmt, err := s.db.PrepareContext(ctx,
@@ -261,8 +135,145 @@ func (s *Repository) ShortLinksByUserID(ctx context.Context, userID string, limi
 	return shortLinks, nil
 }
 
-// Bootstrap подготавливает БД к работе, создавая необходимые таблицы и индексы
-func (s *Repository) Bootstrap(ctx context.Context) error {
+// GetByOriginalURL we will get the model with a short link models.ShortLink to the original URL.
+func (s *Postgres) GetByOriginalURL(ctx context.Context, originalURL string) (*models.ShortLink, error) {
+
+	model := models.ShortLink{}
+
+	stmt, err := s.db.PrepareContext(ctx,
+		`SELECT id, user_id, code, short_url, original_url, is_deleted  FROM short_links WHERE original_url = $1 LIMIT 1`)
+
+	if err != nil {
+		return nil, err
+	}
+
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			logger.Log.Error("error", zap.Error(err))
+		}
+	}()
+
+	// делаем запрос
+	row := stmt.QueryRowContext(ctx, originalURL)
+
+	// разбираем результат
+	err = row.Scan(&model.UUID, &model.UserID, &model.Code, &model.ShortURL, &model.OriginalURL, &model.DeletedFlag)
+	if err != nil {
+		return nil, err
+	}
+
+	return &model, nil
+}
+
+// Save let's save the model of the short link models.ShortLink.
+func (s *Postgres) Save(ctx context.Context, model models.ShortLink) error {
+	sqlStatement := `
+	INSERT INTO short_links (id, user_id, code, short_url, original_url)
+	VALUES ($1, $2, $3, $4, $5)
+	`
+
+	_, err := s.db.ExecContext(
+		ctx,
+		sqlStatement, model.UUID, model.UserID, model.Code, model.ShortURL, model.OriginalURL,
+	)
+
+	if err != nil {
+		var pgErr *pgconn.PgError
+
+		if errors.As(err, &pgErr) && pgerrcode.UniqueViolation == pgErr.Code {
+			err = repository.ErrConflict
+		}
+		return err
+	}
+
+	return nil
+}
+
+// InsertBatch group insertion of short link models []models.ShortLink.
+func (s *Postgres) InsertBatch(ctx context.Context, shortLinks []models.ShortLink) error {
+	// начинаем транзакцию
+	tx, err := s.db.Begin()
+	if err != nil {
+		return err
+	}
+
+	stmt, err := tx.PrepareContext(ctx,
+		`INSERT INTO short_links (id, user_id, code, short_url, original_url)
+				VALUES($1, $2, $3, $4, $5)`)
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			logger.Log.Error("error", zap.Error(err))
+		}
+	}()
+
+	for _, sl := range shortLinks {
+		_, err = stmt.ExecContext(ctx, sl.UUID, sl.UserID, sl.Code, sl.ShortURL, sl.OriginalURL)
+		if err != nil {
+			// если ошибка, то откатываем изменения
+			errRollback := tx.Rollback()
+			if errRollback != nil {
+				return errRollback
+			}
+			return err
+		}
+	}
+	return tx.Commit()
+}
+
+// UpdateBatch group update of short link models []models.ShortLink.
+func (s *Postgres) UpdateBatch(ctx context.Context, shortLinks []models.ShortLink) error {
+	// начинаем транзакцию
+	tx, err := s.db.Begin()
+	if err != nil {
+		return err
+	}
+
+	stmt, err := tx.PrepareContext(ctx,
+		`UPDATE short_links SET original_url = $1, is_deleted=$2 WHERE id = $3`)
+
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			logger.Log.Error("error", zap.Error(err))
+		}
+	}()
+
+	for _, sl := range shortLinks {
+		_, err = stmt.ExecContext(ctx, sl.OriginalURL, sl.DeletedFlag, sl.UUID)
+		if err != nil {
+			// если ошибка, то откатываем изменения
+			errRollback := tx.Rollback()
+			if errRollback != nil {
+				return errRollback
+			}
+			return err
+		}
+	}
+	return tx.Commit()
+}
+
+// Close closing the service.
+func (s *Postgres) Close() error {
+	return s.db.Close()
+}
+
+// Ping service check.
+func (s *Postgres) Ping(ctx context.Context) error {
+	return s.db.PingContext(ctx)
+}
+
+// Bootstrap prepares the database for operation by creating the necessary tables and indexes.
+func (s *Postgres) Bootstrap(ctx context.Context) error {
 
 	sqlStatement := `
 	CREATE TABLE IF NOT EXISTS short_links (

@@ -1,49 +1,28 @@
 package logger
 
 import (
-	"net/http"
-
 	"go.uber.org/zap"
 )
 
-var Log *zap.Logger
+// Log - logger object.
+var Log = zap.NewNop()
 
-type ResponseData struct {
-	Status int
-	Size   int
-}
-
-type LoggingResponseWriter struct {
-	http.ResponseWriter
-	ResponseData *ResponseData
-}
-
-func (r LoggingResponseWriter) Write(b []byte) (int, error) {
-	size, err := r.ResponseWriter.Write(b)
-	r.ResponseData.Size += size
-	return size, err
-}
-
-func (r LoggingResponseWriter) WriteHeader(statusCode int) {
-	r.ResponseWriter.WriteHeader(statusCode)
-	r.ResponseData.Status = statusCode
-}
-
+// NewLogger the constructor creates a global variable Log.
 func NewLogger(level string) error {
 	lvl, err := zap.ParseAtomicLevel(level)
 	if err != nil {
 		return err
 	}
 
+	// используется для ведения журнала разработки.
 	cfg := zap.NewProductionConfig()
 
 	cfg.Level = lvl
 
-	zl, err := cfg.Build()
+	Log, err = cfg.Build()
 	if err != nil {
 		return err
 	}
 
-	Log = zl
 	return nil
 }

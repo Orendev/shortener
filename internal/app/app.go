@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"net/http"
+	_ "net/http/pprof"
 	"time"
 
 	"github.com/Orendev/shortener/internal/config"
@@ -12,22 +13,23 @@ import (
 	"github.com/Orendev/shortener/internal/repository/memory"
 	"github.com/Orendev/shortener/internal/repository/postgres"
 	"github.com/Orendev/shortener/internal/routes"
-	"github.com/go-chi/chi/v5"
 )
 
+// App - structure describing the application
 type App struct {
 	repo repository.Storage
 }
 
 var shutdownTimeout = 10 * time.Second
 
+// Run starts the application.
 func Run(cfg *config.Configs) {
 	ctx := context.Background()
 
 	var repo repository.Storage
 
 	if len(cfg.Database.DatabaseDSN) > 0 {
-		pg, err := postgres.NewRepository(cfg.Database.DatabaseDSN)
+		pg, err := postgres.NewPostgres(cfg.Database.DatabaseDSN)
 		if err != nil {
 			log.Fatal(err)
 			return
@@ -44,7 +46,7 @@ func Run(cfg *config.Configs) {
 
 	} else {
 
-		mem, err := memory.NewRepository(cfg.File.FileStoragePath)
+		mem, err := memory.NewMemory(cfg.File.FileStoragePath)
 		if err != nil {
 			logger.Log.Sugar().Errorf("error memory init: %s", err)
 		}
@@ -63,10 +65,11 @@ func Run(cfg *config.Configs) {
 
 	a.startServer(&http.Server{
 		Addr:    cfg.Server.Addr,
-		Handler: routes.Router(chi.NewRouter(), a.repo, cfg.BaseURL),
+		Handler: routes.Router(a.repo, cfg.BaseURL),
 	})
 }
 
+// NewApp constructor for the application.
 func NewApp(repo repository.Storage) *App {
 	return &App{repo: repo}
 }

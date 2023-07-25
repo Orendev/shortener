@@ -7,9 +7,13 @@ import (
 	"github.com/Orendev/shortener/internal/models"
 )
 
-// ErrConflict указывает на конфликт данных в хранилище
+// ErrConflict indicates a data conflict in the storage.
 var ErrConflict = errors.New("data conflict")
 
+// ErrNotFound object not found.
+var ErrNotFound = errors.New("not found")
+
+// Storage interface for link data storage.
 type Storage interface {
 	GetByCode(ctx context.Context, code string) (*models.ShortLink, error)
 	GetByID(ctx context.Context, id string) (*models.ShortLink, error)

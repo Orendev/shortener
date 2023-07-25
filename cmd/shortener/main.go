@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	_ "net/http/pprof"
 
 	"github.com/Orendev/shortener/internal/app"
 	"github.com/Orendev/shortener/internal/config"
@@ -15,7 +16,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	if err := logger.NewLogger("info"); err != nil {
+	if err := logger.NewLogger(cfg.Log.FlagLogLevel); err != nil {
 		log.Fatal(err)
 	}
 

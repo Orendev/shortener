@@ -13,6 +13,7 @@ type GzipWriter struct {
 	writer *gzip.Writer
 }
 
+// NewGzipWriter the constructor creates a GzipWriter
 func NewGzipWriter(w http.ResponseWriter) *GzipWriter {
 	return &GzipWriter{
 		rw:     w,
@@ -20,14 +21,17 @@ func NewGzipWriter(w http.ResponseWriter) *GzipWriter {
 	}
 }
 
+// Header is a method of the GzipWriter struct
 func (zw *GzipWriter) Header() http.Header {
 	return zw.rw.Header()
 }
 
+// Write writes the data to the connection as part of an HTTP reply.
 func (zw *GzipWriter) Write(b []byte) (int, error) {
 	return zw.writer.Write(b)
 }
 
+// WriteHeader sends an HTTP response header with the provided
 func (zw *GzipWriter) WriteHeader(statusCode int) {
 	if statusCode < 300 {
 		zw.rw.Header().Set("Content-Encoding", "gzip")
@@ -47,6 +51,7 @@ type GzipReader struct {
 	reader *gzip.Reader
 }
 
+// NewGzipReader декомпрессировать получаемые от клиента данные
 func NewGzipReader(r io.ReadCloser) (*GzipReader, error) {
 	zr, err := gzip.NewReader(r)
 	if err != nil {
@@ -59,10 +64,12 @@ func NewGzipReader(r io.ReadCloser) (*GzipReader, error) {
 	}, nil
 }
 
+// Read reads up to len(p) bytes into p. It returns the number of bytes
 func (zr GzipReader) Read(p []byte) (n int, err error) {
 	return zr.reader.Read(p)
 }
 
+// Close is the interface that wraps the basic Close method.
 func (zr GzipReader) Close() error {
 	if err := zr.r.Close(); err != nil {
 		return err
