@@ -2,7 +2,7 @@ package models
 
 import "errors"
 
-// ShortLink модель коротких ссылок
+// ShortLink the short link model.
 type ShortLink struct {
 	UUID        string `json:"uuid" db:"id"`
 	UserID      string `json:"user_id" db:"user_id"`
@@ -12,35 +12,35 @@ type ShortLink struct {
 	DeletedFlag bool   `json:"is_deleted" db:"is_deleted"`
 }
 
-// ShortLinkResponse описывает ответ сервера.
+// ShortLinkResponse describes the server response.
 type ShortLinkResponse struct {
 	Result string `json:"result"`
 }
 
-// ShortLinkRequest описывает запрос клиента.
+// ShortLinkRequest describes the client's request.
 type ShortLinkRequest struct {
 	URL string `json:"url"`
 }
 
-// ShortLinkBatchRequest описывает запрос клиента.
+// ShortLinkBatchRequest describes the client's request.
 type ShortLinkBatchRequest struct {
 	CorrelationID string `json:"correlation_id"`
 	OriginalURL   string `json:"original_url"`
 }
 
-// ShortLinkBatchResponse описывает ответ сервера.
+// ShortLinkBatchResponse describes the response of the short link list server.
 type ShortLinkBatchResponse struct {
 	CorrelationID string `json:"correlation_id"`
 	ShortURL      string `json:"short_url"`
 }
 
-// ShortLinkUserResponse описывает ответ сервера.
+// ShortLinkUserResponse describes the response of the user's short link server.
 type ShortLinkUserResponse struct {
 	OriginalURL string `json:"original_url"`
 	ShortURL    string `json:"short_url"`
 }
 
-// Validate валидация.
+// Validate validation of the input request.
 func (sl ShortLinkRequest) Validate() error {
 	var err error
 	if sl.URL == "" {
