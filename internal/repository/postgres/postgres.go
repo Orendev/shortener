@@ -65,7 +65,7 @@ func (s *Postgres) GetByID(ctx context.Context, id string) (*models.ShortLink, e
 	}
 
 	defer func() {
-		err := stmt.Close()
+		err = stmt.Close()
 		if err != nil {
 			logger.Log.Error("error", zap.Error(err))
 		}
@@ -95,7 +95,7 @@ func (s *Postgres) ShortLinksByUserID(ctx context.Context, userID string, limit 
 	}
 
 	defer func() {
-		err := stmt.Close()
+		err = stmt.Close()
 		if err != nil {
 			logger.Log.Error("error", zap.Error(err))
 		}
@@ -109,7 +109,7 @@ func (s *Postgres) ShortLinksByUserID(ctx context.Context, userID string, limit 
 
 	// обязательно закрываем перед возвратом функции
 	defer func() {
-		err := rows.Close()
+		err = rows.Close()
 		if err != nil {
 			logger.Log.Error("error", zap.Error(err))
 		}
@@ -148,7 +148,7 @@ func (s *Postgres) GetByOriginalURL(ctx context.Context, originalURL string) (*m
 	}
 
 	defer func() {
-		err := stmt.Close()
+		err = stmt.Close()
 		if err != nil {
 			logger.Log.Error("error", zap.Error(err))
 		}
@@ -206,7 +206,7 @@ func (s *Postgres) InsertBatch(ctx context.Context, shortLinks []models.ShortLin
 	}
 
 	defer func() {
-		err := stmt.Close()
+		err = stmt.Close()
 		if err != nil {
 			logger.Log.Error("error", zap.Error(err))
 		}
@@ -242,7 +242,7 @@ func (s *Postgres) UpdateBatch(ctx context.Context, shortLinks []models.ShortLin
 	}
 
 	defer func() {
-		err := stmt.Close()
+		err = stmt.Close()
 		if err != nil {
 			logger.Log.Error("error", zap.Error(err))
 		}

@@ -32,12 +32,12 @@ func (h *Handler) PostAPIShorten(w http.ResponseWriter, r *http.Request) {
 	var req models.ShortLinkRequest
 	dec := json.NewDecoder(r.Body)
 	// читаем тело запроса и декодируем
-	if err := dec.Decode(&req); err != nil {
+	if err = dec.Decode(&req); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	if err := req.Validate(); err != nil {
+	if err = req.Validate(); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -121,7 +121,7 @@ func (h *Handler) PostAPIShortenBatch(w http.ResponseWriter, r *http.Request) {
 		code := random.Strn(8)
 		var model *models.ShortLink
 
-		model, err := h.repo.GetByID(r.Context(), req.CorrelationID)
+		model, err = h.repo.GetByID(r.Context(), req.CorrelationID)
 
 		if err != nil {
 			model = &models.ShortLink{

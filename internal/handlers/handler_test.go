@@ -288,7 +288,7 @@ func TestHandler_PostAPIShorten(t *testing.T) {
 			require.NoError(t, err)
 
 			defer func() {
-				err := resp.Body.Close()
+				err = resp.Body.Close()
 				if err != nil {
 					require.NoError(t, err)
 				}
@@ -392,7 +392,7 @@ func TestHandler_PostAPIShortenBatch(t *testing.T) {
 			require.NoError(t, err)
 
 			defer func() {
-				err := resp.Body.Close()
+				err = resp.Body.Close()
 				if err != nil {
 					require.NoError(t, err)
 				}
@@ -487,7 +487,7 @@ func TestHandler_GetAPIUserUrls(t *testing.T) {
 			require.NoError(t, err)
 
 			defer func() {
-				err := resp.Body.Close()
+				err = resp.Body.Close()
 				if err != nil {
 					require.NoError(t, err)
 				}
@@ -555,7 +555,7 @@ func TestHandler_GetPing(t *testing.T) {
 			require.NoError(t, err)
 
 			defer func() {
-				err := resp.Body.Close()
+				err = resp.Body.Close()
 				if err != nil {
 					require.NoError(t, err)
 				}
