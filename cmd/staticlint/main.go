@@ -2,7 +2,7 @@
 // Assemble the staticline go build command.
 //
 // Build and run go build -o staticlint cmd/staticlint/main.go
-// To check all packages beneath the current directory: ./staticlint ./...
+// To check all packages beneath the current directory: ./staticlint -test=false ./...
 //
 // Package errcheck.Analyzer is a program for checking for unchecked errors in Go code.
 // Package osexitcheck.Analyzer check whether to use a direct call to os.Exit.
