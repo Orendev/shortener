@@ -16,6 +16,8 @@ var (
 	buildCommit  string = "N/A"
 )
 
+// Build go build -ldflags "-X main.buildVersion=1.0.1 -X main.buildCommit=1.0.1 -X 'main.buildDate=$(date +'%Y/%m/%d')'" -o shortener  cmd/shortener/main.go
+// Run: ./shortener
 func main() {
 
 	cfg, err := config.New()
