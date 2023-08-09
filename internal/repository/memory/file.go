@@ -62,7 +62,7 @@ func (f *File) Data() (map[string]models.ShortLink, error) {
 	}
 
 	defer func() {
-		if err := file.Close(); err != nil {
+		if err = file.Close(); err != nil {
 			logger.Log.Sugar().Errorf("error when closing a file while reading: %s", err)
 		}
 	}()
