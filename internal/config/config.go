@@ -39,6 +39,7 @@ type Database struct {
 	DatabaseDSN string `env:"DATABASE_DSN"`
 }
 
+// Cert configuration
 type Cert struct {
 	CertFile string `env:"FILE_CERT"`
 	KeyFile  string `env:"FILE_PRIVATE_KEY"`

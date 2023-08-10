@@ -35,7 +35,7 @@ func Test_doesFileExist(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			var got bool
 			if tt.want {
-				err := os.WriteFile(tt.args.path, []byte(""), 664)
+				err := os.WriteFile(tt.args.path, []byte(""), 0664)
 				require.NoError(t, err)
 				got = doesFileExist(tt.args.path)
 				err = os.Remove(tt.args.path)
