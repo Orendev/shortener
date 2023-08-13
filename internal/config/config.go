@@ -3,7 +3,6 @@ package config
 import (
 	"encoding/json"
 	"flag"
-	"fmt"
 	"log"
 	"os"
 	"strconv"
@@ -58,25 +57,27 @@ type FileConfig struct {
 
 // New constructor a new instance of Configs
 func New() (*Configs, error) {
-	var cfg *Configs
+	var cfg Configs
 
 	fs := flag.NewFlagSet("shortener", flag.ContinueOnError)
-	err := initFlag(cfg, fs)
+	err := initFlag(&cfg, fs)
 	if err != nil {
 		return nil, err
 	}
 
-	err = initEnv(cfg)
+	err = initEnv(&cfg)
 	if err != nil {
 		return nil, err
 	}
 
-	err = initFile(cfg, fs)
+	err = initFile(&cfg, fs)
 	if err != nil {
 		return nil, err
 	}
 
-	return cfg, nil
+	initDefaultValue(&cfg)
+
+	return &cfg, nil
 }
 
 func initFlag(cfg *Configs, fs *flag.FlagSet) error {
@@ -163,13 +164,11 @@ func initFile(cfg *Configs, fs *flag.FlagSet) error {
 			return err
 		}
 
-		fmt.Println("Addr:", cfg.Server.Addr, fileConfig.Addr)
 		if len(cfg.Server.Addr) == 0 {
-			cfg.Server.Addr = setValueString(fileConfig.Addr, "localhost:8080")
+			cfg.Server.Addr = fileConfig.Addr
 		}
-		fmt.Println("Base:", cfg.BaseURL, fileConfig.BaseURL)
 		if len(cfg.BaseURL) == 0 {
-			cfg.BaseURL = setValueString(fileConfig.BaseURL, "localhost:8080")
+			cfg.BaseURL = fileConfig.BaseURL
 		}
 		if len(cfg.Database.DatabaseDSN) == 0 {
 			cfg.Database.DatabaseDSN = fileConfig.DatabaseDSN
@@ -188,11 +187,17 @@ func initFile(cfg *Configs, fs *flag.FlagSet) error {
 		}
 
 		if len(cfg.File.FileStoragePath) == 0 {
-			cfg.File.FileStoragePath = setValueString(fileConfig.FileStoragePath, "/tmp/short-url-db.json")
+			cfg.File.FileStoragePath = fileConfig.FileStoragePath
 		}
 	}
 
 	return nil
+}
+
+func initDefaultValue(cfg *Configs) {
+	cfg.Server.Addr = setValueString(cfg.Server.Addr, "localhost:8080")
+	cfg.BaseURL = setValueString(cfg.BaseURL, "localhost:8080")
+	cfg.File.FileStoragePath = setValueString(cfg.File.FileStoragePath, "/tmp/short-url-db.json")
 }
 
 func setValueString(value, defaultValue string) string {
