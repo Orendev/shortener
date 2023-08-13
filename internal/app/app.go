@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"errors"
 	"log"
 	"net/http"
 	_ "net/http/pprof"
@@ -101,7 +102,7 @@ func (a *App) startServer(ctx context.Context, srv *http.Server, isHTTPS bool, c
 		} else {
 			err = srv.ListenAndServe()
 		}
-		if err != nil {
+		if err != nil && !errors.Is(http.ErrServerClosed, err) {
 			log.Fatalf("failed to start server %s", err)
 		}
 	}()
@@ -123,7 +124,7 @@ func gracefulShutdown() context.Context {
 	ctx, cancel := context.WithCancel(context.Background())
 	irqSig := make(chan os.Signal, 1)
 	// Получено сообщение о завершении работы от операционной системы.
-	signal.Notify(irqSig, syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGINT, syscall.SIGKILL)
+	signal.Notify(irqSig, syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGINT)
 	go func() {
 		<-irqSig
 		cancel()
