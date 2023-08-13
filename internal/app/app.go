@@ -123,7 +123,7 @@ func gracefulShutdown() context.Context {
 	ctx, cancel := context.WithCancel(context.Background())
 	irqSig := make(chan os.Signal, 1)
 	// Получено сообщение о завершении работы от операционной системы.
-	signal.Notify(irqSig, syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGINT)
+	signal.Notify(irqSig, syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGINT, syscall.SIGKILL)
 	go func() {
 		<-irqSig
 		cancel()
