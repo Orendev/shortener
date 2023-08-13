@@ -3,6 +3,7 @@ package config
 import (
 	"encoding/json"
 	"flag"
+	"fmt"
 	"log"
 	"os"
 	"strconv"
@@ -80,7 +81,7 @@ func New() (*Configs, error) {
 
 func initFlag(cfg *Configs, fs *flag.FlagSet) error {
 	fs.StringVar(&cfg.Server.Addr, "a", "", "Адрес запуска сервера localhost:8080")
-	fs.StringVar(&cfg.BaseURL, "b", "", "Базовый URL http://localhost:8080")
+	fs.StringVar(&cfg.BaseURL, "b", "", "Базовый URL localhost:8080")
 	fs.BoolVar(&cfg.Server.IsHTTPS, "s", false, "Включения HTTPS в веб-сервере.")
 	fs.StringVar(&cfg.Log.FlagLogLevel, "ll", "info", "log level")
 	fs.StringVar(&cfg.File.FileStoragePath, "f", "", "Полное имя файла")
@@ -162,11 +163,13 @@ func initFile(cfg *Configs, fs *flag.FlagSet) error {
 			return err
 		}
 
+		fmt.Println("Addr:", cfg.Server.Addr, fileConfig.Addr)
 		if len(cfg.Server.Addr) == 0 {
 			cfg.Server.Addr = setValueString(fileConfig.Addr, "localhost:8080")
 		}
+		fmt.Println("Base:", cfg.BaseURL, fileConfig.BaseURL)
 		if len(cfg.BaseURL) == 0 {
-			cfg.BaseURL = setValueString(fileConfig.BaseURL, "http://localhost:8080")
+			cfg.BaseURL = setValueString(fileConfig.BaseURL, "localhost:8080")
 		}
 		if len(cfg.Database.DatabaseDSN) == 0 {
 			cfg.Database.DatabaseDSN = fileConfig.DatabaseDSN
