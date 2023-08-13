@@ -1,26 +1,16 @@
 package config
 
 import (
+	"encoding/json"
 	"flag"
-
-	"github.com/caarlos0/env/v8"
+	"log"
+	"os"
+	"strconv"
 )
-
-var cfg Configs = Configs{}
-var addr string
-var baseURL string
-var isHTTPS bool
-var flagLogLevel string
-var fileStoragePath string
-var databaseDSN string
-var keyFile string
-var certFile string
 
 // Server configuration
 type Server struct {
 	Addr    string `env:"SERVER_ADDRESS"`
-	Host    string `env:"HOST"`
-	Port    string `env:"PORT"`
 	IsHTTPS bool   `env:"ENABLE_HTTPS"`
 }
 
@@ -45,7 +35,7 @@ type Cert struct {
 	KeyFile  string `env:"FILE_PRIVATE_KEY"`
 }
 
-// Configs configuration
+// Configs configuration application
 type Configs struct {
 	Database Database
 	Server   Server
@@ -53,56 +43,158 @@ type Configs struct {
 	File     File
 	Log      Log
 	BaseURL  string `env:"BASE_URL"`
+	Config   string `env:"CONFIG"`
+}
+
+// FileConfig configuration file
+type FileConfig struct {
+	Addr            string `json:"server_address"`
+	IsHTTPS         bool   `json:"enable_https"`
+	FileStoragePath string `json:"file_storage_path"`
+	DatabaseDSN     string `json:"database-dsn"`
+	BaseURL         string `json:"base_url"`
 }
 
 // New constructor a new instance of Configs
 func New() (*Configs, error) {
+	var cfg Configs
 
-	err := env.Parse(&cfg)
+	fs := flag.NewFlagSet("shortener", flag.ContinueOnError)
+	err := initFlag(&cfg, fs)
 	if err != nil {
 		return nil, err
 	}
-	flag.StringVar(&addr, "a", "localhost:8080", "Адрес запуска сервера localhost:8080")
-	flag.StringVar(&baseURL, "b", "http://localhost:8080", "Базовый URL http://localhost:8080")
-	flag.BoolVar(&isHTTPS, "s", false, "Включения HTTPS в веб-сервере.")
-	flag.StringVar(&flagLogLevel, "ll", "info", "log level")
-	flag.StringVar(&fileStoragePath, "f", "/tmp/short-url-db.json", "Полное имя файла")
-	flag.StringVar(&keyFile, "fc", "key.pem", "Закрытый ключ")
-	flag.StringVar(&certFile, "fk", "cert.pem", "Подписанный центром сертификации, файл сертификата")
-	//host=localhost user=shortener password=secret dbname=shortener sslmode=disable
-	flag.StringVar(&databaseDSN, "d", "", "Строка с адресом подключения")
-	flag.Parse()
 
-	if len(cfg.Server.Addr) == 0 {
-		cfg.Server.Addr = addr
-	}
-	if len(cfg.BaseURL) == 0 {
-		cfg.BaseURL = baseURL
+	err = initEnv(&cfg)
+	if err != nil {
+		return nil, err
 	}
 
-	if !cfg.Server.IsHTTPS {
-		cfg.Server.IsHTTPS = isHTTPS
-	}
-
-	if len(cfg.Cert.CertFile) == 0 {
-		cfg.Cert.CertFile = certFile
-	}
-
-	if len(cfg.Cert.KeyFile) == 0 {
-		cfg.Cert.KeyFile = keyFile
-	}
-
-	if len(cfg.Log.FlagLogLevel) == 0 {
-		cfg.Log.FlagLogLevel = flagLogLevel
-	}
-
-	if len(cfg.File.FileStoragePath) == 0 {
-		cfg.File.FileStoragePath = fileStoragePath
-	}
-
-	if len(cfg.Database.DatabaseDSN) == 0 {
-		cfg.Database.DatabaseDSN = databaseDSN
+	err = initFile(&cfg, fs)
+	if err != nil {
+		return nil, err
 	}
 
 	return &cfg, nil
+}
+
+func initFlag(cfg *Configs, fs *flag.FlagSet) error {
+	fs.StringVar(&cfg.Server.Addr, "a", "", "Адрес запуска сервера localhost:8080")
+	fs.StringVar(&cfg.BaseURL, "b", "", "Базовый URL http://localhost:8080")
+	fs.BoolVar(&cfg.Server.IsHTTPS, "s", false, "Включения HTTPS в веб-сервере.")
+	fs.StringVar(&cfg.Log.FlagLogLevel, "ll", "info", "log level")
+	fs.StringVar(&cfg.File.FileStoragePath, "f", "", "Полное имя файла")
+	fs.StringVar(&cfg.Cert.KeyFile, "fc", "key.pem", "Закрытый ключ")
+	fs.StringVar(&cfg.Cert.CertFile, "fk", "cert.pem", "Подписанный центром сертификации, файл сертификата")
+	fs.StringVar(&cfg.Database.DatabaseDSN, "d", "", "Строка с адресом подключения")
+	fs.StringVar(&cfg.Config, "c", "", "Файл конфигурации")
+	err := fs.Parse(os.Args[1:])
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func initEnv(cfg *Configs) error {
+	var err error
+	if envServerAddress := os.Getenv("SERVER_ADDRESS"); len(envServerAddress) > 0 {
+		cfg.Server.Addr = envServerAddress
+	}
+
+	if envBaseURL := os.Getenv("BASE_URL"); len(envBaseURL) > 0 {
+		cfg.BaseURL = envBaseURL
+	}
+
+	if envIsHTTPS := os.Getenv("ENABLE_HTTPS"); len(envIsHTTPS) > 0 {
+		cfg.Server.IsHTTPS, err = strconv.ParseBool(envIsHTTPS)
+		if err != nil {
+			return err
+		}
+	}
+
+	if envFileStoragePath := os.Getenv("FILE_STORAGE_PATH"); len(envFileStoragePath) > 0 {
+		cfg.File.FileStoragePath = envFileStoragePath
+	}
+
+	if envDatabaseDSN := os.Getenv("DATABASE_DSN"); len(envDatabaseDSN) > 0 {
+		cfg.Database.DatabaseDSN = envDatabaseDSN
+	}
+
+	if envCertFile := os.Getenv("FILE_CERT"); len(envCertFile) > 0 {
+		cfg.Cert.CertFile = envCertFile
+	}
+
+	if envKeyFile := os.Getenv("FILE_PRIVATE_KEY"); len(envKeyFile) > 0 {
+		cfg.Cert.KeyFile = envKeyFile
+	}
+
+	if envFlagLogLevel := os.Getenv("FLAG_LOG_LEVEL"); len(envFlagLogLevel) > 0 {
+		cfg.Log.FlagLogLevel = envFlagLogLevel
+	}
+
+	if envConfig := os.Getenv("CONFIG"); len(envConfig) > 0 {
+		cfg.Config = envConfig
+	}
+
+	return nil
+}
+
+func initFile(cfg *Configs, fs *flag.FlagSet) error {
+
+	if len(cfg.Config) > 0 {
+		var fileConfig FileConfig
+		file, err := os.Open(cfg.Config)
+		if err != nil {
+			return err
+		}
+
+		defer func() {
+			err = file.Close()
+			if err != nil {
+				log.Fatal(err)
+			}
+		}()
+
+		decoder := json.NewDecoder(file)
+		err = decoder.Decode(&fileConfig)
+		if err != nil {
+			return err
+		}
+
+		if len(cfg.Server.Addr) == 0 {
+			cfg.Server.Addr = setValueString(fileConfig.Addr, "localhost:8080")
+		}
+		if len(cfg.BaseURL) == 0 {
+			cfg.BaseURL = setValueString(fileConfig.BaseURL, "http://localhost:8080")
+		}
+		if len(cfg.Database.DatabaseDSN) == 0 {
+			cfg.Database.DatabaseDSN = fileConfig.DatabaseDSN
+		}
+
+		enabled := false
+		fs.Visit(func(f *flag.Flag) {
+			if f.Name == "s" {
+				enabled = true
+			}
+		})
+		envIsHTTPS := os.Getenv("ENABLE_HTTPS")
+
+		if !cfg.Server.IsHTTPS && len(envIsHTTPS) == 0 && !enabled {
+			cfg.Server.IsHTTPS = fileConfig.IsHTTPS
+		}
+
+		if len(cfg.File.FileStoragePath) == 0 {
+			cfg.File.FileStoragePath = setValueString(fileConfig.FileStoragePath, "/tmp/short-url-db.json")
+		}
+	}
+
+	return nil
+}
+
+func setValueString(value, defaultValue string) string {
+	if len(value) > 0 {
+		return value
+	}
+	return defaultValue
 }
