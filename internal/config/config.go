@@ -58,25 +58,25 @@ type FileConfig struct {
 
 // New constructor a new instance of Configs
 func New() (*Configs, error) {
-	var cfg Configs
+	var cfg *Configs
 
 	fs := flag.NewFlagSet("shortener", flag.ContinueOnError)
-	err := initFlag(&cfg, fs)
+	err := initFlag(cfg, fs)
 	if err != nil {
 		return nil, err
 	}
 
-	err = initEnv(&cfg)
+	err = initEnv(cfg)
 	if err != nil {
 		return nil, err
 	}
 
-	err = initFile(&cfg, fs)
+	err = initFile(cfg, fs)
 	if err != nil {
 		return nil, err
 	}
 
-	return &cfg, nil
+	return cfg, nil
 }
 
 func initFlag(cfg *Configs, fs *flag.FlagSet) error {
