@@ -5,6 +5,10 @@ import (
 	"log"
 	"net/http"
 	_ "net/http/pprof"
+	"os"
+	"os/signal"
+	"sync"
+	"syscall"
 	"time"
 
 	"github.com/Orendev/shortener/internal/config"
@@ -26,7 +30,7 @@ var shutdownTimeout = 10 * time.Second
 
 // Run starts the application.
 func Run(cfg *config.Configs) {
-	ctx := context.Background()
+	ctx := gracefulShutdown()
 
 	var repo repository.Storage
 
@@ -70,7 +74,7 @@ func Run(cfg *config.Configs) {
 		logger.Log.Error("error tls init", zap.Error(err))
 	}
 
-	a.startServer(&http.Server{
+	a.startServer(ctx, &http.Server{
 		Addr:    cfg.Server.Addr,
 		Handler: routes.Router(a.repo, cfg.BaseURL),
 	},
@@ -85,16 +89,44 @@ func NewApp(repo repository.Storage) *App {
 	return &App{repo: repo}
 }
 
-func (a *App) startServer(srv *http.Server, isHTTPS bool, certFile, keyFile string) {
+func (a *App) startServer(ctx context.Context, srv *http.Server, isHTTPS bool, certFile, keyFile string) {
 	var err error
+	var wg sync.WaitGroup
 
-	if isHTTPS {
-		err = srv.ListenAndServeTLS(certFile, keyFile)
-	} else {
-		err = srv.ListenAndServe()
-	}
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		if isHTTPS {
+			err = srv.ListenAndServeTLS(certFile, keyFile)
+		} else {
+			err = srv.ListenAndServe()
+		}
+		if err != nil {
+			log.Fatalf("failed to start server %s", err)
+		}
+	}()
 
+	<-ctx.Done()
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
+	defer cancel()
+
+	err = srv.Shutdown(shutdownCtx)
 	if err != nil {
-		log.Fatalf("failed to start server %s", err)
+		log.Fatalf("failed to shudown server %s", err)
 	}
+
+	wg.Wait()
+
+}
+
+func gracefulShutdown() context.Context {
+	ctx, cancel := context.WithCancel(context.Background())
+	irqSig := make(chan os.Signal, 1)
+	// Получено сообщение о завершении работы от операционной системы.
+	signal.Notify(irqSig, syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGINT)
+	go func() {
+		<-irqSig
+		cancel()
+	}()
+	return ctx
 }
