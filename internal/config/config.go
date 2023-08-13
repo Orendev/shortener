@@ -196,7 +196,13 @@ func initFile(cfg *Configs, fs *flag.FlagSet) error {
 
 func initDefaultValue(cfg *Configs) {
 	cfg.Server.Addr = setValueString(cfg.Server.Addr, "localhost:8080")
-	cfg.BaseURL = setValueString(cfg.BaseURL, "localhost:8080")
+	url := "localhost:8080"
+	if cfg.Server.IsHTTPS {
+		url = "https://" + url
+	} else {
+		url = "http://" + url
+	}
+	cfg.BaseURL = setValueString(cfg.BaseURL, url)
 	cfg.File.FileStoragePath = setValueString(cfg.File.FileStoragePath, "/tmp/short-url-db.json")
 }
 
