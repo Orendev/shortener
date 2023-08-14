@@ -3,7 +3,6 @@ package config
 import (
 	"encoding/json"
 	"flag"
-	"log"
 	"os"
 	"strconv"
 )
@@ -51,7 +50,7 @@ type FileConfig struct {
 	Addr            string `json:"server_address"`
 	IsHTTPS         bool   `json:"enable_https"`
 	FileStoragePath string `json:"file_storage_path"`
-	DatabaseDSN     string `json:"database-dsn"`
+	DatabaseDSN     string `json:"database_dsn"`
 	BaseURL         string `json:"base_url"`
 }
 
@@ -83,13 +82,13 @@ func New() (*Configs, error) {
 func initFlag(cfg *Configs, fs *flag.FlagSet) error {
 	fs.StringVar(&cfg.Server.Addr, "a", "", "Адрес запуска сервера localhost:8080")
 	fs.StringVar(&cfg.BaseURL, "b", "", "Базовый URL localhost:8080")
-	fs.BoolVar(&cfg.Server.IsHTTPS, "s", false, "Включения HTTPS в веб-сервере.")
 	fs.StringVar(&cfg.Log.FlagLogLevel, "ll", "info", "log level")
 	fs.StringVar(&cfg.File.FileStoragePath, "f", "", "Полное имя файла")
 	fs.StringVar(&cfg.Cert.KeyFile, "fc", "key.pem", "Закрытый ключ")
 	fs.StringVar(&cfg.Cert.CertFile, "fk", "cert.pem", "Подписанный центром сертификации, файл сертификата")
 	fs.StringVar(&cfg.Database.DatabaseDSN, "d", "", "Строка с адресом подключения")
 	fs.StringVar(&cfg.Config, "c", "", "Файл конфигурации")
+	fs.BoolVar(&cfg.Server.IsHTTPS, "s", false, "Включения HTTPS в веб-сервере.")
 	err := fs.Parse(os.Args[1:])
 	if err != nil {
 		return err
@@ -152,10 +151,7 @@ func initFile(cfg *Configs, fs *flag.FlagSet) error {
 		}
 
 		defer func() {
-			err = file.Close()
-			if err != nil {
-				log.Fatal(err)
-			}
+			_ = file.Close()
 		}()
 
 		decoder := json.NewDecoder(file)
