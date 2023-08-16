@@ -7,13 +7,15 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
-	"time"
+	"sync"
 
 	"github.com/Orendev/shortener/internal/auth"
+	"github.com/Orendev/shortener/internal/logger"
 	"github.com/Orendev/shortener/internal/models"
 	"github.com/Orendev/shortener/internal/random"
 	"github.com/Orendev/shortener/internal/repository"
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 )
 
 // PostAPIShorten save the link and return the short link.
@@ -202,17 +204,7 @@ func (h *Handler) DeleteAPIUserUrls(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	go func() {
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-		defer cancel()
-
-		inputCh := generator(reqData)
-		channels := h.fanOut(ctx, inputCh, userID)
-		resultCh := h.fanIn(ctx, channels...)
-
-		h.flushShortLink(ctx, resultCh)
-	}()
-
+	go h.deleteUserUrlsCodes(context.Background(), reqData, userID)
 	// Запрос получен, но еще не обработан
 	w.WriteHeader(http.StatusAccepted)
 
@@ -266,4 +258,125 @@ func (h *Handler) GetAPIUserUrls(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+}
+
+func (h *Handler) deleteUserUrlsCodes(ctx context.Context, codes []string, userID string) {
+
+	channels := h.fanOut(ctx, func(input []string) chan string {
+		inputCh := make(chan string)
+
+		go func() {
+			defer close(inputCh)
+			for _, data := range input {
+				inputCh <- data
+			}
+		}()
+
+		return inputCh
+	}(codes))
+
+	resultCh := h.fanIn(ctx, channels...)
+
+	var urls []string
+	for url := range resultCh {
+		urls = append(urls, url)
+	}
+
+	err := h.repo.DeleteFlagBatch(ctx, urls, userID)
+	if err != nil {
+		logger.Log.Error("error", zap.Error(err))
+	}
+}
+
+func (h *Handler) fanOut(ctx context.Context, inputCh chan string) []chan string {
+	// количество горутин add
+	numWorkers := 10
+	// каналы, в которые отправляются результаты
+	channels := make([]chan string, numWorkers)
+
+	for i := 0; i < numWorkers; i++ {
+		channels = append(channels, h.getShortLink(ctx, inputCh))
+	}
+
+	// возвращаем слайс каналов
+	return channels
+}
+
+// fanIn объединяет несколько каналов resultChs в один.
+func (h *Handler) fanIn(ctx context.Context, resultChs ...chan string) chan string {
+	// конечный выходной канал в который отправляем данные из всех каналов из слайса, назовём его результирующим
+	finalCh := make(chan string)
+	// понадобится для ожидания всех горутин
+	var wg sync.WaitGroup
+
+	// перебираем все входящие каналы
+	for _, ch := range resultChs {
+		// в горутину передавать переменную цикла нельзя, поэтому делаем так
+		chClosure := ch
+
+		// инкрементируем счётчик горутин, которые нужно подождать
+		wg.Add(1)
+
+		go func() {
+
+			// откладываем сообщение о том, что горутина завершилась
+			defer wg.Done()
+
+			// получаем данные из канала
+			for data := range chClosure {
+				select {
+				// выходим из горутины, если канал закрылся
+				case <-ctx.Done():
+					return
+				// если не закрылся, отправляем данные в конечный выходной канал
+				case finalCh <- data:
+				}
+			}
+		}()
+	}
+
+	go func() {
+		// ждём завершения всех горутин
+		wg.Wait()
+		// когда все горутины завершились, закрываем результирующий канал
+		close(finalCh)
+	}()
+
+	// возвращаем результирующий канал
+	return finalCh
+}
+
+// getShortLinkCode принимает на вход конткст для прекращения работы и канал с входными данными для работы,
+// а возвращает канал, в который будет отправляться результат запроса чтения из БД.
+// На фоне будет запущена горутина, выполняющая запрос чтения из БД до момента закрытия doneCh.
+func (h *Handler) getShortLink(ctx context.Context, inputCh chan string) chan string {
+	// канал с результатом
+	resultCh := make(chan string)
+
+	// горутина, в которой добавляем к значению из inputCh единицу и отправляем результат в addRes
+	go func() {
+		// закрываем канал, когда горутина завершается
+		defer close(resultCh)
+		// берём из канала inputCh значения, которые надо изменить
+		for data := range inputCh {
+			/**
+			получим модель shortLink по коду
+			*/
+			model, err := h.repo.GetByCode(ctx, data)
+			if err != nil {
+				logger.Log.Info("cannot get shortLink", zap.Error(err))
+				continue
+			}
+
+			select {
+			case <-ctx.Done():
+				return
+			case resultCh <- model.Code:
+			}
+		}
+	}()
+
+	// возвращаем канал для результатов вычислений
+	return resultCh
+
 }

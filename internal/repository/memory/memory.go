@@ -138,6 +138,25 @@ func (s *Memory) UpdateBatch(_ context.Context, shortLinks []models.ShortLink) e
 	return nil
 }
 
+// DeleteFlagBatch group delete of short link models []models.ShortLink.
+func (s *Memory) DeleteFlagBatch(ctx context.Context, codes []string, userID string) error {
+	for _, code := range codes {
+		model, err := s.GetByCode(ctx, code)
+		if err != nil {
+			continue
+		}
+		if model.UserID == userID {
+			s.data[code] = *model
+		}
+	}
+	err := s.file.Save(s.data)
+	if err != nil {
+		return err
+	}
+	return nil
+
+}
+
 // Ping service check.
 func (s *Memory) Ping(_ context.Context) error {
 	return nil

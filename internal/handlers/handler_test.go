@@ -23,7 +23,7 @@ func TestHandler_GetShorten(t *testing.T) {
 
 	// создадим конроллер моков и экземпляр мок-хранилища
 	ctrl := gomock.NewController(t)
-	s := mock.NewMockShortLinkStorage(ctrl)
+	s := mockStore.NewMockStorage(ctrl)
 
 	// определим, какой результат будем получать от «хранилища»
 	code := random.Strn(8)
@@ -94,7 +94,7 @@ func TestHandler_PostShorten(t *testing.T) {
 
 	// создадим конроллер моков и экземпляр мок-хранилища
 	ctrl := gomock.NewController(t)
-	s := mock.NewMockShortLinkStorage(ctrl)
+	s := mockStore.NewMockStorage(ctrl)
 
 	// определим, какой результат будем получать от «хранилища»
 	// установим условие: при любом вызове метода Save возвращать uuid без ошибки
@@ -187,7 +187,7 @@ func TestHandler_PostAPIShorten(t *testing.T) {
 
 	// создадим конроллер моков и экземпляр мок-хранилища
 	ctrl := gomock.NewController(t)
-	s := mock.NewMockShortLinkStorage(ctrl)
+	s := mockStore.NewMockStorage(ctrl)
 
 	// определим, какой результат будем получать от «хранилища»
 	// установим условие: при любом вызове метода Save возвращать uuid без ошибки
@@ -313,7 +313,7 @@ func TestHandler_PostAPIShortenBatch(t *testing.T) {
 
 	// создадим конроллер моков и экземпляр мок-хранилища
 	ctrl := gomock.NewController(t)
-	s := mock.NewMockShortLinkStorage(ctrl)
+	s := mockStore.NewMockStorage(ctrl)
 
 	// определим, какой результат будем получать от «хранилища»
 	code := random.Strn(8)
@@ -416,7 +416,7 @@ func TestHandler_PostAPIShortenBatch(t *testing.T) {
 func TestHandler_GetAPIUserUrls(t *testing.T) {
 	// создадим конроллер моков и экземпляр мок-хранилища
 	ctrl := gomock.NewController(t)
-	s := mock.NewMockShortLinkStorage(ctrl)
+	s := mockStore.NewMockStorage(ctrl)
 
 	// определим, какой результат будем получать от «хранилища»
 	code := random.Strn(8)
@@ -435,7 +435,7 @@ func TestHandler_GetAPIUserUrls(t *testing.T) {
 	shortLinks = append(shortLinks, model)
 	// определим, какой результат будем получать от «хранилища»
 	s.EXPECT().
-		ShortLinksByUserId(gomock.Any(), gomock.Any(), gomock.Any()).
+		ShortLinksByUserID(gomock.Any(), gomock.Any(), gomock.Any()).
 		Return(shortLinks, nil)
 
 	// создадим экземпляр приложения и передадим ему «хранилище»
@@ -511,7 +511,7 @@ func TestHandler_GetAPIUserUrls(t *testing.T) {
 func TestHandler_GetPing(t *testing.T) {
 	// создадим конроллер моков и экземпляр мок-хранилища
 	ctrl := gomock.NewController(t)
-	s := mock.NewMockShortLinkStorage(ctrl)
+	s := mockStore.NewMockStorage(ctrl)
 
 	// определим, какой результат будем получать от «хранилища»
 	s.EXPECT().

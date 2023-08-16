@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"strings"
 
 	"github.com/Orendev/shortener/internal/logger"
 	"github.com/Orendev/shortener/internal/models"
@@ -258,6 +259,40 @@ func (s *Postgres) UpdateBatch(ctx context.Context, shortLinks []models.ShortLin
 			}
 			return err
 		}
+	}
+	return tx.Commit()
+}
+
+// DeleteFlagBatch group delete of short link models []models.ShortLink.
+func (s *Postgres) DeleteFlagBatch(ctx context.Context, codes []string, userID string) error {
+	// начинаем транзакцию
+	tx, err := s.db.Begin()
+	if err != nil {
+		return err
+	}
+
+	stmt, err := tx.PrepareContext(ctx,
+		`UPDATE short_links SET is_deleted=true WHERE code = ANY($1) AND user_id = $2`)
+
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		err = stmt.Close()
+		if err != nil {
+			logger.Log.Error("error", zap.Error(err))
+		}
+	}()
+
+	_, err = stmt.ExecContext(ctx, "{"+strings.Join(codes, ",")+"}", userID)
+	if err != nil {
+		// если ошибка, то откатываем изменения
+		errRollback := tx.Rollback()
+		if errRollback != nil {
+			return errRollback
+		}
+		return err
 	}
 	return tx.Commit()
 }
