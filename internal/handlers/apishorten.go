@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/Orendev/shortener/internal/auth"
 	"github.com/Orendev/shortener/internal/logger"
@@ -261,6 +262,8 @@ func (h *Handler) GetAPIUserUrls(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) deleteUserUrlsCodes(ctx context.Context, codes []string, userID string) {
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
 
 	channels := h.fanOut(ctx, func(input []string) chan string {
 		inputCh := make(chan string)
