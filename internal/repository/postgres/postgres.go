@@ -264,7 +264,7 @@ func (s *Postgres) UpdateBatch(ctx context.Context, shortLinks []models.ShortLin
 }
 
 // DeleteFlagBatch group delete of short link models []models.ShortLink.
-func (s *Postgres) DeleteFlagBatch(ctx context.Context, codes []string, _ string) error {
+func (s *Postgres) DeleteFlagBatch(ctx context.Context, codes []string, userID string) error {
 	// начинаем транзакцию
 	tx, err := s.db.Begin()
 	if err != nil {
@@ -272,7 +272,7 @@ func (s *Postgres) DeleteFlagBatch(ctx context.Context, codes []string, _ string
 	}
 
 	stmt, err := tx.PrepareContext(ctx,
-		`UPDATE short_links SET is_deleted=true WHERE code = ANY($1)`)
+		`UPDATE short_links SET is_deleted=true WHERE code = ANY($1) AND user_id = $2`)
 
 	if err != nil {
 		return err
@@ -285,7 +285,7 @@ func (s *Postgres) DeleteFlagBatch(ctx context.Context, codes []string, _ string
 		}
 	}()
 
-	_, err = stmt.ExecContext(ctx, "{"+strings.Join(codes, ",")+"}")
+	_, err = stmt.ExecContext(ctx, "{"+strings.Join(codes, ",")+"}", userID)
 	if err != nil {
 		// если ошибка, то откатываем изменения
 		errRollback := tx.Rollback()
