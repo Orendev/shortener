@@ -262,19 +262,21 @@ func (h *Handler) GetAPIUserUrls(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) deleteUserUrlsCodes(ctx context.Context, codes []string, userID string) {
 	numWorkers := len(codes) + 2
 
-	idsCh := make(chan string, numWorkers)
+	codesCh := make(chan string, numWorkers)
 	urlsCh := make(chan string, numWorkers)
 	var wg sync.WaitGroup
-	for _, id := range codes {
-		idsCh <- id
+
+	for _, code := range codes {
+		codesCh <- code
 	}
-	close(idsCh)
+	close(codesCh)
+
 	for i := 0; i < numWorkers; i++ {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			for id := range idsCh {
-				url := id
+			for code := range codesCh {
+				url := code
 				urlsCh <- url
 			}
 		}()
@@ -283,6 +285,7 @@ func (h *Handler) deleteUserUrlsCodes(ctx context.Context, codes []string, userI
 		wg.Wait()
 		close(urlsCh)
 	}()
+
 	var urls []string
 	for url := range urlsCh {
 		urls = append(urls, url)
