@@ -146,6 +146,7 @@ func (s *Memory) DeleteFlagBatch(ctx context.Context, codes []string, userID str
 			continue
 		}
 		if model.UserID == userID {
+			model.DeletedFlag = true
 			s.data[code] = *model
 		}
 	}
