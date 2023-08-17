@@ -5,11 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"net/http"
-	"strings"
-	"sync"
-	"time"
-
 	"github.com/Orendev/shortener/internal/auth"
 	"github.com/Orendev/shortener/internal/logger"
 	"github.com/Orendev/shortener/internal/models"
@@ -17,6 +12,9 @@ import (
 	"github.com/Orendev/shortener/internal/repository"
 	"github.com/google/uuid"
 	"go.uber.org/zap"
+	"net/http"
+	"strings"
+	"sync"
 )
 
 // PostAPIShorten save the link and return the short link.
@@ -261,27 +259,32 @@ func (h *Handler) GetAPIUserUrls(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *Handler) deleteUserUrlsCodes(_ context.Context, codes []string, userID string) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	logger.Log.Info("codes", zap.Any("codes", codes))
-	channels := h.fanOut(ctx, func(input []string) chan string {
-		inputCh := make(chan string)
+func (h *Handler) deleteUserUrlsCodes(ctx context.Context, codes []string, userID string) {
+	numWorkers := len(codes) + 2
 
+	idsCh := make(chan string, numWorkers)
+	urlsCh := make(chan string, numWorkers)
+	var wg sync.WaitGroup
+	for _, id := range codes {
+		idsCh <- id
+	}
+	close(idsCh)
+	for i := 0; i < numWorkers; i++ {
+		wg.Add(1)
 		go func() {
-			defer close(inputCh)
-			for _, data := range input {
-				inputCh <- data
+			defer wg.Done()
+			for id := range idsCh {
+				url := id
+				urlsCh <- url
 			}
 		}()
-
-		return inputCh
-	}(codes))
-
-	resultCh := h.fanIn(ctx, channels...)
-
+	}
+	go func() {
+		wg.Wait()
+		close(urlsCh)
+	}()
 	var urls []string
-	for url := range resultCh {
+	for url := range urlsCh {
 		urls = append(urls, url)
 	}
 
@@ -289,97 +292,4 @@ func (h *Handler) deleteUserUrlsCodes(_ context.Context, codes []string, userID 
 	if err != nil {
 		logger.Log.Error("error", zap.Error(err))
 	}
-}
-
-func (h *Handler) fanOut(ctx context.Context, inputCh chan string) []chan string {
-	// количество горутин add
-	numWorkers := 10
-	// каналы, в которые отправляются результаты
-	channels := make([]chan string, numWorkers)
-
-	for i := 0; i < numWorkers; i++ {
-		channels = append(channels, h.getShortLink(ctx, inputCh))
-	}
-
-	// возвращаем слайс каналов
-	return channels
-}
-
-// fanIn объединяет несколько каналов resultChs в один.
-func (h *Handler) fanIn(ctx context.Context, resultChs ...chan string) chan string {
-	// конечный выходной канал в который отправляем данные из всех каналов из слайса, назовём его результирующим
-	finalCh := make(chan string)
-	// понадобится для ожидания всех горутин
-	var wg sync.WaitGroup
-
-	// перебираем все входящие каналы
-	for _, ch := range resultChs {
-		// в горутину передавать переменную цикла нельзя, поэтому делаем так
-		chClosure := ch
-
-		// инкрементируем счётчик горутин, которые нужно подождать
-		wg.Add(1)
-
-		go func() {
-
-			// откладываем сообщение о том, что горутина завершилась
-			defer wg.Done()
-
-			// получаем данные из канала
-			for data := range chClosure {
-				select {
-				// выходим из горутины, если канал закрылся
-				case <-ctx.Done():
-					return
-				// если не закрылся, отправляем данные в конечный выходной канал
-				case finalCh <- data:
-				}
-			}
-		}()
-	}
-
-	go func() {
-		// ждём завершения всех горутин
-		wg.Wait()
-		// когда все горутины завершились, закрываем результирующий канал
-		close(finalCh)
-	}()
-
-	// возвращаем результирующий канал
-	return finalCh
-}
-
-// getShortLinkCode принимает на вход конткст для прекращения работы и канал с входными данными для работы,
-// а возвращает канал, в который будет отправляться результат запроса чтения из БД.
-// На фоне будет запущена горутина, выполняющая запрос чтения из БД до момента закрытия doneCh.
-func (h *Handler) getShortLink(ctx context.Context, inputCh chan string) chan string {
-	// канал с результатом
-	resultCh := make(chan string)
-
-	// горутина, в которой добавляем к значению из inputCh единицу и отправляем результат в addRes
-	go func() {
-		// закрываем канал, когда горутина завершается
-		defer close(resultCh)
-		// берём из канала inputCh значения, которые надо изменить
-		for data := range inputCh {
-			/**
-			получим модель shortLink по коду
-			*/
-			model, err := h.repo.GetByCode(ctx, data)
-			if err != nil {
-				logger.Log.Info("cannot get shortLink", zap.Error(err))
-				continue
-			}
-
-			select {
-			case <-ctx.Done():
-				return
-			case resultCh <- model.Code:
-			}
-		}
-	}()
-
-	// возвращаем канал для результатов вычислений
-	return resultCh
-
 }
