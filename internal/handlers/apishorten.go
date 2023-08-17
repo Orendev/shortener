@@ -261,10 +261,10 @@ func (h *Handler) GetAPIUserUrls(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *Handler) deleteUserUrlsCodes(ctx context.Context, codes []string, userID string) {
-	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+func (h *Handler) deleteUserUrlsCodes(_ context.Context, codes []string, userID string) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-
+	logger.Log.Info("codes", zap.Any("codes", codes))
 	channels := h.fanOut(ctx, func(input []string) chan string {
 		inputCh := make(chan string)
 
