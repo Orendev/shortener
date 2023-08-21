@@ -265,13 +265,19 @@ func (h *Handler) GetAPIUserUrls(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) deleteUserUrlsCodes(ctx context.Context, codes []string, userID string) {
-	codeCh := generator(ctx, codes)
+	codeCh := generator(codes)
 	h.flushDeleteShortLink(ctx, codeCh, userID)
 }
 
 // generator создаем каналы
-func generator(ctx context.Context, input []string) chan string {
-	inputCh := make(chan string)
+func generator(input []string) chan string {
+	numWorkers := len(input)
+
+	if numWorkers > 10 {
+		numWorkers = 10
+	}
+
+	inputCh := make(chan string, numWorkers)
 	go func() {
 		defer close(inputCh)
 
