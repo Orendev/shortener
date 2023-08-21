@@ -14,7 +14,7 @@ import (
 	"go.uber.org/zap"
 	"net/http"
 	"strings"
-	"sync"
+	"time"
 )
 
 // PostAPIShorten save the link and return the short link.
@@ -203,7 +203,12 @@ func (h *Handler) DeleteAPIUserUrls(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	go h.deleteUserUrlsCodes(context.Background(), reqData, userID)
+	go func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+		h.deleteUserUrlsCodes(ctx, reqData, userID)
+	}()
+
 	// Запрос получен, но еще не обработан
 	w.WriteHeader(http.StatusAccepted)
 
@@ -260,39 +265,53 @@ func (h *Handler) GetAPIUserUrls(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) deleteUserUrlsCodes(ctx context.Context, codes []string, userID string) {
-	numWorkers := len(codes) + 2
+	codeCh := generator(ctx, codes)
+	h.flushDeleteShortLink(ctx, codeCh, userID)
+}
 
-	codesCh := make(chan string, numWorkers)
-	urlsCh := make(chan string, numWorkers)
-	var wg sync.WaitGroup
-
-	for _, code := range codes {
-		codesCh <- code
-	}
-	close(codesCh)
-
-	for i := 0; i < numWorkers; i++ {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			for code := range codesCh {
-				url := code
-				urlsCh <- url
-			}
-		}()
-	}
+// generator создаем каналы
+func generator(ctx context.Context, input []string) chan string {
+	inputCh := make(chan string)
 	go func() {
-		wg.Wait()
-		close(urlsCh)
+		defer close(inputCh)
+
+		for _, code := range input {
+			inputCh <- code
+		}
 	}()
 
-	var urls []string
-	for url := range urlsCh {
-		urls = append(urls, url)
+	return inputCh
+}
+
+func (h *Handler) flushDeleteShortLink(ctx context.Context, resultCh chan string, userID string) {
+
+	var shortLinks []string
+
+	ticker := time.NewTicker(500 * time.Millisecond)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case shortLink, ok := <-resultCh:
+			if !ok {
+				continue
+			}
+			shortLinks = append(shortLinks, shortLink)
+
+		case <-ticker.C:
+			if len(shortLinks) == 0 {
+				continue
+			}
+
+			err := h.repo.DeleteFlagBatch(ctx, shortLinks, userID)
+			if err != nil {
+				logger.Log.Info("cannot delete shortLink", zap.Error(err))
+				continue
+			}
+			shortLinks = nil
+		}
 	}
 
-	err := h.repo.DeleteFlagBatch(ctx, urls, userID)
-	if err != nil {
-		logger.Log.Error("error", zap.Error(err))
-	}
 }
