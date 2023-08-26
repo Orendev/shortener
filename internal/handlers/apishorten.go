@@ -303,7 +303,7 @@ func (h *Handler) flushDeleteShortLink(ctx context.Context, resultCh chan string
 			return
 		case shortLink, ok := <-resultCh:
 			if !ok {
-				return
+				continue
 			}
 			shortLinks = append(shortLinks, shortLink)
 
