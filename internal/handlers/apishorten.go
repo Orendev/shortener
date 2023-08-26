@@ -5,6 +5,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
+	"strings"
+	"time"
+
 	"github.com/Orendev/shortener/internal/auth"
 	"github.com/Orendev/shortener/internal/logger"
 	"github.com/Orendev/shortener/internal/models"
@@ -12,9 +16,6 @@ import (
 	"github.com/Orendev/shortener/internal/repository"
 	"github.com/google/uuid"
 	"go.uber.org/zap"
-	"net/http"
-	"strings"
-	"time"
 )
 
 // PostAPIShorten save the link and return the short link.
@@ -302,7 +303,7 @@ func (h *Handler) flushDeleteShortLink(ctx context.Context, resultCh chan string
 			return
 		case shortLink, ok := <-resultCh:
 			if !ok {
-				continue
+				return
 			}
 			shortLinks = append(shortLinks, shortLink)
 
@@ -313,7 +314,7 @@ func (h *Handler) flushDeleteShortLink(ctx context.Context, resultCh chan string
 
 			err := h.repo.DeleteFlagBatch(ctx, shortLinks, userID)
 			if err != nil {
-				logger.Log.Info("cannot delete shortLink", zap.Error(err))
+				logger.Log.Error("cannot delete shortLink", zap.Error(err))
 				continue
 			}
 			shortLinks = nil
