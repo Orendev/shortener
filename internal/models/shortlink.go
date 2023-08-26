@@ -1,6 +1,8 @@
 package models
 
-import "errors"
+import (
+	"errors"
+)
 
 // ShortLink the short link model.
 type ShortLink struct {
@@ -48,4 +50,10 @@ func (sl ShortLinkRequest) Validate() error {
 	}
 
 	return err
+}
+
+// Message описывает объект сообщения
+type Message struct {
+	UserID string // пользователь
+	Code   string // код ссылки
 }

@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/Orendev/shortener/internal/auth"
+	"github.com/Orendev/shortener/internal/dedupe"
 	"github.com/Orendev/shortener/internal/logger"
 	"github.com/Orendev/shortener/internal/models"
 	"github.com/Orendev/shortener/internal/random"
@@ -205,9 +206,12 @@ func (h *Handler) DeleteAPIUserUrls(w http.ResponseWriter, r *http.Request) {
 	}
 
 	go func() {
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-		defer cancel()
-		h.deleteUserUrlsCodes(ctx, reqData, userID)
+		for _, code := range reqData {
+			h.msgDeleteUserUrlsChan <- models.Message{
+				UserID: userID,
+				Code:   code,
+			}
+		}
 	}()
 
 	// Запрос получен, но еще не обработан
@@ -265,59 +269,35 @@ func (h *Handler) GetAPIUserUrls(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *Handler) deleteUserUrlsCodes(ctx context.Context, codes []string, userID string) {
-	codeCh := generator(codes)
-	h.flushDeleteShortLink(ctx, codeCh, userID)
-}
+func (h *Handler) flushDeleteShortLink() {
 
-// generator создаем каналы
-func generator(input []string) chan string {
-	numWorkers := len(input)
+	messages := make(map[string][]string)
 
-	if numWorkers > 10 {
-		numWorkers = 10
-	}
-
-	inputCh := make(chan string, numWorkers)
-	go func() {
-		defer close(inputCh)
-
-		for _, code := range input {
-			inputCh <- code
-		}
-	}()
-
-	return inputCh
-}
-
-func (h *Handler) flushDeleteShortLink(ctx context.Context, resultCh chan string, userID string) {
-
-	var shortLinks []string
-
-	ticker := time.NewTicker(500 * time.Millisecond)
+	ticker := time.NewTicker(2 * time.Second)
 	defer ticker.Stop()
 
 	for {
 		select {
-		case <-ctx.Done():
-			return
-		case shortLink, ok := <-resultCh:
-			if !ok {
-				continue
-			}
-			shortLinks = append(shortLinks, shortLink)
-
+		case message, ok := <-h.msgDeleteUserUrlsChan:
+			fmt.Println("test", ok, message, messages[message.UserID])
+			messages[message.UserID] = dedupe.DedupeStrings(append(messages[message.UserID], message.Code))
 		case <-ticker.C:
-			if len(shortLinks) == 0 {
+			if len(messages) == 0 {
 				continue
 			}
 
-			err := h.repo.DeleteFlagBatch(ctx, shortLinks, userID)
-			if err != nil {
-				logger.Log.Error("cannot delete shortLink", zap.Error(err))
-				continue
+			for userID, codes := range messages {
+				err := h.repo.DeleteFlagBatch(context.Background(), codes, userID)
+				if err != nil {
+					logger.Log.Error("cannot delete shortLink", zap.Error(err))
+					continue
+				}
 			}
-			shortLinks = nil
+
+			// почистим срез сообщений на удаления
+			for k := range messages {
+				delete(messages, k)
+			}
 		}
 	}
 
