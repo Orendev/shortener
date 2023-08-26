@@ -22,6 +22,7 @@ type Storage interface {
 	Save(ctx context.Context, model models.ShortLink) error
 	InsertBatch(ctx context.Context, models []models.ShortLink) error
 	UpdateBatch(ctx context.Context, models []models.ShortLink) error
+	DeleteFlagBatch(ctx context.Context, codes []string, userID string) error
 	Ping(ctx context.Context) error
 	Close() error
 }

@@ -36,10 +36,7 @@ func TestFile_Remove(t *testing.T) {
 				},
 			},
 			cfg: &config.Configs{
-				Server: config.Server{
-					Host: "",
-					Port: "8080",
-				},
+				Server:  config.Server{},
 				BaseURL: "http://localhost:8080",
 				File: config.File{
 					FileStoragePath: "/tmp/test-short-url-file.json",
@@ -90,10 +87,7 @@ func TestFile_Save(t *testing.T) {
 				},
 			},
 			cfg: &config.Configs{
-				Server: config.Server{
-					Host: "",
-					Port: "8080",
-				},
+				Server:  config.Server{},
 				BaseURL: "http://localhost:8080",
 				File: config.File{
 					FileStoragePath: "/tmp/test-short-url-file.json",

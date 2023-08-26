@@ -10,10 +10,13 @@ import (
 	"time"
 
 	"github.com/Orendev/shortener/internal/auth"
+	"github.com/Orendev/shortener/internal/dedupe"
+	"github.com/Orendev/shortener/internal/logger"
 	"github.com/Orendev/shortener/internal/models"
 	"github.com/Orendev/shortener/internal/random"
 	"github.com/Orendev/shortener/internal/repository"
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 )
 
 // PostAPIShorten save the link and return the short link.
@@ -203,14 +206,12 @@ func (h *Handler) DeleteAPIUserUrls(w http.ResponseWriter, r *http.Request) {
 	}
 
 	go func() {
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-		defer cancel()
-
-		inputCh := generator(reqData)
-		channels := h.fanOut(ctx, inputCh, userID)
-		resultCh := h.fanIn(ctx, channels...)
-
-		h.flushShortLink(ctx, resultCh)
+		for _, code := range reqData {
+			h.msgDeleteUserUrlsChan <- models.Message{
+				UserID: userID,
+				Code:   code,
+			}
+		}
 	}()
 
 	// Запрос получен, но еще не обработан
@@ -266,4 +267,37 @@ func (h *Handler) GetAPIUserUrls(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+}
+
+func (h *Handler) flushDeleteShortLink() {
+
+	messages := make(map[string][]string)
+
+	ticker := time.NewTicker(2 * time.Second)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case message := <-h.msgDeleteUserUrlsChan:
+			messages[message.UserID] = dedupe.DedupeStrings(append(messages[message.UserID], message.Code))
+		case <-ticker.C:
+			if len(messages) == 0 {
+				continue
+			}
+
+			for userID, codes := range messages {
+				err := h.repo.DeleteFlagBatch(context.Background(), codes, userID)
+				if err != nil {
+					logger.Log.Error("cannot delete shortLink", zap.Error(err))
+					continue
+				}
+			}
+
+			// почистим срез сообщений на удаления
+			for k := range messages {
+				delete(messages, k)
+			}
+		}
+	}
+
 }
