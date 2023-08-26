@@ -278,8 +278,7 @@ func (h *Handler) flushDeleteShortLink() {
 
 	for {
 		select {
-		case message, ok := <-h.msgDeleteUserUrlsChan:
-			fmt.Println("test", ok, message, messages[message.UserID])
+		case message := <-h.msgDeleteUserUrlsChan:
 			messages[message.UserID] = dedupe.DedupeStrings(append(messages[message.UserID], message.Code))
 		case <-ticker.C:
 			if len(messages) == 0 {
