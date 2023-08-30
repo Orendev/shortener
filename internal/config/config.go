@@ -36,13 +36,14 @@ type Cert struct {
 
 // Configs configuration application
 type Configs struct {
-	Database Database
-	Server   Server
-	Cert     Cert
-	File     File
-	Log      Log
-	BaseURL  string `env:"BASE_URL"`
-	Config   string `env:"CONFIG"`
+	Database      Database
+	Server        Server
+	Cert          Cert
+	File          File
+	Log           Log
+	BaseURL       string `env:"BASE_URL"`
+	Config        string `env:"CONFIG"`
+	TrustedSubnet string `env:"TRUSTED_SUBNET"`
 }
 
 // FileConfig configuration file
@@ -52,6 +53,7 @@ type FileConfig struct {
 	FileStoragePath string `json:"file_storage_path"`
 	DatabaseDSN     string `json:"database_dsn"`
 	BaseURL         string `json:"base_url"`
+	TrustedSubnet   string `json:"trusted_subnet"`
 }
 
 // New constructor a new instance of Configs
@@ -87,6 +89,7 @@ func initFlag(cfg *Configs, fs *flag.FlagSet) error {
 	fs.StringVar(&cfg.Cert.KeyFile, "fc", "key.pem", "Закрытый ключ")
 	fs.StringVar(&cfg.Cert.CertFile, "fk", "cert.pem", "Подписанный центром сертификации, файл сертификата")
 	fs.StringVar(&cfg.Database.DatabaseDSN, "d", "", "Строка с адресом подключения")
+	fs.StringVar(&cfg.TrustedSubnet, "t", "", "Строковое представление бесклассовой адресации")
 	fs.StringVar(&cfg.Config, "c", "", "Файл конфигурации")
 	fs.BoolVar(&cfg.Server.IsHTTPS, "s", false, "Включения HTTPS в веб-сервере.")
 	err := fs.Parse(os.Args[1:])
@@ -138,6 +141,10 @@ func initEnv(cfg *Configs) error {
 		cfg.Config = envConfig
 	}
 
+	if envTrustedSubnet := os.Getenv("TRUSTED_SUBNET"); len(envTrustedSubnet) > 0 {
+		cfg.TrustedSubnet = envTrustedSubnet
+	}
+
 	return nil
 }
 
@@ -168,6 +175,10 @@ func initFile(cfg *Configs, fs *flag.FlagSet) error {
 		}
 		if len(cfg.Database.DatabaseDSN) == 0 {
 			cfg.Database.DatabaseDSN = fileConfig.DatabaseDSN
+		}
+
+		if len(cfg.TrustedSubnet) == 0 {
+			cfg.TrustedSubnet = fileConfig.TrustedSubnet
 		}
 
 		enabled := false

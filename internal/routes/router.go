@@ -9,9 +9,9 @@ import (
 )
 
 // Router api handlers
-func Router(repo repository.Storage, baseURL string) *chi.Mux {
+func Router(repo repository.Storage, baseURL, trustedSubnet string) *chi.Mux {
 
-	h := handlers.NewHandler(repo, baseURL)
+	h := handlers.NewHandler(repo, baseURL, trustedSubnet)
 	router := chi.NewRouter()
 	router.Use(middlewares.Logger)
 	router.Use(middlewares.Gzip)
@@ -21,6 +21,7 @@ func Router(repo repository.Storage, baseURL string) *chi.Mux {
 
 	router.Route("/api", func(r chi.Router) {
 		r.Get("/user/urls", h.GetAPIUserUrls)
+		r.Get("/internal/stats", h.GetAPIStats)
 		r.Post("/shorten", h.PostAPIShorten)
 		r.Post("/shorten/batch", h.PostAPIShortenBatch)
 		r.Delete("/user/urls", h.DeleteAPIUserUrls)

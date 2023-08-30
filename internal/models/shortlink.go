@@ -42,6 +42,12 @@ type ShortLinkUserResponse struct {
 	ShortURL    string `json:"short_url"`
 }
 
+// StatsResponse response to a request for statistics on the short link service.
+type StatsResponse struct {
+	Urls  int `json:"urls"`
+	Users int `json:"users"`
+}
+
 // Validate validation of the input request.
 func (sl ShortLinkRequest) Validate() error {
 	var err error

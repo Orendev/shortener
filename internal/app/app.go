@@ -77,7 +77,7 @@ func Run(cfg *config.Configs) {
 
 	a.startServer(ctx, &http.Server{
 		Addr:    cfg.Server.Addr,
-		Handler: routes.Router(a.repo, cfg.BaseURL),
+		Handler: routes.Router(a.repo, cfg.BaseURL, cfg.TrustedSubnet),
 	},
 		cfg.Server.IsHTTPS,
 		cfg.Cert.CertFile,

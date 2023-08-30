@@ -156,6 +156,23 @@ func (s *Memory) DeleteFlagBatch(ctx context.Context, codes []string, _ string) 
 
 }
 
+// UrlsStats number of abbreviated URLs in the service.
+func (s Memory) UrlsStats(ctx context.Context) (int, error) {
+	return len(s.data), nil
+}
+
+// UsersStats number of users in the service.
+func (s Memory) UsersStats(ctx context.Context) (int, error) {
+
+	shortLinks := make(map[string]models.ShortLink)
+
+	for _, link := range s.data {
+		shortLinks[link.UserID] = link
+	}
+
+	return len(shortLinks), nil
+}
+
 // Ping service check.
 func (s *Memory) Ping(_ context.Context) error {
 	return nil
