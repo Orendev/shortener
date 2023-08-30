@@ -196,12 +196,12 @@ func (s *Postgres) UsersStats(ctx context.Context) (int, error) {
 	}()
 
 	var count int
-	var userId string
+	var userID string
 	sum := 0
 
 	// пробегаем по всем записям
 	for rows.Next() {
-		err = rows.Scan(&userId, &count)
+		err = rows.Scan(&userID, &count)
 		if err != nil {
 			return count, err
 		}
