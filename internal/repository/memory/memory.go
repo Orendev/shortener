@@ -157,12 +157,12 @@ func (s *Memory) DeleteFlagBatch(ctx context.Context, codes []string, _ string) 
 }
 
 // UrlsStats number of abbreviated URLs in the service.
-func (s Memory) UrlsStats(ctx context.Context) (int, error) {
+func (s Memory) UrlsStats(_ context.Context) (int, error) {
 	return len(s.data), nil
 }
 
 // UsersStats number of users in the service.
-func (s Memory) UsersStats(ctx context.Context) (int, error) {
+func (s Memory) UsersStats(_ context.Context) (int, error) {
 
 	shortLinks := make(map[string]models.ShortLink)
 
