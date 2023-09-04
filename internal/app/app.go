@@ -125,16 +125,16 @@ func (a *App) startServer(ctx context.Context, srv *http.Server, grpcAddr, baseU
 	var opts []grpc.ServerOption
 
 	opts = middlewares.Logger(opts)
-	sgrpc := grpc.NewServer(opts...)
+	srvGRPC := grpc.NewServer(opts...)
 
-	shortenergrpc := shortenergrpc.NewGRPC(a.repo, baseURL, trustedSubnet)
+	shortenerGRPC := shortenergrpc.NewGRPC(a.repo, baseURL, trustedSubnet)
 
-	pb.RegisterShortenerServiceServer(sgrpc, shortenergrpc)
+	pb.RegisterShortenerServiceServer(srvGRPC, shortenerGRPC)
 
 	go func() {
 		defer wg.Done()
 		// получаем запрос gRPC
-		if err := sgrpc.Serve(listen); err != nil {
+		if err := srvGRPC.Serve(listen); err != nil {
 			log.Fatalf("failed to start grpc server %s", err)
 		}
 	}()
@@ -143,7 +143,7 @@ func (a *App) startServer(ctx context.Context, srv *http.Server, grpcAddr, baseU
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
 	defer cancel()
 
-	sgrpc.GracefulStop()
+	srvGRPC.GracefulStop()
 	err = srv.Shutdown(shutdownCtx)
 	if err != nil {
 		log.Fatalf("failed to shudown server %s", err)

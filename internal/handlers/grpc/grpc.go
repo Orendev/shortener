@@ -102,7 +102,7 @@ func (g *GRPC) SaveAPIShorten(ctx context.Context, reg *pb.APIShortenRequest) (*
 	return &response, nil
 }
 
-func (g *GRPC) Ping(ctx context.Context, reg *pb.PingRequest) (*pb.PingResponse, error) {
+func (g *GRPC) Ping(ctx context.Context, _ *pb.PingRequest) (*pb.PingResponse, error) {
 	var response pb.PingResponse
 
 	err := g.repo.Ping(ctx)
