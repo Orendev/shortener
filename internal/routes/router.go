@@ -1,8 +1,8 @@
 package routes
 
 import (
-	"github.com/Orendev/shortener/internal/handlers"
-	"github.com/Orendev/shortener/internal/middlewares"
+	"github.com/Orendev/shortener/internal/handlers/http"
+	middlewares "github.com/Orendev/shortener/internal/middlewares/http"
 	"github.com/Orendev/shortener/internal/repository"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -11,7 +11,7 @@ import (
 // Router api handlers
 func Router(repo repository.Storage, baseURL, trustedSubnet string) *chi.Mux {
 
-	h := handlers.NewHandler(repo, baseURL, trustedSubnet)
+	h := http.NewHandler(repo, baseURL, trustedSubnet)
 	router := chi.NewRouter()
 	router.Use(middlewares.Logger)
 	router.Use(middlewares.Gzip)
