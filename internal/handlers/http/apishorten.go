@@ -1,4 +1,4 @@
-package handlers
+package http
 
 import (
 	"context"
@@ -15,6 +15,7 @@ import (
 	"github.com/Orendev/shortener/internal/models"
 	"github.com/Orendev/shortener/internal/random"
 	"github.com/Orendev/shortener/internal/repository"
+	"github.com/Orendev/shortener/internal/utils"
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 )
@@ -267,6 +268,61 @@ func (h *Handler) GetAPIUserUrls(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+}
+
+// GetAPIStats statistics on the short link service.
+func (h Handler) GetAPIStats(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+
+	ip, err := utils.ResolveIP(r)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	check, err := utils.CidrRangeContains(h.trustedSubnet, ip.String())
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if !check {
+		http.Error(w, "Forbidden", http.StatusForbidden)
+		return
+	}
+
+	urls, err := h.repo.UrlsStats(r.Context())
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	users, err := h.repo.UsersStats(r.Context())
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	stats := models.StatsResponse{
+		Urls:  urls,
+		Users: users,
+	}
+
+	// заполняем модель ответа
+	enc, err := json.Marshal(stats)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+
+	_, err = w.Write(enc)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
 }
 
 func (h *Handler) flushDeleteShortLink() {

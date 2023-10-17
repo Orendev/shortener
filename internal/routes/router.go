@@ -1,17 +1,17 @@
 package routes
 
 import (
-	"github.com/Orendev/shortener/internal/handlers"
-	"github.com/Orendev/shortener/internal/middlewares"
+	"github.com/Orendev/shortener/internal/handlers/http"
+	middlewares "github.com/Orendev/shortener/internal/middlewares/http"
 	"github.com/Orendev/shortener/internal/repository"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 )
 
 // Router api handlers
-func Router(repo repository.Storage, baseURL string) *chi.Mux {
+func Router(repo repository.Storage, baseURL, trustedSubnet string) *chi.Mux {
 
-	h := handlers.NewHandler(repo, baseURL)
+	h := http.NewHandler(repo, baseURL, trustedSubnet)
 	router := chi.NewRouter()
 	router.Use(middlewares.Logger)
 	router.Use(middlewares.Gzip)
@@ -21,6 +21,7 @@ func Router(repo repository.Storage, baseURL string) *chi.Mux {
 
 	router.Route("/api", func(r chi.Router) {
 		r.Get("/user/urls", h.GetAPIUserUrls)
+		r.Get("/internal/stats", h.GetAPIStats)
 		r.Post("/shorten", h.PostAPIShorten)
 		r.Post("/shorten/batch", h.PostAPIShortenBatch)
 		r.Delete("/user/urls", h.DeleteAPIUserUrls)

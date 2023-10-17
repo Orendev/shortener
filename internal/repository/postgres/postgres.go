@@ -136,6 +136,87 @@ func (s *Postgres) ShortLinksByUserID(ctx context.Context, userID string, limit 
 	return shortLinks, nil
 }
 
+// UrlsStats number of abbreviated URLs in the service.
+func (s *Postgres) UrlsStats(ctx context.Context) (int, error) {
+
+	stmt, err := s.db.PrepareContext(ctx,
+		`SELECT count(*)  FROM short_links`)
+
+	if err != nil {
+		return 0, err
+	}
+
+	defer func() {
+		err = stmt.Close()
+		if err != nil {
+			logger.Log.Error("error", zap.Error(err))
+		}
+	}()
+
+	row := stmt.QueryRowContext(ctx)
+	var count int
+	// разбираем результат
+	err = row.Scan(&count)
+	if err != nil {
+		return count, err
+	}
+
+	return count, nil
+}
+
+// UsersStats number of users in the service.
+func (s *Postgres) UsersStats(ctx context.Context) (int, error) {
+
+	stmt, err := s.db.PrepareContext(ctx,
+		`SELECT user_id, count(distinct('user_id'))  FROM short_links  GROUP BY user_id`)
+
+	if err != nil {
+		return 0, err
+	}
+
+	defer func() {
+		err = stmt.Close()
+		if err != nil {
+			logger.Log.Error("error", zap.Error(err))
+		}
+	}()
+
+	// делаем запрос
+	rows, err := stmt.QueryContext(ctx)
+	if err != nil {
+		return 0, err
+	}
+
+	// обязательно закрываем перед возвратом функции
+	defer func() {
+		err = rows.Close()
+		if err != nil {
+			logger.Log.Error("error", zap.Error(err))
+		}
+	}()
+
+	var count int
+	var userID string
+	sum := 0
+
+	// пробегаем по всем записям
+	for rows.Next() {
+		err = rows.Scan(&userID, &count)
+		if err != nil {
+			return count, err
+		}
+		sum += count
+	}
+
+	// проверяем на ошибки
+	err = rows.Err()
+	if err != nil {
+		return sum, err
+	}
+
+	return sum, nil
+}
+
 // GetByOriginalURL we will get the model with a short link models.ShortLink to the original URL.
 func (s *Postgres) GetByOriginalURL(ctx context.Context, originalURL string) (*models.ShortLink, error) {
 

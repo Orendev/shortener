@@ -1,0 +1,55 @@
+syntax = "proto3";
+
+
+package grpcshortener;
+
+option go_package = "internal/pkg/grpc/proto";
+
+message UserUrl {
+  string original_url = 1;
+  string short_url = 2;
+}
+
+message ShortenBatchIn {
+  string correlation_id = 1;
+  string original_url = 2;
+}
+message ShortenBatchOut {
+  string correlation_id = 1;
+  string short_url = 2;
+}
+
+message APIUserUrlsRequest {
+  string userID = 1;
+}
+message APIUserUrlsResponse {
+  repeated UserUrl user_urls = 1;
+}
+
+message APIStatsRequest {
+}
+message APIStatsResponse {
+  int64 urls = 1;
+  int64 users = 2;
+}
+
+message APIShortenRequest {
+  string URL = 1;
+}
+message APIShortenResponse {
+  string result = 1;
+}
+
+message PingRequest {
+}
+message PingResponse {
+  string result = 1;
+}
+
+
+service ShortenerService {
+  rpc GetAPIUserUrls (APIUserUrlsRequest) returns (APIUserUrlsResponse) {}
+  rpc GetAPIStats (APIStatsRequest) returns (APIStatsResponse) {}
+  rpc SaveAPIShorten (APIShortenRequest) returns (APIShortenResponse) {}
+  rpc Ping (PingRequest) returns (PingResponse) {}
+}

@@ -13,6 +13,10 @@ type Server struct {
 	IsHTTPS bool   `env:"ENABLE_HTTPS"`
 }
 
+type GRPCServer struct {
+	Addr string `env:"GRPC_ADDRESS"`
+}
+
 // File configuration
 type File struct {
 	FileStoragePath string `env:"FILE_STORAGE_PATH"`
@@ -36,22 +40,26 @@ type Cert struct {
 
 // Configs configuration application
 type Configs struct {
-	Database Database
-	Server   Server
-	Cert     Cert
-	File     File
-	Log      Log
-	BaseURL  string `env:"BASE_URL"`
-	Config   string `env:"CONFIG"`
+	Database      Database
+	Server        Server
+	GRPC          GRPCServer
+	Cert          Cert
+	File          File
+	Log           Log
+	BaseURL       string `env:"BASE_URL"`
+	Config        string `env:"CONFIG"`
+	TrustedSubnet string `env:"TRUSTED_SUBNET"`
 }
 
 // FileConfig configuration file
 type FileConfig struct {
 	Addr            string `json:"server_address"`
+	GRPCAddr        string `json:"grpc_address"`
 	IsHTTPS         bool   `json:"enable_https"`
 	FileStoragePath string `json:"file_storage_path"`
 	DatabaseDSN     string `json:"database_dsn"`
 	BaseURL         string `json:"base_url"`
+	TrustedSubnet   string `json:"trusted_subnet"`
 }
 
 // New constructor a new instance of Configs
@@ -81,12 +89,14 @@ func New() (*Configs, error) {
 
 func initFlag(cfg *Configs, fs *flag.FlagSet) error {
 	fs.StringVar(&cfg.Server.Addr, "a", "", "Адрес запуска сервера localhost:8080")
+	fs.StringVar(&cfg.GRPC.Addr, "g", "", "Адрес запуска grpc сервера localhost:3200")
 	fs.StringVar(&cfg.BaseURL, "b", "", "Базовый URL localhost:8080")
 	fs.StringVar(&cfg.Log.FlagLogLevel, "ll", "info", "log level")
 	fs.StringVar(&cfg.File.FileStoragePath, "f", "", "Полное имя файла")
 	fs.StringVar(&cfg.Cert.KeyFile, "fc", "key.pem", "Закрытый ключ")
 	fs.StringVar(&cfg.Cert.CertFile, "fk", "cert.pem", "Подписанный центром сертификации, файл сертификата")
 	fs.StringVar(&cfg.Database.DatabaseDSN, "d", "", "Строка с адресом подключения")
+	fs.StringVar(&cfg.TrustedSubnet, "t", "", "Строковое представление бесклассовой адресации")
 	fs.StringVar(&cfg.Config, "c", "", "Файл конфигурации")
 	fs.BoolVar(&cfg.Server.IsHTTPS, "s", false, "Включения HTTPS в веб-сервере.")
 	err := fs.Parse(os.Args[1:])
@@ -101,6 +111,10 @@ func initEnv(cfg *Configs) error {
 	var err error
 	if envServerAddress := os.Getenv("SERVER_ADDRESS"); len(envServerAddress) > 0 {
 		cfg.Server.Addr = envServerAddress
+	}
+
+	if envGRPCServerAddress := os.Getenv("GRPC_ADDRESS"); len(envGRPCServerAddress) > 0 {
+		cfg.GRPC.Addr = envGRPCServerAddress
 	}
 
 	if envBaseURL := os.Getenv("BASE_URL"); len(envBaseURL) > 0 {
@@ -138,6 +152,10 @@ func initEnv(cfg *Configs) error {
 		cfg.Config = envConfig
 	}
 
+	if envTrustedSubnet := os.Getenv("TRUSTED_SUBNET"); len(envTrustedSubnet) > 0 {
+		cfg.TrustedSubnet = envTrustedSubnet
+	}
+
 	return nil
 }
 
@@ -163,11 +181,18 @@ func initFile(cfg *Configs, fs *flag.FlagSet) error {
 		if len(cfg.Server.Addr) == 0 {
 			cfg.Server.Addr = fileConfig.Addr
 		}
+		if len(cfg.GRPC.Addr) == 0 {
+			cfg.GRPC.Addr = fileConfig.GRPCAddr
+		}
 		if len(cfg.BaseURL) == 0 {
 			cfg.BaseURL = fileConfig.BaseURL
 		}
 		if len(cfg.Database.DatabaseDSN) == 0 {
 			cfg.Database.DatabaseDSN = fileConfig.DatabaseDSN
+		}
+
+		if len(cfg.TrustedSubnet) == 0 {
+			cfg.TrustedSubnet = fileConfig.TrustedSubnet
 		}
 
 		enabled := false

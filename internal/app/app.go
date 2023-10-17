@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"log"
+	"net"
 	"net/http"
 	_ "net/http/pprof"
 	"os"
@@ -13,13 +14,17 @@ import (
 	"time"
 
 	"github.com/Orendev/shortener/internal/config"
+	shortenergrpc "github.com/Orendev/shortener/internal/handlers/grpc"
 	"github.com/Orendev/shortener/internal/logger"
+	middlewares "github.com/Orendev/shortener/internal/middlewares/grpc"
+	pb "github.com/Orendev/shortener/internal/pkg/grpc/proto"
 	"github.com/Orendev/shortener/internal/repository"
 	"github.com/Orendev/shortener/internal/repository/memory"
 	"github.com/Orendev/shortener/internal/repository/postgres"
 	"github.com/Orendev/shortener/internal/routes"
 	"github.com/Orendev/shortener/internal/tls"
 	"go.uber.org/zap"
+	"google.golang.org/grpc"
 )
 
 // App - structure describing the application
@@ -77,8 +82,11 @@ func Run(cfg *config.Configs) {
 
 	a.startServer(ctx, &http.Server{
 		Addr:    cfg.Server.Addr,
-		Handler: routes.Router(a.repo, cfg.BaseURL),
+		Handler: routes.Router(a.repo, cfg.BaseURL, cfg.TrustedSubnet),
 	},
+		cfg.GRPC.Addr,
+		cfg.BaseURL,
+		cfg.TrustedSubnet,
 		cfg.Server.IsHTTPS,
 		cfg.Cert.CertFile,
 		cfg.Cert.KeyFile,
@@ -90,11 +98,12 @@ func NewApp(repo repository.Storage) *App {
 	return &App{repo: repo}
 }
 
-func (a *App) startServer(ctx context.Context, srv *http.Server, isHTTPS bool, certFile, keyFile string) {
+func (a *App) startServer(ctx context.Context, srv *http.Server, grpcAddr, baseURL, trustedSubnet string, isHTTPS bool, certFile, keyFile string) {
 	var err error
 	var wg sync.WaitGroup
 
-	wg.Add(1)
+	wg.Add(2)
+
 	go func() {
 		defer wg.Done()
 		if isHTTPS {
@@ -107,10 +116,34 @@ func (a *App) startServer(ctx context.Context, srv *http.Server, isHTTPS bool, c
 		}
 	}()
 
+	// create grpc server
+	listen, err := net.Listen("tcp", grpcAddr)
+	if err != nil {
+		logger.Log.Sugar().Errorf("failed to start grpc server: %s", err)
+	}
+
+	var opts []grpc.ServerOption
+
+	opts = middlewares.Logger(opts)
+	srvGRPC := grpc.NewServer(opts...)
+
+	shortenerGRPC := shortenergrpc.NewGRPC(a.repo, baseURL, trustedSubnet)
+
+	pb.RegisterShortenerServiceServer(srvGRPC, shortenerGRPC)
+
+	go func() {
+		defer wg.Done()
+		// получаем запрос gRPC
+		if err := srvGRPC.Serve(listen); err != nil {
+			log.Fatalf("failed to start grpc server %s", err)
+		}
+	}()
+
 	<-ctx.Done()
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
 	defer cancel()
 
+	srvGRPC.GracefulStop()
 	err = srv.Shutdown(shutdownCtx)
 	if err != nil {
 		log.Fatalf("failed to shudown server %s", err)

@@ -1,4 +1,4 @@
-package handlers_test
+package http_test
 
 import (
 	"bytes"
@@ -7,8 +7,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/Orendev/shortener/internal/handlers"
-	"github.com/Orendev/shortener/internal/middlewares"
+	http2 "github.com/Orendev/shortener/internal/handlers/http"
+	http3 "github.com/Orendev/shortener/internal/middlewares/http"
 	"github.com/Orendev/shortener/internal/models"
 	"github.com/Orendev/shortener/internal/random"
 	"github.com/Orendev/shortener/internal/repository/mock"
@@ -41,7 +41,7 @@ func TestHandler_GetShorten(t *testing.T) {
 		Return(&model, nil)
 
 	// создадим экземпляр приложения и передадим ему «хранилище»
-	h := handlers.NewHandler(s, "http://localhost")
+	h := http2.NewHandler(s, "http://localhost", "192.168.1.0/24")
 
 	srv := httptest.NewServer(http.HandlerFunc(h.GetShorten))
 	defer srv.Close()
@@ -103,10 +103,10 @@ func TestHandler_PostShorten(t *testing.T) {
 		Return(nil)
 
 	// создадим экземпляр приложения и передадим ему «хранилище»
-	h := handlers.NewHandler(s, "http://localhost")
+	h := http2.NewHandler(s, "http://localhost", "192.168.1.0/24")
 
 	r := chi.NewRouter()
-	r.Use(middlewares.Auth)
+	r.Use(http3.Auth)
 	r.Post("/", h.PostShorten)
 
 	srv := httptest.NewServer(r)
@@ -196,9 +196,9 @@ func TestHandler_PostAPIShorten(t *testing.T) {
 		Return(nil)
 
 	// создадим экземпляр приложения и передадим ему «хранилище»
-	h := handlers.NewHandler(s, "http://localhost")
+	h := http2.NewHandler(s, "http://localhost", "192.168.1.0/24")
 	r := chi.NewRouter()
-	r.Use(middlewares.Auth)
+	r.Use(http3.Auth)
 	r.Post("/api/shorten", h.PostAPIShorten)
 	srv := httptest.NewServer(r)
 	defer srv.Close()
@@ -341,10 +341,10 @@ func TestHandler_PostAPIShortenBatch(t *testing.T) {
 		Return(&model, nil)
 
 	// создадим экземпляр приложения и передадим ему «хранилище»
-	h := handlers.NewHandler(s, "http://localhost")
+	h := http2.NewHandler(s, "http://localhost", "192.168.1.0/24")
 
 	r := chi.NewRouter()
-	r.Use(middlewares.Auth)
+	r.Use(http3.Auth)
 	r.Post("/api/shorten/batch", h.PostAPIShortenBatch)
 
 	srv := httptest.NewServer(r)
@@ -439,10 +439,10 @@ func TestHandler_GetAPIUserUrls(t *testing.T) {
 		Return(shortLinks, nil)
 
 	// создадим экземпляр приложения и передадим ему «хранилище»
-	h := handlers.NewHandler(s, "http://localhost")
+	h := http2.NewHandler(s, "http://localhost", "192.168.1.0/24")
 
 	r := chi.NewRouter()
-	r.Use(middlewares.Auth)
+	r.Use(http3.Auth)
 	r.Get("/api/user/urls", h.GetAPIUserUrls)
 
 	srv := httptest.NewServer(r)
@@ -518,10 +518,10 @@ func TestHandler_GetPing(t *testing.T) {
 		Ping(gomock.Any()).
 		Return(nil)
 
-	h := handlers.NewHandler(s, "http://localhost")
+	h := http2.NewHandler(s, "http://localhost", "192.168.1.0/24")
 
 	r := chi.NewRouter()
-	r.Use(middlewares.Auth)
+	r.Use(http3.Auth)
 	r.Get("/ping", h.GetPing)
 
 	srv := httptest.NewServer(r)

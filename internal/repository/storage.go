@@ -19,6 +19,8 @@ type Storage interface {
 	GetByID(ctx context.Context, id string) (*models.ShortLink, error)
 	ShortLinksByUserID(ctx context.Context, userID string, limit int) ([]models.ShortLink, error)
 	GetByOriginalURL(ctx context.Context, originalURL string) (*models.ShortLink, error)
+	UsersStats(ctx context.Context) (int, error)
+	UrlsStats(ctx context.Context) (int, error)
 	Save(ctx context.Context, model models.ShortLink) error
 	InsertBatch(ctx context.Context, models []models.ShortLink) error
 	UpdateBatch(ctx context.Context, models []models.ShortLink) error

@@ -178,3 +178,33 @@ func (mr *MockStorageMockRecorder) UpdateBatch(ctx, models interface{}) *gomock.
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateBatch", reflect.TypeOf((*MockStorage)(nil).UpdateBatch), ctx, models)
 }
+
+// UrlsStats mocks base method.
+func (m *MockStorage) UrlsStats(ctx context.Context) (int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UrlsStats", ctx)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UrlsStats indicates an expected call of UrlsStats.
+func (mr *MockStorageMockRecorder) UrlsStats(ctx interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UrlsStats", reflect.TypeOf((*MockStorage)(nil).UrlsStats), ctx)
+}
+
+// UsersStats mocks base method.
+func (m *MockStorage) UsersStats(ctx context.Context) (int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UsersStats", ctx)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UsersStats indicates an expected call of UsersStats.
+func (mr *MockStorageMockRecorder) UsersStats(ctx interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UsersStats", reflect.TypeOf((*MockStorage)(nil).UsersStats), ctx)
+}
